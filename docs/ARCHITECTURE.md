@@ -43,7 +43,7 @@ Falhou → uma nova tentativa com o erro no prompt; falhou de novo → erro para
 ```
 compass/
 ├── docs/ARCHITECTURE.md            ← este arquivo
-├── supabase/migrations/            ← SQL versionado (passo 2)
+├── supabase/migrations/            ← SQL versionado
 └── src/
     ├── proxy.ts                    ← renova a sessão do Supabase e protege (app) (passo 6)
     ├── app/
@@ -92,6 +92,24 @@ Regras de organização:
 - Tipos de domínio são inferidos dos schemas Zod (`z.infer`), nunca escritos à mão em paralelo.
 - Componentes de mapa são client components carregados só na rota do roteiro (o MapLibre pesa ~200 kB).
 
+## Modelo de dados
+
+Migração: `supabase/migrations/20261015000000_initial_schema.sql`.
+
+| Tabela | O que guarda | Usuário (RLS) | Servidor (service_role) |
+|---|---|---|---|
+| `auth.users` | e-mail, senha, OTP (Supabase Auth) | — | — |
+| `profiles` | nome e telefone do cadastro; criado por trigger a partir de `options.data` do signUp | lê e edita `full_name`, `phone` | — |
+| `trip_requests` | respostas do wizard, `total_days` calculado, `status` (`pending` → `generating` → `completed`/`failed`) | cria (sem poder definir `status`), lê, apaga | muda `status` e `error_message` |
+| `generated_itineraries` | JSON da IA (`itinerary`), `version` por regeneração, `checklist_state`, tokens e latência | lê, edita `title` e `checklist_state` | grava |
+
+- `checklist_state` = `{ "<id_ponto>": [índices marcados] }`, ex.: `{ "p1": [0, 2] }`. Cada regeneração
+  é uma nova versão com checklist zerado, então os índices nunca apontam para uma lista diferente.
+- Um trigger garante que o `user_id` do roteiro é o mesmo do pedido, mesmo quando o servidor grava
+  com service_role (que ignora RLS).
+- `generations_last_24h(user_id)` conta gerações do dia para o limite por plano; só o servidor executa.
+- Apagar a conta em `auth.users` apaga perfil, pedidos e roteiros em cascata.
+
 ## Contrato da IA
 
 Entrada: o JSON do wizard (campos do PRD) mais `total_dias_viagem`, calculado no servidor a partir
@@ -103,8 +121,8 @@ das datas. Saída: `resumo_estrategico` + `pontos_mapa[]`, como no PRD, com dois
 
 ## Roadmap de commits
 
-1. **Estrutura e arquitetura** (este commit)
-2. Schema do banco: `profiles`, `trip_requests`, `generated_itineraries`, RLS
+1. ~~Estrutura e arquitetura~~
+2. ~~Schema do banco: `profiles`, `trip_requests`, `generated_itineraries`, RLS~~
 3. Tipos e schemas Zod de entrada, saída e estado do mapa
 4. `POST /api/generate-itinerary` com Claude, retry e checagens
 5. Mapa interativo (pins, linhas, drawer com checklist)
