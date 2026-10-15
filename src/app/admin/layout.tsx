@@ -10,6 +10,8 @@ const LINKS = [
   { href: "/admin/base/revisao", rotulo: "Revisão" },
   { href: "/admin/base/busca", rotulo: "Busca" },
   { href: "/admin/base/roteiros", rotulo: "Roteiros prontos" },
+  { href: "/admin/medicao", rotulo: "Medição" },
+  { href: "/admin/config", rotulo: "Configurações" },
 ];
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {

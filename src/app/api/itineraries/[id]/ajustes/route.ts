@@ -64,6 +64,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
   try {
     const r = await gerarComProvedorConfigurado(pedido, req.signal, base.contexto, {
+      tipo: "ajuste",
       roteiroAtual,
       pedido: corpo.data.pedido,
     });

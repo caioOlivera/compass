@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { DESTINOS_LANDING, MOSAICO_HERO, REGIOES_LANDING } from "@/components/landing/destinos";
+import { Assinados } from "@/components/landing/assinados";
 import { DestinosCarrossel } from "@/components/landing/destinos-carrossel";
 import { Faq } from "@/components/landing/faq";
 import { ChamadaFinal, Rodape } from "@/components/landing/fechamento";
@@ -10,6 +11,7 @@ import { Showcase } from "@/components/landing/showcase";
 import { SiteHeader } from "@/components/landing/site-header";
 import { Stages } from "@/components/landing/stages";
 import { buscarFoto, buscarFotos, type Foto } from "@/lib/images/fotos";
+import { catalogoAssinados, formatarPreco, precoAssinado } from "@/lib/motor/catalogo";
 
 export const metadata: Metadata = {
   title: "Compass: roteiros de viagem fluidos",
@@ -22,13 +24,15 @@ export const metadata: Metadata = {
 export const revalidate = 604800;
 
 export default async function Home() {
-  const [mosaico, regioes, destinos, chamada] = await Promise.all([
+  const [assinados, preco] = await Promise.all([catalogoAssinados(), precoAssinado()]);
+  const [mosaico, regioes, destinos, chamada, fotosAssinados] = await Promise.all([
     Promise.all(MOSAICO_HERO.map((m, i) => buscarFoto(m.busca, { orientacao: i === 0 ? "portrait" : "landscape" }))),
     buscarFotos(REGIOES_LANDING.map((r) => r.busca), { orientacao: "landscape" }),
     buscarFotos(DESTINOS_LANDING.map((d) => d.busca), { orientacao: "portrait" }),
     buscarFoto("airplane window clouds", { orientacao: "landscape" }),
+    buscarFotos(assinados.slice(0, 3).map((a) => a.cidades[Math.min(1, a.cidades.length - 1)] ?? a.titulo), { idioma: "pt-BR" }),
   ]);
-  const creditos = [...mosaico, ...regioes, ...destinos, chamada].filter((f): f is Foto => f !== null);
+  const creditos = [...mosaico, ...regioes, ...destinos, chamada, ...fotosAssinados].filter((f): f is Foto => f !== null);
 
   return (
     <div className="bg-bg text-text">
@@ -37,6 +41,7 @@ export default async function Home() {
         <Hero fotos={mosaico} />
         <Regioes fotos={regioes} />
         <DestinosCarrossel fotos={destinos} />
+        <Assinados itens={assinados} fotos={fotosAssinados} preco={formatarPreco(preco)} />
         <RouteStory />
         <Moldura titulo="Oito perguntas, nenhuma sobre o caminho" texto="Arraste pelas etapas e veja a tela de cada uma.">
           <Stages />

@@ -1,6 +1,6 @@
 import "server-only";
 import { anthropic } from "@/lib/ai/client";
-import { gerarRoteiro, type Ajuste, type ChamadorModelo, type ContextoBase, type ResultadoGeracao } from "@/lib/ai/generate";
+import { gerarRoteiro, type ChamadorModelo, type ContextoBase, type ModoGeracao, type ResultadoGeracao } from "@/lib/ai/generate";
 import { chamadorAnthropic } from "@/lib/ai/providers/anthropic";
 import { gerarRoteiroDemonstracao } from "@/lib/ai/providers/demo";
 import { chamadorOpenAICompat, type TarefaJson } from "@/lib/ai/providers/openai-compatible";
@@ -12,15 +12,15 @@ export function gerarComProvedorConfigurado(
   pedido: ItineraryPromptInput,
   signal?: AbortSignal,
   contexto?: ContextoBase,
-  ajuste?: Ajuste,
+  modo?: ModoGeracao,
 ): Promise<ResultadoGeracao> {
   const env = serverEnv();
   switch (env.AI_PROVIDER) {
     case "demo":
-      if (ajuste) {
-        const r = ajuste.roteiroAtual.resumo_estrategico;
+      if (modo?.tipo === "ajuste") {
+        const r = modo.roteiroAtual.resumo_estrategico;
         return Promise.resolve({
-          roteiro: { ...ajuste.roteiroAtual, resumo_estrategico: { ...r, alertas: ["Modo demonstração: o ajuste não foi aplicado.", ...r.alertas] } },
+          roteiro: { ...modo.roteiroAtual, resumo_estrategico: { ...r, alertas: ["Modo demonstração: o ajuste não foi aplicado.", ...r.alertas] } },
           modelo: "demonstracao",
           tentativas: 1,
           inputTokens: 0,
@@ -38,14 +38,14 @@ export function gerarComProvedorConfigurado(
         modoJson: env.AI_JSON_MODE,
         signal,
       });
-      return gerarRoteiro(pedido, chamar, contexto, ajuste).then((r) => ({ ...r, modelo: `${r.modelo} @ ${new URL(env.AI_BASE_URL!).host}` }));
+      return gerarRoteiro(pedido, chamar, contexto, modo).then((r) => ({ ...r, modelo: `${r.modelo} @ ${new URL(env.AI_BASE_URL!).host}` }));
     }
     case "anthropic":
       return gerarRoteiro(
         pedido,
         chamadorAnthropic({ client: anthropic(), modelo: env.ANTHROPIC_MODEL, effort: env.ANTHROPIC_EFFORT, signal }),
         contexto,
-        ajuste,
+        modo,
       );
   }
 }

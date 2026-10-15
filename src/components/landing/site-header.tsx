@@ -7,10 +7,13 @@ export function SiteHeader() {
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
         <Logo />
         <nav aria-label="Principal" className="flex items-center gap-1 text-sm sm:gap-2">
-          <a href="#regioes" className="hidden rounded-md px-3 py-2 text-text-2 hover:bg-surface-2 hover:text-text md:inline">
+          <a href="/#regioes" className="hidden rounded-md px-3 py-2 text-text-2 hover:bg-surface-2 hover:text-text md:inline">
             Destinos
           </a>
-          <a href="#como-funciona" className="hidden rounded-md px-3 py-2 text-text-2 hover:bg-surface-2 hover:text-text md:inline">
+          <Link href="/roteiros-assinados" className="hidden rounded-md px-3 py-2 text-text-2 hover:bg-surface-2 hover:text-text md:inline">
+            Roteiros assinados
+          </Link>
+          <a href="/#como-funciona" className="hidden rounded-md px-3 py-2 text-text-2 hover:bg-surface-2 hover:text-text lg:inline">
             Como funciona
           </a>
           <Link href="/exemplo" className="hidden rounded-md px-3 py-2 text-text-2 hover:bg-surface-2 hover:text-text sm:inline">

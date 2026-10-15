@@ -929,6 +929,19 @@ export type Database = {
           texto: string
         }[]
       }
+      catalogo_roteiros_assinados: {
+        Args: never
+        Returns: {
+          cidades: string[]
+          duracao_dias: number
+          epoca: string | null
+          essencia: string[]
+          id: string
+          paises: string[]
+          resumo: string
+          titulo: string
+        }[]
+      }
       generations_last_24h: { Args: { p_user_id: string }; Returns: number }
       is_admin: { Args: never; Returns: boolean }
     }

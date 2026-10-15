@@ -62,3 +62,72 @@ describe("custo por tokens", () => {
     expect(c.brl).toBeCloseTo(0.065);
   });
 });
+
+describe("roteiro assinado", async () => {
+  const { cidadeAuge, pedidoDoAssinado, regioesDoRoteiro, somarDias } = await import("@/lib/motor/assinado-pedido");
+  const dias = [
+    { dia: 1, cidade: "Doha", lat: 25.29, lng: 51.53 },
+    { dia: 2, cidade: "Phuket", lat: 7.88, lng: 98.39 },
+    { dia: 3, cidade: "Phuket", lat: 7.88, lng: 98.39 },
+    { dia: 4, cidade: "Seul", lat: 37.57, lng: 126.98 },
+    { dia: 5, cidade: "Seul", lat: 37.57, lng: 126.98 },
+    { dia: 6, cidade: "Seul", lat: 37.57, lng: 126.98 },
+    { dia: 7, cidade: "Doha", lat: 25.29, lng: 51.53 },
+  ];
+
+  it("regiões na ordem das cidades e auge pela maior estadia", () => {
+    expect(regioesDoRoteiro(dias)).toEqual(["oriente-medio", "sudeste-asiatico", "asia-leste"]);
+    expect(cidadeAuge(dias)).toBe("Seul");
+    expect(somarDias("2026-11-14", 22)).toBe("2026-12-06");
+  });
+
+  it("vira um pedido válido com a duração do roteiro", () => {
+    const p = pedidoDoAssinado(
+      { titulo: "Qatar + Tailândia + Coreia", duracao_dias: 7, dias },
+      { data_inicio: "2026-11-14", cidade_origem: "Goiânia", adultos: 2, criancas: 0, orcamento: "medio", ritmo_viagem: "medio", observacoes: "" },
+    );
+    expect(p.regioes).toEqual(["oriente-medio", "sudeste-asiatico", "asia-leste"]);
+    expect(p.data_fim).toBe("2026-11-21");
+    expect(p.auge_da_viagem).toBe("Seul");
+    expect(p.locais_desejados_complementares).toEqual(["Doha", "Phuket"]);
+    expect(p.observacoes).toMatch(/Roteiro assinado/);
+  });
+});
+
+describe("painel de medição", async () => {
+  const { resumirUso } = await import("@/lib/medicao-painel");
+  const linha = (o: Partial<import("@/lib/medicao-painel").LinhaUso>) => ({
+    tipo: "geracao",
+    produto: "roteiro",
+    user_id: "u1",
+    trip_request_id: "t1",
+    custo_brl: 0.1,
+    input_tokens: 100,
+    output_tokens: 50,
+    sucesso: true,
+    created_at: "2026-10-15T10:00:00Z",
+    ...o,
+  });
+
+  it("custo por consulta soma geração e ajustes, e calcula a margem do produto", () => {
+    const r = resumirUso(
+      [
+        linha({}),
+        linha({ tipo: "ajuste", produto: null, custo_brl: 0.05 }),
+        linha({ trip_request_id: "t2", custo_brl: 0.25 }),
+        linha({ tipo: "adaptacao", produto: "assinado", trip_request_id: "t3", custo_brl: 0.3 }),
+        linha({ tipo: "extracao", produto: null, trip_request_id: null, user_id: "admin", custo_brl: 1, sucesso: false }),
+      ],
+      { roteiro: 9.9, assinado: 14.9 },
+    );
+    expect(r.custoTotal).toBeCloseTo(1.7);
+    expect(r.falhas).toBe(1);
+    const roteiro = r.porProduto.find((p) => p.produto === "roteiro")!;
+    expect(roteiro.consultas).toBe(2);
+    expect(roteiro.custoMedio).toBeCloseTo(0.2);
+    expect(roteiro.margem).toBeCloseTo(9.7);
+    expect(r.porProduto.find((p) => p.produto === "assinado")!.margemPct).toBeCloseTo(((14.9 - 0.3) / 14.9) * 100);
+    expect(r.porTipo.find((t) => t.tipo === "geracao")!.n).toBe(2);
+    expect(r.porUsuario[0]).toMatchObject({ user_id: "admin", custo: 1 });
+  });
+});
