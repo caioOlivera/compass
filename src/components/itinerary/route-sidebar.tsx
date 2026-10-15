@@ -108,7 +108,10 @@ export function RouteSidebar({ roteiro, trechos, selecao, onSelecionar, progress
                     {p.ordem}
                   </span>
                   <span className="flex min-w-0 flex-1 flex-col">
-                    <span className="truncate font-medium">{p.nome_local}</span>
+                    <span className="truncate font-medium">
+                      <span aria-hidden>{p.emoji} </span>
+                      {p.nome_local}
+                    </span>
                     <span className="text-xs text-text-3">{ROTULO_TIPO_PONTO[p.tipo_ponto]}</span>
                   </span>
                   <span className="shrink-0 text-sm text-text-2 tabular-nums">

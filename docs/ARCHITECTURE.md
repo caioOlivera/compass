@@ -152,6 +152,10 @@ Migrações em `supabase/migrations/`, já aplicadas no projeto Supabase `compas
 `components/wizard/wizard.tsx` + `steps.tsx`, etapas e validação em `lib/wizard.ts`.
 
 - 7 etapas do PRD; cada uma valida só os próprios campos (`validarEtapa`) antes de avançar.
+- Europa é uma opção única (os ids antigos seguem válidos no banco). Sugestões de auge por região em
+  `lib/sugestoes-auge.ts`. Origem padrão: São Paulo.
+- Tela de geração com barra de progresso estimada (`progressoEstimado`): rápida no começo, nunca passa
+  de 95% antes de o roteiro existir.
 - As regras entre campos (`checarDatas`, `checarLocais`) ficam fora do `superRefine` para rodarem na
   etapa certa: no Zod, o `superRefine` só executa com o objeto inteiro válido.
 - Rascunho no `localStorage` (recarregar não perde as respostas); apagado quando o roteiro é gerado.
@@ -172,6 +176,14 @@ Migrações em `supabase/migrations/`, já aplicadas no projeto Supabase `compas
 - Erros do Supabase Auth traduzidos por código em `mensagemErroAuth`.
 - A proteção dos dados é a RLS; o proxy só decide navegação.
 
+## Identidade visual
+
+Azul-marinho `#1f2b4d` sobre branco, tangerina `#f7941d` só na ação principal (texto em tangerina
+usa `#a8560a` para manter contraste), Inter Tight auto-hospedada. Tokens em `src/app/globals.css`;
+todas as telas usam os tokens. A landing (`components/landing/`) foi feita com a skill
+design-taste-frontend (direção split-stage): o painel fixo mostra a rota de exemplo e avança uma
+parada a cada seção; notas de direção em `.taste-skill/notes.md`.
+
 ## Mapa interativo
 
 Tela `/roteiros/[id]` (e `/exemplo`, demonstração pública com o roteiro do PRD).
@@ -188,7 +200,9 @@ Tela `/roteiros/[id]` (e `/exemplo`, demonstração pública com o roteiro do PR
   (`tipoTransporte` classifica o texto livre da IA). São retas entre as bases, não o traçado da estrada.
 - O MapLibre 6 roda num worker carregado de arquivo separado; `scripts/copy-maplibre-worker.mjs`
   (postinstall) copia o worker para `public/` e o mapa aponta para ele com `setWorkerUrl`.
-- Estilo do mapa: `NEXT_PUBLIC_MAP_STYLE_URL`, padrão OpenFreeMap Positron (sem token).
+- Estilo do mapa: `NEXT_PUBLIC_MAP_STYLE_URL`, padrão OpenFreeMap Liberty (colorido, sem token). Ao carregar,
+  os rótulos passam a usar `name:pt` (português), com o nome local como reserva.
+- Cada parada tem `emoji` (gerado pela IA), mostrado no pin, na lista e no painel.
 - Componentes de UI no padrão shadcn (Radix + Tailwind) em `components/ui`; animações com Motion,
   respeitando `prefers-reduced-motion`.
 

@@ -11,7 +11,7 @@ import {
 import { pedidoPRD, roteiroPRD } from "@/lib/itinerary/exemplo";
 
 const base = {
-  continente_regiao: "europa-do-sul",
+  continente_regiao: "europa",
   data_inicio: "2026-09-10",
   data_fim: "2026-09-25",
   ritmo_viagem: "medio",
@@ -58,7 +58,7 @@ describe("TripRequestInputSchema", () => {
 
   it("ida e volta pelas colunas do banco preserva o pedido", () => {
     const row = toTripRequestRow(pedidoPRD);
-    expect(row.subregion).toBe("europa-do-sul");
+    expect(row.subregion).toBe("europa");
     expect(row.avoided_places).toEqual(["Veneza"]);
     const { total_dias_viagem: _, ...semTotal } = pedidoPRD;
     expect(fromTripRequestRow(row as Required<typeof row>)).toEqual(semTotal);

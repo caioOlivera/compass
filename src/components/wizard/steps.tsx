@@ -5,6 +5,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Field } from "@/components/ui/field";
 import { TagInput } from "@/components/ui/tag-input";
 import { FLEXIBILIDADE_MAX_DIAS, LOCAIS_MAX, RITMOS, SUBREGIOES } from "@/lib/constants";
+import { SUGESTOES_AUGE, SUGESTOES_GERAIS } from "@/lib/sugestoes-auge";
 import { diasEntre, type TripRequestDraft } from "@/lib/validation/trip-request";
 import type { ErrosEtapa } from "@/lib/wizard";
 import { cn } from "@/lib/utils";
@@ -136,9 +137,9 @@ function Flexibilidade({ rotulo, valor, onChange }: { rotulo: string; valor: num
 // 3. Auge da viagem
 // ---------------------------------------------------------------------------
 
-const EXEMPLOS_AUGE = ["Dolomitas", "Ilhas Gregas", "Toscana", "Patagônia", "Tóquio", "Costa Amalfitana"];
-
 export function EtapaAuge({ rascunho, atualizar, erros }: PropsEtapa) {
+  const regiao = SUBREGIOES.find((r) => r.id === rascunho.continente_regiao);
+  const sugestoes = regiao ? SUGESTOES_AUGE[regiao.id] : SUGESTOES_GERAIS;
   return (
     <div className="flex flex-col gap-4">
       <p className="text-sm text-text-2">
@@ -149,21 +150,33 @@ export function EtapaAuge({ rascunho, atualizar, erros }: PropsEtapa) {
         label="Auge da viagem"
         value={rascunho.auge_da_viagem}
         onChange={(e) => atualizar({ auge_da_viagem: e.target.value })}
-        placeholder="Ex.: Dolomitas"
+        placeholder={`Ex.: ${sugestoes[0].nome}`}
         erro={erros.auge_da_viagem}
         autoFocus
       />
-      <div className="flex flex-wrap gap-2" aria-label="Exemplos">
-        {EXEMPLOS_AUGE.map((ex) => (
-          <button
-            key={ex}
-            type="button"
-            onClick={() => atualizar({ auge_da_viagem: ex })}
-            className="rounded-full border border-border px-3 py-1 text-sm text-text-2 transition hover:border-text-3 hover:text-text"
-          >
-            {ex}
-          </button>
-        ))}
+      <div className="flex flex-col gap-2">
+        <p className="text-sm text-text-2">{regiao ? `Ideias para ${regiao.nome}` : "Ideias"}</p>
+        <div className="flex flex-wrap gap-2">
+          {sugestoes.map((s) => {
+            const ativa = rascunho.auge_da_viagem === s.nome;
+            return (
+              <button
+                key={s.nome}
+                type="button"
+                aria-pressed={ativa}
+                onClick={() => atualizar({ auge_da_viagem: s.nome })}
+                className={cn(
+                  "rounded-full border px-3 py-1.5 text-sm transition active:scale-[0.97]",
+                  ativa
+                    ? "border-text bg-text text-white"
+                    : "border-border text-text-2 hover:border-text-3 hover:text-text",
+                )}
+              >
+                <span aria-hidden>{s.emoji}</span> {s.nome}
+              </button>
+            );
+          })}
+        </div>
       </div>
     </div>
   );
@@ -210,7 +223,7 @@ export function EtapaOrigem({ rascunho, atualizar, erros }: PropsEtapa) {
         label="Cidade de origem"
         value={rascunho.cidade_origem}
         onChange={(e) => atualizar({ cidade_origem: e.target.value })}
-        placeholder="Ex.: Rio de Janeiro"
+        placeholder="Ex.: São Paulo"
         autoComplete="address-level2"
         erro={erros.cidade_origem}
         autoFocus
@@ -224,7 +237,7 @@ export function EtapaOrigem({ rascunho, atualizar, erros }: PropsEtapa) {
         <span className="flex flex-col gap-1">
           <span className="text-sm font-medium">Aceito embarcar por aeroportos alternativos</span>
           <span className="text-sm text-text-2">
-            Ex.: sair de São Paulo ou Recife em vez do Rio, se o voo compensar.
+            Ex.: sair de Campinas (VCP) ou do Rio em vez de Guarulhos, se o voo compensar.
           </span>
         </span>
       </label>

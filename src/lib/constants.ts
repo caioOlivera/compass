@@ -3,9 +3,8 @@ export const SUBREGIOES = [
   { id: "america-do-norte", continente: "América", nome: "América do Norte" },
   { id: "america-central", continente: "América", nome: "América Central" },
   { id: "america-do-sul", continente: "América", nome: "América do Sul" },
-  { id: "europa-do-norte", continente: "Europa", nome: "Europa do Norte" },
-  { id: "europa-do-sul", continente: "Europa", nome: "Europa do Sul" },
-  { id: "europa-central-leste", continente: "Europa", nome: "Europa Central/Leste" },
+  // Europa inteira numa opção só: as distâncias são curtas e uma rota natural cruza sub-regiões.
+  { id: "europa", continente: "Europa", nome: "Europa" },
   { id: "asia-leste", continente: "Ásia", nome: "Ásia Leste" },
   { id: "asia-sul", continente: "Ásia", nome: "Sul da Ásia" },
   { id: "oriente-medio", continente: "Ásia", nome: "Oriente Médio" },
@@ -47,4 +46,11 @@ export type TipoPonto = (typeof TIPOS_PONTO)[number];
 export type CategoriaChecklist = (typeof CATEGORIAS_CHECKLIST)[number];
 
 export const SUBREGIAO_IDS = SUBREGIOES.map((s) => s.id) as [SubregiaoId, ...SubregiaoId[]];
+/** Ids de versões antigas do questionário (rascunhos salvos no navegador) → id atual. */
+export const SUBREGIOES_ANTIGAS: Record<string, SubregiaoId> = {
+  "europa-do-norte": "europa",
+  "europa-do-sul": "europa",
+  "europa-central-leste": "europa",
+};
+
 export const RITMO_IDS = RITMOS.map((r) => r.id) as [RitmoId, ...RitmoId[]];

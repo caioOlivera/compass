@@ -42,6 +42,9 @@ com tempo por base ajustado ao ritmo e ao tipo de destino, pronto para ser desen
 # CONTEÚDO DE CADA PONTO DO MAPA
 
 - Coordenadas reais (lat/lng em graus decimais) do centro da cidade ou da base principal da região.
+- "emoji": um único emoji que represente o lugar e apareça ao lado do nome no mapa (ex.: 🏛️ Roma,
+  🎨 Florença, 🏔️ Dolomitas, 🗼 Paris, 🏖️ uma praia, 🍷 uma região de vinhos). Evite repetir o mesmo
+  emoji em paradas diferentes.
 - "tipo_ponto": o primeiro é "hub_entrada", o último é "hub_saida", a(s) base(s) do auge são
   "auge_viagem" e o resto é "base_intermediaria". Se entrada e auge coincidirem, use "hub_entrada".
 - "atribuicoes_e_checklist": de 4 a 8 atrações ou experiências essenciais, cada uma com uma

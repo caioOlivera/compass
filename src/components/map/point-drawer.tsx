@@ -54,7 +54,10 @@ export function PointDrawer({ ponto, pontos, lado, checklist, onAlternar, onIrPa
                   </span>
                   {ROTULO_TIPO_PONTO[ponto.tipo_ponto]}
                 </span>
-                <SheetTitle>{ponto.nome_local}</SheetTitle>
+                <SheetTitle>
+                  <span aria-hidden>{ponto.emoji} </span>
+                  {ponto.nome_local}
+                </SheetTitle>
                 <SheetDescription>{ponto.subtitulo_card}</SheetDescription>
                 <p className="mt-1 inline-flex items-center gap-1.5 text-sm font-medium">
                   <MoonStar className="size-4 text-accent-strong" aria-hidden />

@@ -26,6 +26,13 @@ export const PontoMapaSchema = z.object({
   id_ponto: z.string().regex(/^p\d+$/).describe('"p1", "p2", ... na ordem da rota'),
   ordem: z.int().min(1),
   nome_local: z.string().min(2).max(120),
+  // Roteiros gravados antes deste campo não têm emoji: o default mantém a leitura funcionando.
+  emoji: z
+    .string()
+    .min(1)
+    .max(16)
+    .describe("Um emoji que represente o lugar, ex.: 🏛️ para Roma, 🏔️ para as Dolomitas, 🏖️ para uma praia")
+    .default("📍"),
   tipo_ponto: z.enum(TIPOS_PONTO),
   coordenadas: CoordenadasSchema,
   dias_alocados: z.int().min(1).max(90),

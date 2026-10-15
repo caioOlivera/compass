@@ -14,12 +14,12 @@ export const ICONE_TRANSPORTE: Record<TipoTransporte, LucideIcon> = {
 
 /** Mesmas cores das linhas no mapa (MapLibre não lê variáveis CSS). */
 export const COR_TRANSPORTE: Record<TipoTransporte, string> = {
-  voo: "#6250d6",
-  trem: "#2a78d6",
+  voo: "#1f2b4d",
+  trem: "#2f6fd6",
   barco: "#0e9aa7",
   onibus: "#b0751c",
-  carro: "#1f6f5c",
-  outro: "#6b6b63",
+  carro: "#1f8a5b",
+  outro: "#6a7186",
 };
 
 export function LegResumo({ deslocamento, className }: { deslocamento: Deslocamento; className?: string }) {

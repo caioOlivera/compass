@@ -32,7 +32,26 @@ import { cn } from "@/lib/utils";
 // Este módulo só carrega no navegador (dynamic com ssr: false), então pode rodar no topo.
 maplibregl.setWorkerUrl("/maplibre-gl-worker.mjs");
 
-const ESTILO_PADRAO = "https://tiles.openfreemap.org/styles/positron";
+// Liberty: estilo colorido do OpenFreeMap (água, parques, relevo), sem token.
+const ESTILO_PADRAO = "https://tiles.openfreemap.org/styles/liberty";
+
+/**
+ * Os rótulos do estilo vêm no idioma local (ou em inglês). Os tiles do OpenMapTiles trazem o nome em
+ * português em "name:pt": trocamos o texto de toda camada de rótulo que usa o nome do lugar.
+ */
+function rotulosEmPortugues(mapa: maplibregl.Map) {
+  for (const camada of mapa.getStyle().layers ?? []) {
+    if (camada.type !== "symbol") continue;
+    const texto = mapa.getLayoutProperty(camada.id, "text-field");
+    if (!texto || !JSON.stringify(texto).includes("name")) continue;
+    mapa.setLayoutProperty(camada.id, "text-field", [
+      "coalesce",
+      ["get", "name:pt"],
+      ["get", "name:latin"],
+      ["get", "name"],
+    ]);
+  }
+}
 const CAMADA_CLIQUE = "trechos-clique";
 
 const corPorTipo = [
@@ -135,6 +154,7 @@ export default function ItineraryMap({ pontos, trechos, selecao, onSelecionar, d
       mapStyle={process.env.NEXT_PUBLIC_MAP_STYLE_URL || ESTILO_PADRAO}
       interactiveLayerIds={[CAMADA_CLIQUE]}
       onClick={aoClicar}
+      onLoad={(e) => rotulosEmPortugues(e.target)}
       onMouseEnter={() => setCursor("pointer")}
       onMouseLeave={() => setCursor("")}
       cursor={cursor}
@@ -152,7 +172,7 @@ export default function ItineraryMap({ pontos, trechos, selecao, onSelecionar, d
           type="line"
           filter={filtroDestaque}
           layout={{ "line-cap": "round" }}
-          paint={{ "line-color": "#13140f", "line-width": 2, "line-gap-width": 5, "line-opacity": 0.6 }}
+          paint={{ "line-color": "#1f2b4d", "line-width": 2, "line-gap-width": 5, "line-opacity": 0.6 }}
         />
       </Source>
 
@@ -189,7 +209,7 @@ export default function ItineraryMap({ pontos, trechos, selecao, onSelecionar, d
                 {p.ordem}
               </span>
               <span className="max-w-40 truncate rounded-md bg-surface/90 px-1.5 py-0.5 text-xs font-medium text-text shadow-sm backdrop-blur-sm">
-                {nomeCurto(p.nome_local)}
+                <span aria-hidden>{p.emoji}</span> {nomeCurto(p.nome_local)}
               </span>
             </button>
           </Marker>

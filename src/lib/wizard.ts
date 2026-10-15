@@ -34,7 +34,8 @@ export const RASCUNHO_VAZIO: TripRequestDraft = {
   auge_da_viagem: "",
   locais_desejados_complementares: [],
   locais_a_evitar: [],
-  cidade_origem: "",
+  // Saída padrão: São Paulo (o usuário troca se quiser)
+  cidade_origem: "São Paulo",
   aceita_outros_aeroportos: true,
   ritmo_viagem: undefined as unknown as TripRequestDraft["ritmo_viagem"],
   observacoes: "",

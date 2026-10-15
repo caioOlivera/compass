@@ -34,7 +34,7 @@ export default async function RoteirosPage() {
         titulo: r.title,
         criadoEm: dataCurta.format(new Date(r.created_at)),
         dias: it.data.resumo_estrategico.total_dias_viagem,
-        rota: pontos.map((p) => nomeCurto(p.nome_local)).join(" → "),
+        rota: pontos.map((p) => `${p.emoji} ${nomeCurto(p.nome_local)}`).join(" → "),
       },
     ];
   });

@@ -47,7 +47,7 @@ describe("checarRegrasDoRoteiro", () => {
   it("coordenadas invertidas caem fora da sub-região", () => {
     const r = roteiroPRD();
     r.pontos_mapa[0].coordenadas = { lat: 12.4964, lng: 41.9028 };
-    expect(checarRegrasDoRoteiro(r, pedidoPRD).join()).toMatch(/fora da sub-região europa-do-sul/);
+    expect(checarRegrasDoRoteiro(r, pedidoPRD).join()).toMatch(/fora da sub-região europa/);
   });
 
   it("bate-e-volta: mesmo local duas vezes", () => {
@@ -68,8 +68,8 @@ describe("checarRegrasDoRoteiro", () => {
 
 describe("sub-regiões", () => {
   it.each([
-    ["europa-do-sul", 37.0, 25.4], // Naxos
-    ["europa-do-sul", 28.29, -16.63], // Tenerife
+    ["europa", 37.0, 25.4], // Naxos
+    ["europa", 28.29, -16.63], // Tenerife
     ["america-do-sul", -0.74, -90.31], // Galápagos
     ["oceania", -17.53, -149.57], // Taiti
     ["oceania", -45.03, 168.66], // Queenstown
@@ -82,7 +82,7 @@ describe("sub-regiões", () => {
   });
 
   it("Tóquio não está na Europa do Sul", () => {
-    expect(dentroDaSubregiao("europa-do-sul", { lat: 35.68, lng: 139.69 })).toBe(false);
+    expect(dentroDaSubregiao("europa", { lat: 35.68, lng: 139.69 })).toBe(false);
   });
 });
 

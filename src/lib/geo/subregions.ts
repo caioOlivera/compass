@@ -10,9 +10,8 @@ const CAIXAS: Record<SubregiaoId, Caixa[]> = {
   "america-do-norte": [{ latMin: 14, latMax: 72, lngMin: -170, lngMax: -50 }],
   "america-central": [{ latMin: 5, latMax: 27, lngMin: -93, lngMax: -59 }],
   "america-do-sul": [{ latMin: -56, latMax: 13, lngMin: -92, lngMax: -34 }],
-  "europa-do-norte": [{ latMin: 47, latMax: 72, lngMin: -25, lngMax: 45 }],
-  "europa-do-sul": [{ latMin: 27, latMax: 48, lngMin: -19, lngMax: 35 }],
-  "europa-central-leste": [{ latMin: 41, latMax: 60, lngMin: -5, lngMax: 50 }],
+  // Dos Açores e Canárias à Rússia europeia, da Islândia a Chipre
+  europa: [{ latMin: 27, latMax: 72, lngMin: -32, lngMax: 50 }],
   "asia-leste": [{ latMin: 18, latMax: 54, lngMin: 73, lngMax: 146 }],
   // Índia, Paquistão, Nepal, Butão, Bangladesh, Sri Lanka, Maldivas
   "asia-sul": [{ latMin: -1, latMax: 37, lngMin: 60, lngMax: 98 }],

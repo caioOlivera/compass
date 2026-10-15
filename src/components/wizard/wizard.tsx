@@ -18,6 +18,7 @@ import {
   type PropsEtapa,
 } from "@/components/wizard/steps";
 import { TripRequestInputSchema, type TripRequestDraft } from "@/lib/validation/trip-request";
+import { SUBREGIOES_ANTIGAS } from "@/lib/constants";
 import { ETAPAS, etapaDoCampo, hojeLocal, RASCUNHO_VAZIO, validarEtapa, type ErrosEtapa } from "@/lib/wizard";
 
 const COMPONENTES: ((p: PropsEtapa) => React.ReactNode)[] = [
@@ -70,7 +71,13 @@ export function Wizard() {
     setHoje(hojeLocal());
     const salvo = lerRascunho();
     if (salvo) {
-      setRascunho({ ...RASCUNHO_VAZIO, ...salvo.rascunho });
+      const regiao = salvo.rascunho.continente_regiao as string | undefined;
+      setRascunho({
+        ...RASCUNHO_VAZIO,
+        ...salvo.rascunho,
+        // Rascunhos da época em que a Europa era dividida em três
+        ...(regiao && SUBREGIOES_ANTIGAS[regiao] ? { continente_regiao: SUBREGIOES_ANTIGAS[regiao] } : {}),
+      });
       setEtapa(Math.min(Math.max(salvo.etapa, 0), ETAPAS.length - 1));
     }
     setRestaurado(true);
