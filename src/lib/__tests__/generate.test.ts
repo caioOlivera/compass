@@ -52,6 +52,13 @@ describe("gerarRoteiro", () => {
     expect(p.fallbacks).toBe("default");
   });
 
+  it("não envia fallback para modelo que não aceita (Haiku)", async () => {
+    const { client, chamadas } = clienteFalso([{ texto: ok }]);
+    await gerarRoteiro(pedidoPRD, { ...opcoes(client), modelo: "claude-haiku-5-5" });
+    expect(chamadas[0]).not.toHaveProperty("fallbacks");
+    expect(chamadas[0]).not.toHaveProperty("betas");
+  });
+
   it("refaz com os erros quando a soma de dias não fecha", async () => {
     const { client, chamadas } = clienteFalso([{ texto: semDias() }, { texto: ok }]);
     const r = await gerarRoteiro(pedidoPRD, opcoes(client));

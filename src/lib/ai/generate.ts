@@ -10,6 +10,8 @@ import type { ItineraryPromptInput } from "@/lib/validation/trip-request";
 
 const MAX_TENTATIVAS = 2;
 
+const MODELOS_COM_FALLBACK = new Set(["claude-fable-5-1", "claude-opus-5-5", "claude-opus-5", "claude-sonnet-5-5"]);
+
 // Só o JSON Schema; sem o parse automático do SDK, que lança exceção e perderia os erros
 // de validação que queremos devolver ao modelo.
 const { type, schema } = betaZodOutputFormat(ItinerarySchema);
@@ -59,8 +61,10 @@ export async function gerarRoteiro(pedido: ItineraryPromptInput, opcoes: OpcoesG
         messages: [{ role: "user", content: montarMensagem(pedido, anterior) }],
         output_config: { effort: opcoes.effort, format: FORMATO_SAIDA },
         // Se o modelo principal recusar por engano, a API refaz no modelo de fallback.
-        betas: ["server-side-fallback-2026-07-01"],
-        fallbacks: "default",
+        // Só alguns modelos aceitam o parâmetro (o Haiku, por exemplo, responde 400).
+        ...(MODELOS_COM_FALLBACK.has(opcoes.modelo)
+          ? { betas: ["server-side-fallback-2026-07-01"], fallbacks: "default" as const }
+          : {}),
       },
       { signal: opcoes.signal },
     );
