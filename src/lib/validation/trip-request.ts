@@ -34,25 +34,30 @@ export const TripRequestInputSchema = z
     observacoes: z.string().trim().max(2000, "Máximo de 2000 caracteres").default(""),
   })
   .superRefine((v, ctx) => {
-    const dias = diasEntre(v.data_inicio, v.data_fim);
-    if (dias < 1) {
-      ctx.addIssue({ code: "custom", path: ["data_fim"], message: "O retorno precisa ser depois da saída" });
-    } else if (dias > VIAGEM_MAX_DIAS) {
-      ctx.addIssue({ code: "custom", path: ["data_fim"], message: `Viagens de até ${VIAGEM_MAX_DIAS} dias` });
-    }
-    const evitar = new Set(v.locais_a_evitar.map(normalizarNome));
-    const conflito = v.locais_desejados_complementares.find((l) => evitar.has(normalizarNome(l)));
-    if (conflito) {
-      ctx.addIssue({
-        code: "custom",
-        path: ["locais_a_evitar"],
-        message: `"${conflito}" está nas duas listas`,
-      });
-    }
-    if (evitar.has(normalizarNome(v.auge_da_viagem))) {
-      ctx.addIssue({ code: "custom", path: ["locais_a_evitar"], message: "O auge da viagem não pode ser evitado" });
-    }
+    const erroDatas = checarDatas(v.data_inicio, v.data_fim);
+    if (erroDatas) ctx.addIssue({ code: "custom", path: ["data_fim"], message: erroDatas });
+    const erroLocais = checarLocais(v.locais_desejados_complementares, v.locais_a_evitar, v.auge_da_viagem);
+    if (erroLocais) ctx.addIssue({ code: "custom", path: ["locais_a_evitar"], message: erroLocais });
   });
+
+// Regras entre campos, separadas do schema porque o Zod só roda o superRefine quando o objeto
+// inteiro é válido: o wizard precisa delas na etapa em que os campos aparecem.
+
+export function checarDatas(inicio: string, fim: string): string | null {
+  const dias = diasEntre(inicio, fim);
+  if (Number.isNaN(dias)) return null;
+  if (dias < 1) return "O retorno precisa ser depois da saída";
+  if (dias > VIAGEM_MAX_DIAS) return `Viagens de até ${VIAGEM_MAX_DIAS} dias`;
+  return null;
+}
+
+export function checarLocais(desejados: string[], evitar: string[], auge = ""): string | null {
+  const chavesEvitar = new Set(evitar.map(normalizarNome));
+  const conflito = desejados.find((l) => chavesEvitar.has(normalizarNome(l)));
+  if (conflito) return `"${conflito}" está nas duas listas`;
+  if (auge && chavesEvitar.has(normalizarNome(auge))) return "O auge da viagem não pode ser evitado";
+  return null;
+}
 
 export type TripRequestInput = z.infer<typeof TripRequestInputSchema>;
 /** Formato aceito antes dos defaults (estado do formulário). */

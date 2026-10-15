@@ -97,6 +97,7 @@ compass/
     ├── hooks/                      ← useGenerateItinerary, useItinerary, useChecklist
     ├── lib/
     │   ├── constants.ts            ← sub-regiões, ritmos, tipos de ponto
+    │   ├── wizard.ts               ← etapas do questionário e validação por etapa
     │   ├── ai/
     │   │   ├── client.ts           ← SDK da Anthropic (server-only)
     │   │   ├── generate.ts         ← chamada, retry e checagens de negócio
@@ -129,6 +130,17 @@ Migrações em `supabase/migrations/`, já aplicadas no projeto Supabase `compas
   com service_role (que ignora RLS).
 - `generations_last_24h(user_id)` conta gerações do dia para o limite por plano; só o servidor executa.
 - Apagar a conta em `auth.users` apaga perfil, pedidos e roteiros em cascata.
+
+## Questionário (`/nova-viagem`)
+
+`components/wizard/wizard.tsx` + `steps.tsx`, etapas e validação em `lib/wizard.ts`.
+
+- 7 etapas do PRD; cada uma valida só os próprios campos (`validarEtapa`) antes de avançar.
+- As regras entre campos (`checarDatas`, `checarLocais`) ficam fora do `superRefine` para rodarem na
+  etapa certa: no Zod, o `superRefine` só executa com o objeto inteiro válido.
+- Rascunho no `localStorage` (recarregar não perde as respostas); apagado quando o roteiro é gerado.
+- Envio: `POST /api/generate-itinerary` → tela de espera → `/roteiros/[id]`. Erro 400 volta para a
+  etapa do campo com problema; 401 vai para o login; demais erros mostram a mensagem e "Tentar de novo".
 
 ## Autenticação
 
@@ -192,7 +204,7 @@ Ajustes em relação ao JSON do PRD:
 4. ~~`POST /api/generate-itinerary` com Claude, retry e checagens~~
 5. ~~Mapa interativo (pins, linhas, drawer com checklist)~~
 6. ~~Autenticação (senha + OTP) e `proxy.ts`~~
-7. Wizard de 7 etapas
+7. ~~Wizard de 7 etapas~~
 
 Depois: base de conhecimento (RAG com posts autorizados do *Como Viajar com Luiz* em pgvector no
 próprio Supabase) e módulo de voos (Duffel/Kiwi) usando os hubs de entrada e saída do roteiro.
