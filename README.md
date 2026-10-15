@@ -7,15 +7,25 @@ volta desnecessária, tempo de cada parada ajustado ao seu ritmo e tudo desenhad
 
 ```bash
 npm install
-cp .env.example .env.local
+cp .env.example .env.local   # preencha as chaves (Supabase e Anthropic)
 npm run dev        # http://localhost:3000
 ```
 
 ## Banco de dados
 
-Crie um projeto no [Supabase](https://supabase.com) e aplique a migração de `supabase/migrations/`
-(pelo SQL Editor do painel ou com `npx supabase db push`). Em *Authentication → Providers → Email*,
-deixe ligados "Confirm email" e o envio de OTP.
+O projeto Supabase `compass` já tem as migrações de `supabase/migrations/` aplicadas. Para um projeto
+novo, aplique-as pelo SQL Editor ou com `npx supabase db push`.
+
+Configuração de Auth no painel do Supabase (não dá para versionar no repositório):
+
+1. **Authentication → URL Configuration**: *Site URL* = domínio de produção; em *Redirect URLs*
+   inclua `http://localhost:3000/auth/callback` e `https://SEU-DOMINIO/auth/callback`.
+2. **Authentication → Email Templates**: nos templates *Confirm signup* e *Magic Link*, inclua o
+   código para quem prefere digitar em vez de clicar no link, por exemplo:
+   `<p>Seu código: <strong>{{ .Token }}</strong></p>`
+3. **Authentication → Providers → Email**: "Confirm email" ligado.
+4. Para produção, configure um SMTP próprio (*Authentication → Emails → SMTP*): o envio padrão do
+   Supabase tem limite baixo de e-mails por hora.
 
 ## Documentação
 

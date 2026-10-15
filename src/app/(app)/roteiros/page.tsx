@@ -2,6 +2,7 @@ import { CalendarDays, MapPin, Plus } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { AppHeader } from "@/components/app-header";
 import { createClient } from "@/lib/supabase/server";
 import { nomeCurto } from "@/lib/itinerary/map";
 import { ItinerarySchema } from "@/lib/validation/itinerary";
@@ -39,6 +40,8 @@ export default async function RoteirosPage() {
   });
 
   return (
+    <>
+    <AppHeader />
     <main className="mx-auto flex max-w-3xl flex-col gap-8 px-4 py-12 sm:px-6">
       <header className="flex flex-wrap items-center justify-between gap-4">
         <h1 className="text-3xl font-semibold tracking-tight">Meus roteiros</h1>
@@ -86,5 +89,6 @@ export default async function RoteirosPage() {
         </ul>
       )}
     </main>
+    </>
   );
 }

@@ -130,6 +130,20 @@ Migrações em `supabase/migrations/`, já aplicadas no projeto Supabase `compas
 - `generations_last_24h(user_id)` conta gerações do dia para o limite por plano; só o servidor executa.
 - Apagar a conta em `auth.users` apaga perfil, pedidos e roteiros em cascata.
 
+## Autenticação
+
+| Tela | Como funciona |
+|---|---|
+| `/cadastro` | nome, e-mail, telefone, senha → `signUp` com `full_name`/`phone` nos metadados (o trigger cria o profile) → `/verificar` |
+| `/login` | aba "Com senha" (`signInWithPassword`) ou "Código por e-mail" (`signInWithOtp`, sem criar conta) |
+| `/verificar` | código de 6 dígitos → `verifyOtp({ type: "email" })`, vale para cadastro e login; reenvio após 60 s |
+| `/auth/callback` | destino dos links dos e-mails (`?code=` PKCE ou `?token_hash=`) |
+| `src/proxy.ts` | renova a sessão a cada navegação; sem sessão em `/roteiros` e `/nova-viagem` → `/login?next=`; logado em `/login` → `/roteiros` |
+
+- `next` só aceita caminho interno (`caminhoSeguro`), contra open redirect.
+- Erros do Supabase Auth traduzidos por código em `mensagemErroAuth`.
+- A proteção dos dados é a RLS; o proxy só decide navegação.
+
 ## Mapa interativo
 
 Tela `/roteiros/[id]` (e `/exemplo`, demonstração pública com o roteiro do PRD).
@@ -177,7 +191,7 @@ Ajustes em relação ao JSON do PRD:
 3. ~~Tipos e schemas Zod de entrada, saída e estado do mapa~~
 4. ~~`POST /api/generate-itinerary` com Claude, retry e checagens~~
 5. ~~Mapa interativo (pins, linhas, drawer com checklist)~~
-6. Autenticação (senha + OTP) e `proxy.ts`
+6. ~~Autenticação (senha + OTP) e `proxy.ts`~~
 7. Wizard de 7 etapas
 
 Depois: base de conhecimento (RAG com posts autorizados do *Como Viajar com Luiz* em pgvector no
