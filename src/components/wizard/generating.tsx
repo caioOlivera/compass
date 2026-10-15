@@ -28,7 +28,7 @@ export function Gerando({ auge }: { auge: string }) {
       <motion.span
         animate={{ rotate: 360 }}
         transition={{ duration: 6, repeat: Infinity, ease: "linear" }}
-        className="text-accent"
+        className="text-accent-strong"
       >
         <Compass className="size-12" aria-hidden />
       </motion.span>

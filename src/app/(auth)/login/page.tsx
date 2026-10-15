@@ -19,7 +19,7 @@ export default async function LoginPage({ searchParams }: Props) {
       rodape={
         <>
           Ainda não tem conta?{" "}
-          <Link href={`/cadastro?next=${encodeURIComponent(next)}`} className="font-medium text-accent underline">
+          <Link href={`/cadastro?next=${encodeURIComponent(next)}`} className="font-medium text-accent-strong underline">
             Criar conta
           </Link>
         </>

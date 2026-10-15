@@ -46,7 +46,7 @@ export function RouteSidebar({ roteiro, trechos, selecao, onSelecionar, progress
 
       <section className="flex flex-col gap-3 rounded-xl border border-border bg-surface p-4">
         <p className="flex items-start gap-2 text-sm font-medium">
-          <Plane className="mt-0.5 size-4 shrink-0 text-accent" aria-hidden />
+          <Plane className="mt-0.5 size-4 shrink-0 text-accent-strong" aria-hidden />
           {r.logistica_voos}
         </p>
         <p className="text-sm text-text-2">{r.estrategia_deslocamento}</p>

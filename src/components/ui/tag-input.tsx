@@ -46,7 +46,7 @@ export function TagInput({ label, valores, onChange, placeholder, dica, erro, ma
             key={v}
             className={cn(
               "inline-flex items-center gap-1 rounded-md py-1 pr-1 pl-2 text-sm",
-              tom === "negativo" ? "bg-red-500/10 text-red-700 line-through decoration-red-700/40" : "bg-accent/10 text-accent",
+              tom === "negativo" ? "bg-red-500/10 text-red-700 line-through decoration-red-700/40" : "bg-accent/10 text-accent-strong",
             )}
           >
             {v}

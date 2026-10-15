@@ -39,7 +39,7 @@ export function EtapaRegiao({ rascunho, atualizar, erros }: PropsEtapa) {
                   className={cn(
                     "relative flex cursor-pointer items-center rounded-xl border border-border bg-surface px-4 py-3 text-sm font-medium transition",
                     "hover:border-text-3 has-focus-visible:ring-2 has-focus-visible:ring-accent/40",
-                    ativo && "border-accent bg-accent/8 text-accent hover:border-accent",
+                    ativo && "border-accent bg-accent/8 text-accent-strong hover:border-accent",
                   )}
                 >
                   <input
@@ -267,8 +267,8 @@ export function EtapaRitmo({ rascunho, atualizar, erros }: PropsEtapa) {
               className="sr-only"
             />
             <span className="flex items-center justify-between">
-              <span className={cn("font-medium", ativo && "text-accent")}>{r.nome}</span>
-              {ativo && <Check className="size-4 text-accent" aria-hidden />}
+              <span className={cn("font-medium", ativo && "text-accent-strong")}>{r.nome}</span>
+              {ativo && <Check className="size-4 text-accent-strong" aria-hidden />}
             </span>
             <span className="text-sm text-text-2">{r.descricao}</span>
             <span className="flex flex-wrap gap-x-5 gap-y-1 text-xs text-text-2">

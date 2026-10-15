@@ -49,7 +49,7 @@ export function FormAlert({ children, tipo = "erro" }: { children: React.ReactNo
       role={tipo === "erro" ? "alert" : "status"}
       className={cn(
         "rounded-lg px-3 py-2.5 text-sm",
-        tipo === "erro" ? "bg-red-500/10 text-red-700" : "bg-accent/10 text-accent",
+        tipo === "erro" ? "bg-red-500/10 text-red-700" : "bg-accent/10 text-accent-strong",
       )}
     >
       {children}

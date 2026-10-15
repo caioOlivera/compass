@@ -56,11 +56,11 @@ export default async function RoteirosPage() {
 
       {roteiros.length === 0 ? (
         <section className="flex flex-col items-start gap-3 rounded-xl border border-dashed border-border p-8">
-          <MapPin className="size-6 text-accent" aria-hidden />
+          <MapPin className="size-6 text-accent-strong" aria-hidden />
           <p className="font-medium">Você ainda não tem roteiros.</p>
           <p className="text-sm text-text-2">
             Responda o questionário e receba sua rota no mapa. Quer ver antes como fica?{" "}
-            <Link href="/exemplo" className="text-accent underline">
+            <Link href="/exemplo" className="text-accent-strong underline">
               Abra o exemplo
             </Link>
             .

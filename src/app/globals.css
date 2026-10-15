@@ -2,39 +2,33 @@
 
 :root {
   color-scheme: light;
-  --bg: #f7f6f2;
-  --surface: #fdfcf9;
-  --surface-2: #efede6;
-  --border: #e2dfd6;
-  --text: #13140f;
-  --text-2: #4f5048;
-  --text-3: #8a8a80;
-  --accent: #1f6f5c;
-  --accent-contrast: #ffffff;
+  /* Identidade Compass: azul-marinho sobre branco, tangerina só na ação principal */
+  --bg: #ffffff;
+  --surface: #f4f4f2;
+  --surface-2: #e9e8e4;
+  --border: #e3e1dc;
+  --text: #1f2b4d;
+  --text-2: #4a5472;
+  --text-3: #6a7186;
+  --accent: #f7941d;
+  --accent-contrast: #1f2b4d;
+  /* Tangerina escura: texto e ícones de destaque sobre fundo claro (5.3:1) */
+  --accent-strong: #a8560a;
+  --field-dark: #05070a;
+  --field-dark-ink: #ffffff;
+  --field-warm: #e3e1dc;
 
-  /* Tipos de ponto no mapa (ordem fixa, usados nos pins e na legenda) */
-  --pin-hub-entrada: #2a78d6;
-  --pin-base: #8a8a80;
-  --pin-auge: #eb6834;
-  --pin-hub-saida: #6250d6;
-}
+  /* Tipos de ponto no mapa (pins, legenda e badges) */
+  --pin-hub-entrada: #1f2b4d;
+  --pin-base: #6a7186;
+  --pin-auge: #f7941d;
+  --pin-hub-saida: #0e7c86;
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    color-scheme: dark;
-    --bg: #11120f;
-    --surface: #191a16;
-    --surface-2: #22231e;
-    --border: #2e2f29;
-    --text: #f1f0ea;
-    --text-2: #b4b3aa;
-    --text-3: #7d7c74;
-    --accent: #4fb89b;
-    --accent-contrast: #0b1712;
-  }
+  --font-sans: "Inter Tight Variable", ui-sans-serif, system-ui, sans-serif;
 }
 
 @theme inline {
+  --font-sans: var(--font-sans);
   --color-bg: var(--bg);
   --color-surface: var(--surface);
   --color-surface-2: var(--surface-2);
@@ -44,11 +38,22 @@
   --color-text-3: var(--text-3);
   --color-accent: var(--accent);
   --color-accent-contrast: var(--accent-contrast);
+  --color-accent-strong: var(--accent-strong);
+  --color-field-dark: var(--field-dark);
+  --color-field-dark-ink: var(--field-dark-ink);
+  --color-field-warm: var(--field-warm);
 }
 
 body {
   background: var(--bg);
   color: var(--text);
+  font-family: var(--font-sans);
+  letter-spacing: -0.01em;
+}
+
+::selection {
+  background: var(--accent);
+  color: var(--accent-contrast);
 }
 
 /* Popup dos trechos no mapa (MapLibre), com os tokens do Compass */
@@ -78,4 +83,72 @@ body {
 }
 .compass-popup.maplibregl-popup-anchor-top .maplibregl-popup-tip {
   border-bottom-color: var(--surface);
+}
+
+/* Entrada das partes de cada seção, ligada à rolagem. Só CSS: sem suporte ou sem JS, o conteúdo
+   aparece parado. Desligada com prefers-reduced-motion. */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .reveal {
+      animation: revelar linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 45%;
+    }
+    .reveal + .reveal,
+    .reveal + * .reveal {
+      animation-range: entry 8% entry 55%;
+    }
+  }
+}
+@keyframes revelar {
+  from {
+    opacity: 0;
+    translate: 0 28px;
+  }
+}
+
+/* Slider de etapas da landing: trilho de 8px, parte percorrida em tinta cheia, polegar quadrado tangerina */
+.stage-range {
+  appearance: none;
+  height: 32px;
+  background: transparent;
+  cursor: pointer;
+}
+.stage-range::-webkit-slider-runnable-track {
+  height: 8px;
+  background: transparent;
+}
+.stage-range::-moz-range-track {
+  height: 8px;
+  background: transparent;
+}
+.stage-range::-webkit-slider-thumb {
+  appearance: none;
+  width: 32px;
+  height: 32px;
+  margin-top: -12px;
+  background: var(--accent);
+  border: 0;
+  transition: scale 150ms;
+}
+.stage-range::-moz-range-thumb {
+  width: 32px;
+  height: 32px;
+  background: var(--accent);
+  border: 0;
+  border-radius: 0;
+}
+.stage-range:active::-webkit-slider-thumb {
+  scale: 1.1;
+}
+.stage-range:focus-visible {
+  outline: 2px solid var(--text);
+  outline-offset: 4px;
+}
+@media (max-width: 640px) {
+  .stage-range::-webkit-slider-thumb {
+    width: 40px;
+    height: 40px;
+    margin-top: -16px;
+  }
 }

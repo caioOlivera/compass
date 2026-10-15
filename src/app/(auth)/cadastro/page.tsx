@@ -17,7 +17,7 @@ export default async function CadastroPage({ searchParams }: Props) {
       rodape={
         <>
           Já tem conta?{" "}
-          <Link href={`/login?next=${encodeURIComponent(next)}`} className="font-medium text-accent underline">
+          <Link href={`/login?next=${encodeURIComponent(next)}`} className="font-medium text-accent-strong underline">
             Entrar
           </Link>
         </>

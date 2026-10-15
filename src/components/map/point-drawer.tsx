@@ -57,7 +57,7 @@ export function PointDrawer({ ponto, pontos, lado, checklist, onAlternar, onIrPa
                 <SheetTitle>{ponto.nome_local}</SheetTitle>
                 <SheetDescription>{ponto.subtitulo_card}</SheetDescription>
                 <p className="mt-1 inline-flex items-center gap-1.5 text-sm font-medium">
-                  <MoonStar className="size-4 text-accent" aria-hidden />
+                  <MoonStar className="size-4 text-accent-strong" aria-hidden />
                   {ponto.dias_alocados} {ponto.dias_alocados === 1 ? "dia" : "dias"} nesta base
                 </p>
               </SheetHeader>
@@ -84,7 +84,7 @@ export function PointDrawer({ ponto, pontos, lado, checklist, onAlternar, onIrPa
                             className={cn(
                               "w-fit rounded-full px-2 py-0.5 text-[11px] font-medium",
                               item.categoria === "Imperdível"
-                                ? "bg-accent/12 text-accent"
+                                ? "bg-accent/12 text-accent-strong"
                                 : "bg-surface-2 text-text-2",
                             )}
                           >
