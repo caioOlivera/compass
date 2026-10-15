@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { z } from "zod";
 import { ItineraryView } from "@/components/itinerary/itinerary-view";
-import { buscarFoto } from "@/lib/images/pexels";
+import { buscarFoto } from "@/lib/images/fotos";
 import { fotosDoRoteiro } from "@/lib/itinerary/fotos";
 import { createClient } from "@/lib/supabase/server";
 import { ChecklistStateSchema, ItinerarySchema } from "@/lib/validation/itinerary";

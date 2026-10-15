@@ -53,8 +53,12 @@ export function PointDrawer({ ponto, pontos, fotos, lado, checklist, onAlternar,
                   <FotoDestino foto={foto} className="h-44 sm:h-52" />
                   <figcaption className="px-5 pt-1.5 text-[11px] text-text-3">
                     Foto:{" "}
-                    <a href={foto.paginaUrl} target="_blank" rel="noreferrer" className="underline hover:text-text-2">
-                      {foto.autor} / Pexels
+                    <a href={foto.autorUrl} target="_blank" rel="noreferrer" className="underline hover:text-text-2">
+                      {foto.autor}
+                    </a>{" "}
+                    /{" "}
+                    <a href={foto.fonteUrl} target="_blank" rel="noreferrer" className="underline hover:text-text-2">
+                      {foto.fonte}
                     </a>
                   </figcaption>
                 </figure>

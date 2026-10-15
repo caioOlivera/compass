@@ -1,6 +1,6 @@
 import type { SubregiaoId } from "@/lib/constants";
 
-// Conteúdo visual da landing. `busca` é a consulta em inglês para o Pexels (rende fotos melhores);
+// Conteúdo visual da landing. `busca` é a consulta em inglês para o banco de fotos (rende fotos melhores);
 // `cor` é o fundo do cartão quando não há foto.
 
 export type Regiao = { id: SubregiaoId; nome: string; destaques: string; busca: string; emoji: string; cor: string };

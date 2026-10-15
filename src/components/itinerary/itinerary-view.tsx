@@ -21,7 +21,7 @@ const LARGURA_PAINEL = 420;
 
 type Props = {
   roteiro: Itinerary;
-  /** Foto de cada parada (Pexels); vazio sem chave */
+  /** Foto de cada parada (Unsplash/Pexels); vazio sem chave */
   fotos?: FotosPorPonto;
   checklistInicial: ChecklistState;
   /** Sem id = demonstração: o checklist não é salvo. */

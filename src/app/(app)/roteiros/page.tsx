@@ -4,7 +4,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { AppHeader } from "@/components/app-header";
 import { FotoDestino } from "@/components/ui/foto";
-import { buscarFoto } from "@/lib/images/pexels";
+import { buscarFoto } from "@/lib/images/fotos";
 import { consultaDaParada, pontoDeCapa } from "@/lib/itinerary/fotos";
 import { nomeCurto } from "@/lib/itinerary/map";
 import { createClient } from "@/lib/supabase/server";
@@ -31,7 +31,7 @@ export default async function RoteirosPage() {
     const it = ItinerarySchema.safeParse(r.itinerary);
     return it.success ? [{ ...r, roteiro: it.data }] : [];
   });
-  // Capa = foto do auge (Pexels, em cache no servidor); sem chave, cor + emoji.
+  // Capa = foto do auge (Unsplash/Pexels, em cache no servidor); sem chave, cor + emoji.
   const capas = await Promise.all(
     validos.map((r) => buscarFoto(consultaDaParada(pontoDeCapa(r.roteiro).nome_local), { idioma: "pt-BR", orientacao: "landscape" })),
   );

@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRef } from "react";
 import { DESTINOS_LANDING, linkQuestionario } from "@/components/landing/destinos";
 import { FotoDestino } from "@/components/ui/foto";
-import type { Foto } from "@/lib/images/pexels";
+import type { Foto } from "@/lib/images/fotos";
 
 /** Carrossel de destinos: cada cartão abre o questionário com o destino como auge. */
 export function DestinosCarrossel({ fotos }: { fotos: (Foto | null)[] }) {

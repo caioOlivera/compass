@@ -1,4 +1,4 @@
-import type { Foto } from "@/lib/images/pexels";
+import type { Foto } from "@/lib/images/fotos";
 import { nomeCurto } from "@/lib/itinerary/map";
 import type { Itinerary } from "@/lib/validation/itinerary";
 

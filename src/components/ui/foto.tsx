@@ -1,11 +1,11 @@
 import type * as React from "react";
-import type { Foto } from "@/lib/images/pexels";
+import type { Foto } from "@/lib/images/fotos";
 import { cn } from "@/lib/utils";
 
 type Props = {
   foto: Foto | null | undefined;
   tamanho?: "grande" | "media" | "retrato";
-  /** Mostrado no lugar da foto quando não há (sem chave do Pexels ou busca vazia) */
+  /** Mostrado no lugar da foto quando não há (sem chave do banco de fotos ou busca vazia) */
   emoji?: string;
   /** Cor do cartão sem foto */
   corReserva?: string;
@@ -17,7 +17,7 @@ type Props = {
 };
 
 /**
- * Foto de destino ocupando o contêiner, com o crédito do Pexels no title.
+ * Foto de destino ocupando o contêiner, com o crédito do autor no title.
  * Sem foto, vira um bloco de cor com o emoji do lugar, no mesmo tamanho.
  */
 export function FotoDestino({
@@ -36,11 +36,11 @@ export function FotoDestino({
       style={{ background: foto?.cor ?? corReserva ?? "var(--surface-2)" }}
     >
       {foto ? (
-        // eslint-disable-next-line @next/next/no-img-element -- fotos externas do Pexels, já em tamanho certo
+        // eslint-disable-next-line @next/next/no-img-element -- fotos externas (Unsplash/Pexels), já em tamanho certo
         <img
           src={foto[tamanho]}
           alt={foto.alt}
-          title={`Foto: ${foto.autor} / Pexels`}
+          title={`Foto: ${foto.autor} / ${foto.fonte}`}
           loading={prioridade ? "eager" : "lazy"}
           decoding="async"
           className={cn("absolute inset-0 h-full w-full object-cover", imgClassName)}

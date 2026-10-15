@@ -49,13 +49,19 @@ escolhido não aceitar `json_schema`, use `AI_JSON_MODE=json_object`.
 **OpenRouter**: chave em https://openrouter.ai, `AI_BASE_URL=https://openrouter.ai/api/v1` e um
 modelo com `:free` no nome.
 
-## Fotos (Pexels, grátis)
+## Fotos (Unsplash ou Pexels, grátis)
 
-A landing e as paradas do roteiro usam fotos do [Pexels](https://www.pexels.com). Crie uma chave
-gratuita em https://www.pexels.com/api, defina `PEXELS_API_KEY` (na Vercel: Settings → Environment
-Variables, depois um Redeploy). As buscas rodam só no servidor e ficam em cache por uma semana; sem
-chave, os cartões mostram a cor e o emoji de cada destino. Os créditos dos fotógrafos aparecem no
-rodapé e em cada parada.
+A landing, as capas e as paradas do roteiro usam fotos de bancos gratuitos. Basta uma chave:
+
+- **Unsplash** (recomendado): crie uma conta de desenvolvedor em https://unsplash.com/developers,
+  clique em **New Application**, aceite os termos e copie a **Access Key** para `UNSPLASH_ACCESS_KEY`.
+  No modo "Demo" o limite é 50 buscas por hora; peça o modo "Production" na própria página do app
+  (5.000/hora) quando o site estiver no ar.
+- **Pexels**: `PEXELS_API_KEY` (https://www.pexels.com/api; a emissão de chaves novas pode estar pausada).
+
+Na Vercel: Settings → Environment Variables, depois um Redeploy. As buscas rodam só no servidor e
+ficam em cache por uma semana. Sem chave, os cartões mostram a cor e o emoji de cada destino. Os
+créditos (autor + banco) aparecem no rodapé, em cada parada e no PDF.
 
 ## Perfil e PDF
 

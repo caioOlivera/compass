@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { ItineraryView } from "@/components/itinerary/itinerary-view";
-import { buscarFoto } from "@/lib/images/pexels";
+import { buscarFoto } from "@/lib/images/fotos";
 import { fotosDoRoteiro } from "@/lib/itinerary/fotos";
 import { roteiroPRD } from "@/lib/itinerary/exemplo";
 

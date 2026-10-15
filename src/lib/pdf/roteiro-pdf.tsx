@@ -37,7 +37,7 @@ const COR_PIN: Record<TipoPonto, string> = {
 };
 
 export type ImagemPdf = { data: Buffer; format: "jpg" | "png" };
-export type FotoPdf = { imagem: ImagemPdf; autor: string };
+export type FotoPdf = { imagem: ImagemPdf; autor: string; fonte: string };
 
 export type DadosPdf = {
   roteiro: Itinerary;
@@ -82,7 +82,7 @@ function DocumentoRoteiro({ roteiro, checklist, capa, miniaturas = {}, geradoEm 
   const titulo = semEmoji(roteiro.titulo);
   const data = new Intl.DateTimeFormat("pt-BR", { day: "numeric", month: "long", year: "numeric" }).format(geradoEm);
   const projetados = projetarRota(pontos, LARGURA_MAPA, ALTURA_MAPA, 34);
-  const creditos = [capa, ...Object.values(miniaturas)].filter((f): f is FotoPdf => !!f).map((f) => f.autor);
+  const creditos = [capa, ...Object.values(miniaturas)].filter((f): f is FotoPdf => !!f).map((f) => `${f.autor} / ${f.fonte}`);
 
   return (
     <Document title={titulo} author="Compass" subject="Roteiro de viagem" creator="Compass" language="pt-BR">
@@ -96,7 +96,7 @@ function DocumentoRoteiro({ roteiro, checklist, capa, miniaturas = {}, geradoEm 
           <View>
             <Image src={capa.imagem} style={s.capa} />
             <Text style={[s.pequeno, { marginTop: 3 }]}>
-              {semEmoji(nomeCurto(auge.nome_local))} · Foto: {capa.autor} / Pexels
+              {semEmoji(nomeCurto(auge.nome_local))} · Foto: {capa.autor} / {capa.fonte}
             </Text>
           </View>
         )}
@@ -214,7 +214,7 @@ function DocumentoRoteiro({ roteiro, checklist, capa, miniaturas = {}, geradoEm 
         <View style={{ marginTop: 22 }} wrap={false}>
           <Text style={s.pequeno}>
             Roteiro sugerido por IA: confira horários, preços e regras de entrada antes de comprar.
-            {creditos.length > 0 ? ` Fotos: ${[...new Set(creditos)].join(", ")} / Pexels.` : ""}
+            {creditos.length > 0 ? ` Fotos: ${[...new Set(creditos)].join(", ")}.` : ""}
           </Text>
         </View>
 

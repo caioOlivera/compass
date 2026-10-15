@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Logo } from "@/components/logo";
 import { FotoDestino } from "@/components/ui/foto";
-import type { Foto } from "@/lib/images/pexels";
+import type { Foto } from "@/lib/images/fotos";
 
 /** Chamada final sobre uma foto grande. */
 export function ChamadaFinal({ foto }: { foto: Foto | null }) {
@@ -33,7 +33,13 @@ export function ChamadaFinal({ foto }: { foto: Foto | null }) {
 }
 
 export function Rodape({ creditos }: { creditos: Foto[] }) {
-  const autores = [...new Set(creditos.map((f) => f.autor))];
+  // Crédito agrupado por banco: "Unsplash (Ana, Bruno)"
+  const porFonte = new Map<string, { url: string; autores: Set<string> }>();
+  for (const f of creditos) {
+    const grupo = porFonte.get(f.fonte) ?? { url: f.fonteUrl, autores: new Set<string>() };
+    grupo.autores.add(f.autor);
+    porFonte.set(f.fonte, grupo);
+  }
   return (
     <footer className="border-t border-border bg-surface">
       <div className="mx-auto grid max-w-6xl gap-10 px-4 py-12 sm:px-6 md:grid-cols-[1.4fr_1fr_1fr]">
@@ -60,15 +66,15 @@ export function Rodape({ creditos }: { creditos: Foto[] }) {
       </div>
       <div className="mx-auto flex max-w-6xl flex-col gap-2 border-t border-border px-4 py-5 text-xs text-text-2 sm:px-6">
         <p>© 2026 Compass. Roteiros sugeridos por IA: confira horários, preços e regras antes de comprar.</p>
-        {autores.length > 0 && (
-          <p>
+        {[...porFonte].map(([fonte, { url, autores }]) => (
+          <p key={fonte}>
             Fotos:{" "}
-            <a href="https://www.pexels.com" target="_blank" rel="noreferrer" className="underline hover:text-text">
-              Pexels
+            <a href={url} target="_blank" rel="noreferrer" className="underline hover:text-text">
+              {fonte}
             </a>{" "}
-            ({autores.join(", ")}).
+            ({[...autores].join(", ")}).
           </p>
-        )}
+        ))}
       </div>
     </footer>
   );

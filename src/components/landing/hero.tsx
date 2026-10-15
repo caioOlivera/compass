@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { linkQuestionario, MOSAICO_HERO } from "@/components/landing/destinos";
 import { FotoDestino } from "@/components/ui/foto";
-import type { Foto } from "@/lib/images/pexels";
+import type { Foto } from "@/lib/images/fotos";
 
 const POPULARES = [
   { nome: "Dolomitas", emoji: "🏔️", regiao: "europa" },

@@ -1,21 +1,22 @@
 import "server-only";
-import { buscarFoto, type Foto } from "@/lib/images/pexels";
+import { buscarFoto, type Foto } from "@/lib/images/fotos";
 import { consultaDaParada, pontoDeCapa } from "@/lib/itinerary/fotos";
 import type { FotoPdf, ImagemPdf } from "@/lib/pdf/roteiro-pdf";
 import type { Itinerary } from "@/lib/validation/itinerary";
 
 const LIMITE_BYTES = 3 * 1024 * 1024;
 
-/** O CDN do Pexels recorta pelo tamanho pedido na URL: miniaturas leves para o PDF. */
+/** Os CDNs do Pexels e do Unsplash recortam pelo tamanho pedido na URL: imagens leves e em JPEG para o PDF. */
 export function urlRecortada(url: string, w: number, h: number): string {
   try {
     const u = new URL(url);
-    if (u.hostname !== "images.pexels.com") return url;
-    u.searchParams.set("auto", "compress");
-    u.searchParams.set("cs", "tinysrgb");
-    u.searchParams.set("fit", "crop");
-    u.searchParams.set("w", String(w));
-    u.searchParams.set("h", String(h));
+    const tamanho = { fit: "crop", w: String(w), h: String(h) };
+    let extras: Record<string, string>;
+    if (u.hostname === "images.pexels.com") extras = { auto: "compress", cs: "tinysrgb" };
+    else if (u.hostname === "images.unsplash.com") extras = { fm: "jpg", q: "80" };
+    else return url;
+    if (u.hostname === "images.unsplash.com") u.searchParams.delete("auto"); // auto=format pode virar WebP/AVIF
+    for (const [k, v] of Object.entries({ ...extras, ...tamanho })) u.searchParams.set(k, v);
     return u.toString();
   } catch {
     return url;
@@ -40,7 +41,7 @@ export async function baixarImagem(url: string): Promise<ImagemPdf | null> {
 async function paraPdf(foto: Foto | null, w: number, h: number): Promise<FotoPdf | null> {
   if (!foto) return null;
   const imagem = await baixarImagem(urlRecortada(foto.media, w, h));
-  return imagem ? { imagem, autor: foto.autor } : null;
+  return imagem ? { imagem, autor: foto.autor, fonte: foto.fonte } : null;
 }
 
 /** Capa (foto do auge) e miniatura de cada parada, prontas para o PDF. */

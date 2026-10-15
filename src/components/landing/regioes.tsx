@@ -2,7 +2,7 @@ import { ArrowUpRight } from "lucide-react";
 import Link from "next/link";
 import { linkQuestionario, REGIOES_LANDING } from "@/components/landing/destinos";
 import { FotoDestino } from "@/components/ui/foto";
-import type { Foto } from "@/lib/images/pexels";
+import type { Foto } from "@/lib/images/fotos";
 import { cn } from "@/lib/utils";
 
 /** Grade de regiões com foto: cada uma abre o questionário com a região escolhida. */

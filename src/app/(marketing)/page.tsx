@@ -9,7 +9,7 @@ import { RouteStory } from "@/components/landing/route-story";
 import { Showcase } from "@/components/landing/showcase";
 import { SiteHeader } from "@/components/landing/site-header";
 import { Stages } from "@/components/landing/stages";
-import { buscarFoto, buscarFotos, type Foto } from "@/lib/images/pexels";
+import { buscarFoto, buscarFotos, type Foto } from "@/lib/images/fotos";
 
 export const metadata: Metadata = {
   title: "Compass: roteiros de viagem fluidos",
@@ -17,7 +17,7 @@ export const metadata: Metadata = {
     "Roteiros que entram por uma cidade e saem por outra. Responda sete perguntas e receba a rota no mapa, com os dias de cada parada, os trechos e o checklist.",
 };
 
-// As fotos vêm do Pexels (cache de uma semana no servidor). Sem chave ou sem rede, os cartões
+// As fotos vêm do Unsplash/Pexels (cache de uma semana no servidor). Sem chave ou sem rede, os cartões
 // mostram a cor e o emoji de cada destino.
 export const revalidate = 604800;
 
