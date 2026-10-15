@@ -1,10 +1,15 @@
 import { z } from "zod";
 import {
   FLEXIBILIDADE_MAX_DIAS,
+  INTERESSES,
   LOCAIS_MAX,
+  ORCAMENTO_IDS,
+  REGIOES_MAX,
   RITMO_IDS,
   SUBREGIAO_IDS,
+  SUBREGIOES_ANTIGAS,
   VIAGEM_MAX_DIAS,
+  type SubregiaoId,
 } from "@/lib/constants";
 import type { TablesInsert } from "@/types/database";
 
@@ -20,7 +25,11 @@ const listaDeLocais = z
 
 export const TripRequestInputSchema = z
   .object({
-    continente_regiao: z.enum(SUBREGIAO_IDS, "Escolha uma sub-região"),
+    regioes: z
+      .array(z.enum(SUBREGIAO_IDS, "Região inválida"), "Escolha pelo menos uma região")
+      .min(1, "Escolha pelo menos uma região")
+      .max(REGIOES_MAX, `No máximo ${REGIOES_MAX} regiões`)
+      .transform((r) => [...new Set(r)]),
     data_inicio: z.iso.date("Data de saída inválida"),
     data_fim: z.iso.date("Data de retorno inválida"),
     flexibilidade_dias_ida: z.int().min(0).max(FLEXIBILIDADE_MAX_DIAS).default(0),
@@ -31,6 +40,10 @@ export const TripRequestInputSchema = z
     cidade_origem: z.string().trim().min(2, "Informe a cidade de origem").max(120),
     aceita_outros_aeroportos: z.boolean().default(false),
     ritmo_viagem: z.enum(RITMO_IDS, "Escolha um ritmo"),
+    orcamento: z.enum(ORCAMENTO_IDS, "Escolha uma faixa de orçamento").default("medio"),
+    adultos: z.int("Informe quantos adultos").min(1, "Pelo menos 1 adulto").max(20).default(2),
+    criancas: z.int().min(0).max(20).default(0),
+    interesses: z.array(z.enum(INTERESSES)).max(INTERESSES.length).default([]),
     observacoes: z.string().trim().max(2000, "Máximo de 2000 caracteres").default(""),
   })
   .superRefine((v, ctx) => {
@@ -74,11 +87,25 @@ export function toPromptInput(input: TripRequestInput): ItineraryPromptInput {
 // Mapeamento PRD <-> colunas de trip_requests
 // ---------------------------------------------------------------------------
 
-type TripRequestInsert = Omit<TablesInsert<"trip_requests">, "id" | "user_id" | "status" | "error_message" | "total_days" | "created_at" | "updated_at">;
+type TripRequestInsert = Omit<
+  TablesInsert<"trip_requests">,
+  "id" | "user_id" | "status" | "error_message" | "total_days" | "created_at" | "updated_at" | "product" | "base_itinerary_id"
+>;
+
+/** Pedidos antigos têm só a região única (e ids antigos da Europa). */
+export function regioesDaLinha(row: { regions?: string[] | null; subregion?: string | null }): SubregiaoId[] {
+  const lista = row.regions?.length ? row.regions : row.subregion ? [row.subregion] : [];
+  return [...new Set(lista.map((r) => SUBREGIOES_ANTIGAS[r] ?? r))] as SubregiaoId[];
+}
 
 export function toTripRequestRow(input: TripRequestInput): TripRequestInsert {
   return {
-    subregion: input.continente_regiao,
+    subregion: input.regioes[0],
+    regions: input.regioes,
+    budget_level: input.orcamento,
+    adults: input.adultos,
+    children: input.criancas,
+    interests: input.interesses,
     start_date: input.data_inicio,
     end_date: input.data_fim,
     flex_days_outbound: input.flexibilidade_dias_ida,
@@ -95,7 +122,11 @@ export function toTripRequestRow(input: TripRequestInput): TripRequestInsert {
 
 export function fromTripRequestRow(row: Required<TripRequestInsert>): TripRequestInput {
   return TripRequestInputSchema.parse({
-    continente_regiao: row.subregion,
+    regioes: regioesDaLinha(row),
+    orcamento: row.budget_level ?? undefined,
+    adultos: row.adults,
+    criancas: row.children,
+    interesses: row.interests,
     data_inicio: row.start_date,
     data_fim: row.end_date,
     flexibilidade_dias_ida: row.flex_days_outbound,

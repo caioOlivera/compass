@@ -22,6 +22,12 @@ export const DeslocamentoSchema = z.object({
   instrucoes_logistica: z.string().min(2).max(400),
 });
 
+export const DiaPlanoSchema = z.object({
+  dia: z.int().min(1).max(120).describe("Número do dia na viagem inteira (dia 1 = primeiro dia), contínuo entre as paradas"),
+  titulo: z.string().min(2).max(80).describe('Ex.: "Coliseu e Fórum Romano"'),
+  descricao: z.string().min(5).max(400).describe("Manhã, tarde e noite em 1 a 3 frases, práticas"),
+});
+
 export const PontoMapaSchema = z.object({
   id_ponto: z.string().regex(/^p\d+$/).describe('"p1", "p2", ... na ordem da rota'),
   ordem: z.int().min(1),
@@ -39,6 +45,11 @@ export const PontoMapaSchema = z.object({
   subtitulo_card: z.string().min(2).max(80),
   atribuicoes_e_checklist: z.array(ItemChecklistSchema).min(1).max(12),
   proximo_deslocamento: DeslocamentoSchema.nullable().describe("null apenas no último ponto"),
+  plano_dias: z
+    .array(DiaPlanoSchema)
+    .max(90)
+    .describe("Uma entrada por dia alocado nesta parada, em ordem")
+    .default([]),
 });
 
 export const ResumoEstrategicoSchema = z.object({
@@ -56,12 +67,18 @@ export const ItinerarySchema = z.object({
   titulo: z.string().min(2).max(80).describe('Nome curto da viagem, ex.: "Itália de Roma às Dolomitas"'),
   resumo_estrategico: ResumoEstrategicoSchema,
   pontos_mapa: z.array(PontoMapaSchema).min(1).max(20),
+  referencias_base: z
+    .array(z.string().regex(/^R\d{1,3}$/))
+    .max(80)
+    .describe('Ids da base de conhecimento usados no roteiro, ex.: ["R3", "R12"]. Lista vazia se nenhum.')
+    .default([]),
 });
 
 export type Coordenadas = z.infer<typeof CoordenadasSchema>;
 export type ItemChecklist = z.infer<typeof ItemChecklistSchema>;
 export type Deslocamento = z.infer<typeof DeslocamentoSchema>;
 export type PontoMapa = z.infer<typeof PontoMapaSchema>;
+export type DiaPlano = z.infer<typeof DiaPlanoSchema>;
 export type ResumoEstrategico = z.infer<typeof ResumoEstrategicoSchema>;
 export type Itinerary = z.infer<typeof ItinerarySchema>;
 

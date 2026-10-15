@@ -4,7 +4,12 @@ import { normalizarNome, type ItineraryPromptInput } from "@/lib/validation/trip
 
 // Regras de negócio que o schema não expressa. Rodam no servidor depois da IA; cada erro
 // volta para o modelo na nova tentativa, então as mensagens são instruções diretas.
-export function checarRegrasDoRoteiro(roteiro: Itinerary, pedido: ItineraryPromptInput): string[] {
+export function checarRegrasDoRoteiro(
+  roteiro: Itinerary,
+  pedido: ItineraryPromptInput,
+  /** Ids da base de conhecimento enviados no prompt; referências fora deles são inventadas. */
+  refsValidas?: ReadonlySet<string>,
+): string[] {
   const erros: string[] = [];
   const pontos = roteiro.pontos_mapa;
 
@@ -38,9 +43,9 @@ export function checarRegrasDoRoteiro(roteiro: Itinerary, pedido: ItineraryPromp
       }
     }
 
-    if (!dentroDaSubregiao(pedido.continente_regiao, p.coordenadas)) {
+    if (!pedido.regioes.some((r) => dentroDaSubregiao(r, p.coordenadas))) {
       erros.push(
-        `"${p.nome_local}" (${p.coordenadas.lat}, ${p.coordenadas.lng}) está fora da sub-região ${pedido.continente_regiao}. Confira as coordenadas ou troque o local.`,
+        `"${p.nome_local}" (${p.coordenadas.lat}, ${p.coordenadas.lng}) está fora das regiões escolhidas (${pedido.regioes.join(", ")}). Confira as coordenadas ou troque o local.`,
       );
     }
   });
@@ -55,13 +60,35 @@ export function checarRegrasDoRoteiro(roteiro: Itinerary, pedido: ItineraryPromp
     }
   });
 
-  // Bate-e-volta: o mesmo local duas vezes na rota
+  // Bate-e-volta: o mesmo local duas vezes na rota. Exceção: o hub de conexão que abre e fecha a
+  // viagem (stopover na ida e na volta, como Doha num roteiro pela Ásia).
   const vistos = new Map<string, number>();
   pontos.forEach((p, i) => {
     const k = normalizarNome(p.nome_local);
-    if (vistos.has(k)) erros.push(`"${p.nome_local}" aparece duas vezes (posições ${vistos.get(k)! + 1} e ${i + 1}).`);
-    else vistos.set(k, i);
+    const anterior = vistos.get(k);
+    if (anterior === undefined) vistos.set(k, i);
+    else if (!(anterior === 0 && i === pontos.length - 1)) {
+      erros.push(`"${p.nome_local}" aparece duas vezes (posições ${anterior + 1} e ${i + 1}).`);
+    }
   });
+
+  // Plano dia a dia: um dia por dia alocado e numeração contínua na viagem inteira
+  pontos.forEach((p) => {
+    if (p.plano_dias.length !== p.dias_alocados) {
+      erros.push(`"${p.nome_local}" tem ${p.dias_alocados} dias alocados, mas plano_dias tem ${p.plano_dias.length} entradas. Uma entrada por dia.`);
+    }
+  });
+  const numeros = pontos.flatMap((p) => p.plano_dias.map((d) => d.dia));
+  if (numeros.length === pedido.total_dias_viagem && numeros.some((n, i) => n !== i + 1)) {
+    erros.push(`Os dias de plano_dias devem ir de 1 a ${pedido.total_dias_viagem}, em ordem e sem pular nem repetir.`);
+  }
+
+  if (refsValidas) {
+    const inventadas = roteiro.referencias_base.filter((r) => !refsValidas.has(r));
+    if (inventadas.length) {
+      erros.push(`referencias_base tem ids que não existem na base enviada: ${inventadas.join(", ")}. Use só os ids [R..] recebidos.`);
+    }
+  }
 
   for (const evitar of pedido.locais_a_evitar) {
     const alvo = normalizarNome(evitar);

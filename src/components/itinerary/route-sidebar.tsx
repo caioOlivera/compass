@@ -3,6 +3,7 @@
 import {
   AlertTriangle,
   ArrowLeft,
+  BookOpen,
   CalendarDays,
   Download,
   Gauge,
@@ -10,6 +11,7 @@ import {
 } from "lucide-react";
 import { motion } from "motion/react";
 import Link from "next/link";
+import { AjustarRoteiro, type InfoAjustes } from "@/components/itinerary/ajustar-roteiro";
 import { LegResumo } from "@/components/itinerary/leg-info";
 import { FotoDestino } from "@/components/ui/foto";
 import { pontoDeCapa, type FotosPorPonto } from "@/lib/itinerary/fotos";
@@ -36,6 +38,9 @@ type Props = {
   voltar: { href: string; rotulo: string };
   /** Link do PDF do roteiro */
   pdfHref?: string;
+  refsBase?: number;
+  /** Só para o dono (não aparece no exemplo) */
+  ajustes?: { itineraryId: string; info: InfoAjustes };
 };
 
 const pilula =
@@ -52,6 +57,8 @@ export function RouteSidebar({
   onTentarDeNovo,
   voltar,
   pdfHref,
+  refsBase = 0,
+  ajustes,
 }: Props) {
   const r = roteiro.resumo_estrategico;
   const pct = progresso.total
@@ -103,6 +110,12 @@ export function RouteSidebar({
               {r.ritmo_aplicado}
             </span>
           </div>
+          {refsBase > 0 && (
+            <p className="inline-flex w-fit items-center gap-1.5 rounded-full bg-accent/10 px-3 py-1 text-xs font-medium text-accent-strong">
+              <BookOpen className="size-3.5" aria-hidden />
+              Montado com {refsBase} {refsBase === 1 ? "dica" : "dicas"} de viagens reais
+            </p>
+          )}
         </header>
 
         <section className="flex flex-col gap-3 rounded-xl border border-border bg-surface p-4">
@@ -135,6 +148,8 @@ export function RouteSidebar({
             </ul>
           </section>
         )}
+
+        {ajustes && <AjustarRoteiro itineraryId={ajustes.itineraryId} info={ajustes.info} />}
 
         <section className="flex flex-col gap-2">
           <div className="flex items-baseline justify-between text-sm">

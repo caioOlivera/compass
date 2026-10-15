@@ -3,6 +3,7 @@
 import { MotionConfig } from "motion/react";
 import dynamic from "next/dynamic";
 import { useMemo, useState } from "react";
+import type { InfoAjustes } from "@/components/itinerary/ajustar-roteiro";
 import { RouteSidebar } from "@/components/itinerary/route-sidebar";
 import { PointDrawer } from "@/components/map/point-drawer";
 import { useChecklist } from "@/hooks/use-checklist";
@@ -29,9 +30,12 @@ type Props = {
   voltar: { href: string; rotulo: string };
   /** Link para baixar o roteiro em PDF */
   pdfHref?: string;
+  /** Quantos registros da base de conhecimento o roteiro usou */
+  refsBase?: number;
+  ajustes?: InfoAjustes;
 };
 
-export function ItineraryView({ roteiro, fotos = {}, checklistInicial, itineraryId, voltar, pdfHref }: Props) {
+export function ItineraryView({ roteiro, fotos = {}, checklistInicial, itineraryId, voltar, pdfHref, refsBase = 0, ajustes }: Props) {
   const [selecao, setSelecao] = useState<Selecao>(null);
   const checklist = useChecklist(checklistInicial, itineraryId);
   const desktop = useIsDesktop();
@@ -58,6 +62,8 @@ export function ItineraryView({ roteiro, fotos = {}, checklistInicial, itinerary
             onTentarDeNovo={checklist.tentarDeNovo}
             voltar={voltar}
             pdfHref={pdfHref}
+            refsBase={refsBase}
+            ajustes={ajustes && itineraryId ? { itineraryId, info: ajustes } : undefined}
           />
         </aside>
         <main className="relative order-1 h-[52dvh] shrink-0 lg:order-2 lg:h-auto lg:flex-1">

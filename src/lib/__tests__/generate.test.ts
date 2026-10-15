@@ -84,7 +84,7 @@ describe("gerarRoteiro", () => {
     const e = await gerarRoteiro(pedidoPRD, opcoes(client)).catch((x) => x);
     expect(e).toBeInstanceOf(GeracaoError);
     expect(e.motivo).toBe("invalido");
-    expect(e.detalhes).toHaveLength(1);
+    expect(e.detalhes.join()).toMatch(/soma de dias_alocados/);
   });
 
   it("recusa não gasta nova tentativa", async () => {

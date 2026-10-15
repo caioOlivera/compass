@@ -11,7 +11,7 @@ import {
 import { pedidoPRD, roteiroPRD } from "@/lib/itinerary/exemplo";
 
 const base = {
-  continente_regiao: "europa",
+  regioes: ["europa"],
   data_inicio: "2026-09-10",
   data_fim: "2026-09-25",
   ritmo_viagem: "medio",
@@ -31,8 +31,8 @@ describe("TripRequestInputSchema", () => {
     expect(TripRequestInputSchema.safeParse({ ...base, data_fim: "2027-01-10" }).success).toBe(false);
   });
 
-  it("recusa sub-região, ritmo e flexibilidade fora da lista", () => {
-    expect(TripRequestInputSchema.safeParse({ ...base, continente_regiao: "marte" }).success).toBe(false);
+  it("recusa região, ritmo e flexibilidade fora da lista", () => {
+    expect(TripRequestInputSchema.safeParse({ ...base, regioes: ["marte"] }).success).toBe(false);
     expect(TripRequestInputSchema.safeParse({ ...base, ritmo_viagem: "turbo" }).success).toBe(false);
     expect(TripRequestInputSchema.safeParse({ ...base, flexibilidade_dias_ida: 6 }).success).toBe(false);
   });

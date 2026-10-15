@@ -5,6 +5,8 @@ import { GeracaoError } from "@/lib/ai/generate";
 import { gerarComProvedorConfigurado } from "@/lib/ai";
 import { ProvedorError } from "@/lib/ai/providers/openai-compatible";
 import { serverEnv } from "@/lib/env";
+import { registrarUso } from "@/lib/medicao";
+import { montarContextoBase } from "@/lib/motor/contexto";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { toPromptInput, toTripRequestRow, TripRequestInputSchema } from "@/lib/validation/trip-request";
@@ -62,8 +64,13 @@ export async function POST(req: NextRequest) {
 
   await marcarStatus("generating");
 
+  const pedidoIA = toPromptInput(input);
+  // Lugares, trechos e dicas da base que interessam a este pedido (vazio se a base não tiver nada)
+  const base = await montarContextoBase(admin, pedidoIA);
+
   try {
-    const resultado = await gerarComProvedorConfigurado(toPromptInput(input), req.signal);
+    const resultado = await gerarComProvedorConfigurado(pedidoIA, req.signal, base.contexto);
+    const refsUsadas = resultado.roteiro.referencias_base.filter((ref) => base.mapa[ref]).map((ref) => ({ ref, ...base.mapa[ref] }));
 
     const { data: roteiro, error: erroRoteiro } = await admin
       .from("generated_itineraries")
@@ -76,16 +83,39 @@ export async function POST(req: NextRequest) {
         input_tokens: resultado.inputTokens,
         output_tokens: resultado.outputTokens,
         latency_ms: resultado.latenciaMs,
+        kb_refs: refsUsadas,
       })
       .select("id")
       .single();
     if (erroRoteiro) throw erroRoteiro;
 
     await marcarStatus("completed");
+    await registrarUso(admin, {
+      tipo: "geracao",
+      userId: user.id,
+      tripRequestId: pedido.id,
+      itineraryId: roteiro.id,
+      produto: "roteiro",
+      provedor: env.AI_PROVIDER,
+      modelo: resultado.modelo,
+      inputTokens: resultado.inputTokens,
+      outputTokens: resultado.outputTokens,
+      meta: { tentativas: resultado.tentativas, latencia_ms: resultado.latenciaMs, refs_enviadas: base.contexto.refs.length, refs_usadas: refsUsadas.length },
+    });
     return NextResponse.json({ trip_request_id: pedido.id, itinerary_id: roteiro.id }, { status: 201 });
   } catch (e) {
     const { status, mensagem } = classificarFalha(e);
     await marcarStatus("failed", mensagem);
+    // Falha também custa (tokens das tentativas): fica registrada sem tokens conhecidos
+    await registrarUso(admin, {
+      tipo: "geracao",
+      userId: user.id,
+      tripRequestId: pedido.id,
+      produto: "roteiro",
+      provedor: env.AI_PROVIDER,
+      sucesso: false,
+      meta: { erro: mensagem },
+    });
     console.error("[generate-itinerary]", pedido.id, e instanceof GeracaoError ? e.detalhes : e);
     return NextResponse.json({ error: mensagem, trip_request_id: pedido.id }, { status });
   }

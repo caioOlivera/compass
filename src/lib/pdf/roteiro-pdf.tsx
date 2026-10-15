@@ -189,6 +189,20 @@ function DocumentoRoteiro({ roteiro, checklist, capa, miniaturas = {}, geradoEm 
                 </View>
               </View>
 
+              {p.plano_dias.length > 0 && (
+                <View style={{ marginTop: 8, marginLeft: 32, gap: 4 }}>
+                  {p.plano_dias.map((d) => (
+                    <View key={d.dia} wrap={false} style={{ flexDirection: "row", gap: 8 }}>
+                      <Text style={{ width: 38, fontWeight: 600, color: COR.verde }}>Dia {d.dia}</Text>
+                      <View style={{ flex: 1 }}>
+                        <Text style={{ fontWeight: 600 }}>{semEmoji(d.titulo)}</Text>
+                        <Text style={{ color: COR.tinta2 }}>{semEmoji(d.descricao)}</Text>
+                      </View>
+                    </View>
+                  ))}
+                </View>
+              )}
+
               <View style={{ marginTop: 6, marginLeft: 32 }}>
                 {p.atribuicoes_e_checklist.map((item, k) => (
                   <View key={k} style={s.item} wrap={false}>

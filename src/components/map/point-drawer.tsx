@@ -85,6 +85,22 @@ export function PointDrawer({ ponto, pontos, fotos, lado, checklist, onAlternar,
               </SheetHeader>
 
               <div className="flex-1 overflow-y-auto px-5 py-4">
+                {ponto.plano_dias.length > 0 && (
+                  <section className="mb-5">
+                    <h3 className="mb-2 text-xs font-medium tracking-wide text-text-3 uppercase">Dia a dia</h3>
+                    <ol className="flex flex-col gap-3 border-l-2 border-accent/30 pl-4">
+                      {ponto.plano_dias.map((d) => (
+                        <li key={d.dia} className="relative">
+                          <span className="absolute top-1.5 -left-[21px] size-2.5 rounded-full bg-accent" aria-hidden />
+                          <p className="text-sm font-medium">
+                            <span className="text-accent-strong tabular-nums">Dia {d.dia}</span> · {d.titulo}
+                          </p>
+                          <p className="text-sm text-text-2">{d.descricao}</p>
+                        </li>
+                      ))}
+                    </ol>
+                  </section>
+                )}
                 <h3 className="mb-2 text-xs font-medium tracking-wide text-text-3 uppercase">O que fazer</h3>
                 <ul className="flex flex-col">
                   {ponto.atribuicoes_e_checklist.map((item, i) => {

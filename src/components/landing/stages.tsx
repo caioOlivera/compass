@@ -35,7 +35,7 @@ export function Stages() {
             </motion.h2>
           </AnimatePresence>
           <p className={`max-w-[42ch] ${T.corpo}`}>
-            São sete perguntas curtas. Nenhuma pede que você já saiba o caminho: isso é o trabalho da Compass.
+            São oito perguntas curtas. Nenhuma pede que você já saiba o caminho: isso é o trabalho da Compass.
           </p>
         </div>
         <div className="order-1 flex items-center justify-center bg-field-warm px-5 py-10 lg:order-2">

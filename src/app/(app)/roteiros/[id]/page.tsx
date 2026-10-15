@@ -4,6 +4,8 @@ import { z } from "zod";
 import { ItineraryView } from "@/components/itinerary/itinerary-view";
 import { buscarFoto } from "@/lib/images/fotos";
 import { fotosDoRoteiro } from "@/lib/itinerary/fotos";
+import { lerConfig } from "@/lib/configuracoes";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { ChecklistStateSchema, ItinerarySchema } from "@/lib/validation/itinerary";
 
@@ -23,7 +25,7 @@ export default async function RoteiroPage({ params }: Props) {
 
   const { data } = await supabase
     .from("generated_itineraries")
-    .select("itinerary, checklist_state")
+    .select("itinerary, checklist_state, kb_refs, version, trip_request_id")
     .eq("id", id)
     .maybeSingle();
   if (!data) notFound();
@@ -32,7 +34,12 @@ export default async function RoteiroPage({ params }: Props) {
   const roteiro = ItinerarySchema.parse(data.itinerary);
   const checklist = ChecklistStateSchema.catch({}).parse(data.checklist_state);
 
-  const fotos = await fotosDoRoteiro(roteiro, (q) => buscarFoto(q, { idioma: "pt-BR" }));
+  const [fotos, { data: versoes }, inclusos] = await Promise.all([
+    fotosDoRoteiro(roteiro, (q) => buscarFoto(q, { idioma: "pt-BR" })),
+    supabase.from("generated_itineraries").select("id, version").eq("trip_request_id", data.trip_request_id).order("version"),
+    lerConfig(createAdminClient(), "ajustes_inclusos", 3),
+  ]);
+  const ultimaVersao = versoes?.at(-1)?.version ?? data.version;
 
   return (
     <ItineraryView
@@ -42,6 +49,13 @@ export default async function RoteiroPage({ params }: Props) {
       itineraryId={id}
       voltar={{ href: "/roteiros", rotulo: "Meus roteiros" }}
       pdfHref={`/api/itineraries/${id}/pdf`}
+      refsBase={Array.isArray(data.kb_refs) ? data.kb_refs.length : 0}
+      ajustes={{
+        usados: ultimaVersao - 1,
+        inclusos: Number(inclusos),
+        versoes: (versoes ?? []).map((v) => ({ id: v.id, versao: v.version })),
+        versaoAtual: data.version,
+      }}
     />
   );
 }

@@ -59,7 +59,7 @@ export const FAQ = [
   },
   {
     p: "Quanto tempo leva para o roteiro ficar pronto?",
-    r: "Costuma levar menos de um minuto depois das sete perguntas. Você acompanha uma barra de progresso enquanto a rota é montada.",
+    r: "Costuma levar menos de um minuto depois das oito perguntas. Você acompanha uma barra de progresso enquanto a rota é montada.",
   },
   {
     p: "Posso sair de outra cidade que não São Paulo?",

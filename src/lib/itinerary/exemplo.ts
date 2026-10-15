@@ -5,7 +5,7 @@ import { toPromptInput, TripRequestInputSchema } from "@/lib/validation/trip-req
 // Exemplo do PRD: Rio de Janeiro → Itália, 15 dias, auge nas Dolomitas, evitando Veneza.
 export const pedidoPRD = toPromptInput(
   TripRequestInputSchema.parse({
-    continente_regiao: "europa",
+    regioes: ["europa"],
     data_inicio: "2026-09-10",
     data_fim: "2026-09-25",
     ritmo_viagem: "medio",
@@ -29,6 +29,7 @@ export function roteiroPRD(): Itinerary {
       justificativa_fluidez: "Linha contínua de sul para norte, sem bate-e-volta.",
       alertas: ["Devolver o carro em outra cidade costuma ter taxa extra."],
     },
+    referencias_base: [],
     pontos_mapa: [
       {
         id_ponto: "p1",
@@ -43,6 +44,11 @@ export function roteiroPRD(): Itinerary {
           { item: "Coliseu e Fórum Romano", categoria: "Imperdível" },
           { item: "Vaticano", categoria: "Cultura" },
           { item: "Jantar em Trastevere", categoria: "Gastronomia" },
+        ],
+        plano_dias: [
+          { dia: 1, titulo: "Chegada e Trastevere", descricao: "Chegada em Fiumicino e trem Leonardo Express até Termini. À tarde, caminhada leve pelo centro; jantar em Trastevere." },
+          { dia: 2, titulo: "Coliseu e Fórum Romano", descricao: "Manhã no Coliseu com ingresso de horário marcado, depois Fórum e Palatino. Fim de tarde na Fontana di Trevi e no Panteão." },
+          { dia: 3, titulo: "Vaticano", descricao: "Museus do Vaticano e Capela Sistina logo cedo; Basílica de São Pedro em seguida. Noite livre no Campo de' Fiori." },
         ],
         proximo_deslocamento: {
           destino_id: "p2",
@@ -61,6 +67,10 @@ export function roteiroPRD(): Itinerary {
         dias_alocados: 2,
         subtitulo_card: "Conexão lógica e pitstop cultural",
         atribuicoes_e_checklist: [{ item: "Galeria Uffizi", categoria: "Cultura" }],
+        plano_dias: [
+          { dia: 4, titulo: "Trem para Florença e Duomo", descricao: "Frecciarossa pela manhã. À tarde, Duomo e Ponte Vecchio; pôr do sol na Piazzale Michelangelo." },
+          { dia: 5, titulo: "Uffizi e retirada do carro", descricao: "Galeria Uffizi com reserva. No fim do dia, retire o carro fora da ZTL para sair cedo no dia seguinte." },
+        ],
         proximo_deslocamento: {
           destino_id: "p3",
           meio_transporte: "Carro alugado",
@@ -81,6 +91,16 @@ export function roteiroPRD(): Itinerary {
           { item: "Tre Cime di Lavaredo", categoria: "Aventura" },
           { item: "Lago di Braies cedo", categoria: "Imperdível" },
         ],
+        plano_dias: [
+          { dia: 6, titulo: "Estrada até Cortina", descricao: "Saída cedo pela A22, parada para almoço em Bolzano e chegada a Cortina no fim da tarde." },
+          { dia: 7, titulo: "Lago di Braies", descricao: "Lago di Braies ao amanhecer, antes das vans de excursão. À tarde, volta pelo Lago di Dobbiaco." },
+          { dia: 8, titulo: "Tre Cime di Lavaredo", descricao: "Estrada com pedágio até o Rifugio Auronzo e a volta completa nas Tre Cime (cerca de 4 h de trilha)." },
+          { dia: 9, titulo: "Cinque Torri", descricao: "Teleférico para as Cinque Torri e trilha entre as trincheiras da Primeira Guerra." },
+          { dia: 10, titulo: "Dia livre em Cortina", descricao: "Descanso, cafés no Corso Italia ou um dia extra caso o tempo tenha atrapalhado uma trilha." },
+          { dia: 11, titulo: "Passo Giau e Lago di Sorapis", descricao: "Mirante do Passo Giau cedo; trilha até o Lago di Sorapis (ida e volta de 4 a 5 h)." },
+          { dia: 12, titulo: "Val Gardena e Seceda", descricao: "Estrada pelos passos até Ortisei e teleférico para Seceda, o cartão-postal das Dolomitas." },
+          { dia: 13, titulo: "Alpe di Siusi", descricao: "Planalto da Alpe di Siusi de teleférico; caminhadas leves e pôr do sol com vista para o Sassolungo." },
+        ],
         proximo_deslocamento: {
           destino_id: "p4",
           meio_transporte: "Carro alugado",
@@ -98,6 +118,10 @@ export function roteiroPRD(): Itinerary {
         dias_alocados: 2,
         subtitulo_card: "Porta de saída",
         atribuicoes_e_checklist: [{ item: "Duomo e terraços", categoria: "Imperdível" }],
+        plano_dias: [
+          { dia: 14, titulo: "Descida para Milão", descricao: "Estrada até Milão pela manhã e devolução do carro. À tarde, Duomo e terraços." },
+          { dia: 15, titulo: "Último dia e voo", descricao: "Galleria Vittorio Emanuele e Navigli de manhã; transfer para Malpensa e voo de volta." },
+        ],
         proximo_deslocamento: null,
       },
     ],

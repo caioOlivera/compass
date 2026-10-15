@@ -19,9 +19,7 @@ describe("checarRegrasDoRoteiro", () => {
   it("soma de dias diferente do total", () => {
     const r = roteiroPRD();
     r.pontos_mapa[2].dias_alocados = 6;
-    expect(checarRegrasDoRoteiro(r, pedidoPRD)).toEqual([
-      "A soma de dias_alocados é 13; precisa ser exatamente 15.",
-    ]);
+    expect(checarRegrasDoRoteiro(r, pedidoPRD)).toContain("A soma de dias_alocados é 13; precisa ser exatamente 15.");
   });
 
   it("local a evitar na rota, mesmo com sufixo", () => {
@@ -44,10 +42,23 @@ describe("checarRegrasDoRoteiro", () => {
     expect(erros).toContain('O último ponto ("Milão") deve ter proximo_deslocamento null.');
   });
 
-  it("coordenadas invertidas caem fora da sub-região", () => {
+  it("coordenadas invertidas caem fora das regiões", () => {
     const r = roteiroPRD();
     r.pontos_mapa[0].coordenadas = { lat: 12.4964, lng: 41.9028 };
-    expect(checarRegrasDoRoteiro(r, pedidoPRD).join()).toMatch(/fora da sub-região europa/);
+    expect(checarRegrasDoRoteiro(r, pedidoPRD).join()).toMatch(/fora das regiões escolhidas \(europa\)/);
+  });
+
+  it("hub que abre e fecha a viagem pode repetir (stopover na ida e na volta)", () => {
+    const r = roteiroPRD();
+    r.pontos_mapa.at(-1)!.nome_local = r.pontos_mapa[0].nome_local;
+    expect(checarRegrasDoRoteiro(r, pedidoPRD).join()).not.toMatch(/aparece duas vezes/);
+  });
+
+  it("várias regiões: ponto em qualquer uma delas vale", () => {
+    const r = roteiroPRD();
+    r.pontos_mapa[0].coordenadas = { lat: 25.29, lng: 51.53 }; // Doha
+    expect(checarRegrasDoRoteiro(r, pedidoPRD).join()).toMatch(/fora das regiões/);
+    expect(checarRegrasDoRoteiro(r, { ...pedidoPRD, regioes: ["europa", "oriente-medio"] }).join()).not.toMatch(/fora das regiões/);
   });
 
   it("bate-e-volta: mesmo local duas vezes", () => {
@@ -128,5 +139,28 @@ describe("transporte", () => {
     expect(fc.features).toHaveLength(3);
     expect(fc.features[0].properties).toEqual({ id: "p1-p2", tipo: "trem" });
     expect(fc.features[0].geometry.coordinates[0]).toEqual([12.4964, 41.9028]);
+  });
+});
+
+describe("plano dia a dia e referências", () => {
+  it("o exemplo passa: 15 dias numerados de 1 a 15", () => {
+    const r = roteiroPRD();
+    expect(r.pontos_mapa.flatMap((p) => p.plano_dias.map((d) => d.dia))).toEqual(Array.from({ length: 15 }, (_, i) => i + 1));
+    expect(checarRegrasDoRoteiro(r, pedidoPRD)).toEqual([]);
+  });
+
+  it("acusa parada sem um dia por dia alocado e numeração fora de ordem", () => {
+    const r = roteiroPRD();
+    r.pontos_mapa[1].plano_dias.pop();
+    expect(checarRegrasDoRoteiro(r, pedidoPRD).join()).toMatch(/"Florença" tem 2 dias alocados, mas plano_dias tem 1/);
+    const r2 = roteiroPRD();
+    r2.pontos_mapa[0].plano_dias[0].dia = 2;
+    expect(checarRegrasDoRoteiro(r2, pedidoPRD).join()).toMatch(/de 1 a 15/);
+  });
+
+  it("referências fora da base enviada são inventadas", () => {
+    const r = { ...roteiroPRD(), referencias_base: ["R1", "R9"] };
+    expect(checarRegrasDoRoteiro(r, pedidoPRD, new Set(["R1", "R2"])).join()).toMatch(/R9/);
+    expect(checarRegrasDoRoteiro(r, pedidoPRD, new Set(["R1", "R9"]))).toEqual([]);
   });
 });

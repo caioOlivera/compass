@@ -15,14 +15,15 @@ import {
   EtapaOrigem,
   EtapaRegiao,
   EtapaRitmo,
+  EtapaViajantes,
   type PropsEtapa,
 } from "@/components/wizard/steps";
 import { TripRequestInputSchema, type TripRequestDraft } from "@/lib/validation/trip-request";
-import { SUBREGIOES_ANTIGAS } from "@/lib/constants";
 import {
   ETAPAS,
   etapaDoCampo,
   hojeLocal,
+  migrarRascunho,
   RASCUNHO_VAZIO,
   validarEtapa,
   type ErrosEtapa,
@@ -34,6 +35,7 @@ const COMPONENTES: ((p: PropsEtapa) => React.ReactNode)[] = [
   EtapaDatas,
   EtapaAuge,
   EtapaLocais,
+  EtapaViajantes,
   EtapaOrigem,
   EtapaRitmo,
   EtapaObservacoes,
@@ -79,20 +81,15 @@ export function Wizard({ inicio = {} }: { inicio?: InicioQuestionario }) {
     setHoje(hojeLocal());
     const salvo = lerRascunho();
     if (salvo) {
-      const regiao = salvo.rascunho.continente_regiao as string | undefined;
-      setRascunho({
-        ...RASCUNHO_VAZIO,
-        ...salvo.rascunho,
-        // Rascunhos da época em que a Europa era dividida em três
-        ...(regiao && SUBREGIOES_ANTIGAS[regiao] ? { continente_regiao: SUBREGIOES_ANTIGAS[regiao] } : {}),
-      });
+      // Rascunhos antigos (região única, Europa dividida em três) viram o formato atual
+      setRascunho({ ...RASCUNHO_VAZIO, ...migrarRascunho(salvo.rascunho as Record<string, unknown>) });
       setEtapa(Math.min(Math.max(salvo.etapa, 0), ETAPAS.length - 1));
     }
     // Vindo de um cartão da landing: a escolha feita lá vale por cima do rascunho
     if (inicio.regiao || inicio.auge) {
       setRascunho((r) => ({
         ...r,
-        ...(inicio.regiao ? { continente_regiao: inicio.regiao } : {}),
+        ...(inicio.regiao ? { regioes: [inicio.regiao!] } : {}),
         ...(inicio.auge ? { auge_da_viagem: inicio.auge } : {}),
       }));
       setEtapa(inicio.regiao ? 1 : 0);

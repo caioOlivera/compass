@@ -8,12 +8,20 @@ import {
   type TripRequestDraft,
 } from "@/lib/validation/trip-request";
 
-// Etapas do questionário (PRD seção 2.3) e a validação de cada uma.
+// Etapas do questionário (PRD seção 2.3 + briefing da consultoria) e a validação de cada uma.
+
+/** Rascunhos salvos antes das várias regiões: a região única vira a lista. */
+export function migrarRascunho(salvo: Record<string, unknown>): Partial<TripRequestDraft> {
+  const { continente_regiao, ...resto } = salvo as { continente_regiao?: string } & Partial<TripRequestDraft>;
+  if (resto.regioes?.length || !continente_regiao) return resto;
+  const id = SUBREGIOES_ANTIGAS[continente_regiao] ?? continente_regiao;
+  return (SUBREGIAO_IDS as string[]).includes(id) ? { ...resto, regioes: [id as SubregiaoId] } : resto;
+}
 
 export type CampoPedido = keyof TripRequestDraft;
 
 export const ETAPAS = [
-  { id: "regiao", titulo: "Para onde você vai?", campos: ["continente_regiao"] },
+  { id: "regiao", titulo: "Para onde você vai?", campos: ["regioes"] },
   {
     id: "datas",
     titulo: "Quando?",
@@ -21,6 +29,7 @@ export const ETAPAS = [
   },
   { id: "auge", titulo: "Qual é o auge da viagem?", campos: ["auge_da_viagem"] },
   { id: "locais", titulo: "O que mais entra (e o que fica de fora)?", campos: ["locais_desejados_complementares", "locais_a_evitar"] },
+  { id: "viajantes", titulo: "Quem vai e do que vocês gostam?", campos: ["adultos", "criancas", "orcamento", "interesses"] },
   { id: "origem", titulo: "De onde você sai?", campos: ["cidade_origem", "aceita_outros_aeroportos"] },
   { id: "ritmo", titulo: "Qual é o seu ritmo?", campos: ["ritmo_viagem"] },
   { id: "observacoes", titulo: "Algo mais que a gente deva saber?", campos: ["observacoes"] },
@@ -29,7 +38,7 @@ export const ETAPAS = [
 export type ErrosEtapa = Partial<Record<CampoPedido, string>>;
 
 export const RASCUNHO_VAZIO: TripRequestDraft = {
-  continente_regiao: undefined as unknown as TripRequestDraft["continente_regiao"],
+  regioes: [],
   data_inicio: "",
   data_fim: "",
   flexibilidade_dias_ida: 0,
@@ -41,6 +50,10 @@ export const RASCUNHO_VAZIO: TripRequestDraft = {
   cidade_origem: "São Paulo",
   aceita_outros_aeroportos: true,
   ritmo_viagem: undefined as unknown as TripRequestDraft["ritmo_viagem"],
+  orcamento: "medio",
+  adultos: 2,
+  criancas: 0,
+  interesses: [],
   observacoes: "",
 };
 

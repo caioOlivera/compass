@@ -25,6 +25,11 @@ const ServerEnvSchema = z
     AI_JSON_MODE: z.enum(["json_schema", "json_object", "nenhum"]).default("json_schema"),
 
     DAILY_GENERATION_LIMIT: z.coerce.number().int().min(1).default(5),
+
+    // Embeddings da base de conhecimento (Gemini). Sem chave própria, usa a AI_API_KEY quando
+    // ela é do Gemini. Sem nenhuma, a busca cai para texto.
+    EMBEDDINGS_API_KEY: z.string().optional(),
+    EMBEDDINGS_MODEL: z.string().default("gemini-embedding-001"),
   })
   .superRefine((env, ctx) => {
     if (env.AI_PROVIDER === "anthropic" && !env.ANTHROPIC_API_KEY) {

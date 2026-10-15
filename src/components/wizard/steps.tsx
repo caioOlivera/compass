@@ -1,10 +1,19 @@
 "use client";
 
-import { Building2, Check, Mountain, Plane } from "lucide-react";
+import { Baby, Building2, Check, Minus, Mountain, Plane, Plus, User } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Field } from "@/components/ui/field";
 import { TagInput } from "@/components/ui/tag-input";
-import { FLEXIBILIDADE_MAX_DIAS, LOCAIS_MAX, RITMOS, SUBREGIOES } from "@/lib/constants";
+import {
+  FLEXIBILIDADE_MAX_DIAS,
+  INTERESSES,
+  LOCAIS_MAX,
+  ORCAMENTOS,
+  REGIOES_MAX,
+  RITMOS,
+  SUBREGIOES,
+  type SubregiaoId,
+} from "@/lib/constants";
 import { SUGESTOES_AUGE, SUGESTOES_GERAIS } from "@/lib/sugestoes-auge";
 import { diasEntre, type TripRequestDraft } from "@/lib/validation/trip-request";
 import type { ErrosEtapa } from "@/lib/wizard";
@@ -24,16 +33,29 @@ export type PropsEtapa = {
 const CONTINENTES = [...new Set(SUBREGIOES.map((s) => s.continente))];
 
 export function EtapaRegiao({ rascunho, atualizar, erros }: PropsEtapa) {
+  const escolhidas = rascunho.regioes ?? [];
+  const alternar = (id: SubregiaoId) =>
+    atualizar({
+      regioes: escolhidas.includes(id)
+        ? escolhidas.filter((r) => r !== id)
+        : escolhidas.length < REGIOES_MAX
+          ? [...escolhidas, id]
+          : escolhidas,
+    });
   return (
     <fieldset className="flex flex-col gap-5">
-      <legend className="sr-only">Sub-região</legend>
-      <p className="text-sm text-text-2">O roteiro inteiro fica dentro da sub-região escolhida: entradas, bases e saídas.</p>
+      <legend className="sr-only">Regiões</legend>
+      <p className="text-sm text-text-2">
+        O roteiro fica dentro das regiões escolhidas. Dá para combinar até {REGIOES_MAX}: Oriente Médio + Sudeste Asiático +
+        Ásia Leste, por exemplo, para Qatar, Tailândia e Coreia na mesma viagem.
+      </p>
       {CONTINENTES.map((continente) => (
         <div key={continente} className="flex flex-col gap-2">
           <h3 className="text-xs font-medium tracking-wide text-text-3 uppercase">{continente}</h3>
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
             {SUBREGIOES.filter((s) => s.continente === continente).map((s) => {
-              const ativo = rascunho.continente_regiao === s.id;
+              const ativo = escolhidas.includes(s.id);
+              const cheio = !ativo && escolhidas.length >= REGIOES_MAX;
               return (
                 <label
                   key={s.id}
@@ -41,14 +63,16 @@ export function EtapaRegiao({ rascunho, atualizar, erros }: PropsEtapa) {
                     "relative flex cursor-pointer items-center rounded-xl border border-border bg-surface px-4 py-3 text-sm font-medium transition",
                     "hover:border-text-3 has-focus-visible:ring-2 has-focus-visible:ring-accent/40",
                     ativo && "border-accent bg-accent/8 text-accent-strong hover:border-accent",
+                    cheio && "cursor-not-allowed opacity-50 hover:border-border",
                   )}
                 >
                   <input
-                    type="radio"
-                    name="continente_regiao"
+                    type="checkbox"
+                    name="regioes"
                     value={s.id}
                     checked={ativo}
-                    onChange={() => atualizar({ continente_regiao: s.id })}
+                    disabled={cheio}
+                    onChange={() => alternar(s.id)}
                     className="sr-only"
                   />
                   {s.nome}
@@ -59,7 +83,12 @@ export function EtapaRegiao({ rascunho, atualizar, erros }: PropsEtapa) {
           </div>
         </div>
       ))}
-      {erros.continente_regiao && <p className="text-sm text-red-600">{erros.continente_regiao}</p>}
+      {escolhidas.length > 1 && (
+        <p className="text-sm text-text-2">
+          {escolhidas.length} regiões: os trechos entre elas entram como voos no roteiro.
+        </p>
+      )}
+      {erros.regioes && <p className="text-sm text-red-600">{erros.regioes}</p>}
     </fieldset>
   );
 }
@@ -138,8 +167,8 @@ function Flexibilidade({ rotulo, valor, onChange }: { rotulo: string; valor: num
 // ---------------------------------------------------------------------------
 
 export function EtapaAuge({ rascunho, atualizar, erros }: PropsEtapa) {
-  const regiao = SUBREGIOES.find((r) => r.id === rascunho.continente_regiao);
-  const sugestoes = regiao ? SUGESTOES_AUGE[regiao.id] : SUGESTOES_GERAIS;
+  const regioes = SUBREGIOES.filter((r) => rascunho.regioes?.includes(r.id));
+  const sugestoes = regioes.length ? regioes.flatMap((r) => SUGESTOES_AUGE[r.id]) : SUGESTOES_GERAIS;
   return (
     <div className="flex flex-col gap-4">
       <p className="text-sm text-text-2">
@@ -155,7 +184,7 @@ export function EtapaAuge({ rascunho, atualizar, erros }: PropsEtapa) {
         autoFocus
       />
       <div className="flex flex-col gap-2">
-        <p className="text-sm text-text-2">{regiao ? `Ideias para ${regiao.nome}` : "Ideias"}</p>
+        <p className="text-sm text-text-2">{regioes.length ? `Ideias para ${regioes.map((r) => r.nome).join(", ")}` : "Ideias"}</p>
         <div className="flex flex-wrap gap-2">
           {sugestoes.map((s) => {
             const ativa = rascunho.auge_da_viagem === s.nome;
@@ -213,7 +242,121 @@ export function EtapaLocais({ rascunho, atualizar, erros }: PropsEtapa) {
 }
 
 // ---------------------------------------------------------------------------
-// 5. Origem e aeroportos
+// 5. Quem viaja, orçamento e interesses
+// ---------------------------------------------------------------------------
+
+function Contador({
+  rotulo,
+  icone: Icone,
+  valor,
+  min,
+  max,
+  onChange,
+}: {
+  rotulo: string;
+  icone: typeof User;
+  valor: number;
+  min: number;
+  max: number;
+  onChange: (v: number) => void;
+}) {
+  return (
+    <div className="flex items-center justify-between rounded-xl border border-border bg-surface px-4 py-3">
+      <span className="flex items-center gap-2 text-sm font-medium">
+        <Icone className="size-4 text-text-2" aria-hidden />
+        {rotulo}
+      </span>
+      <span className="flex items-center gap-3">
+        <button
+          type="button"
+          onClick={() => onChange(Math.max(min, valor - 1))}
+          disabled={valor <= min}
+          aria-label={`Menos ${rotulo.toLowerCase()}`}
+          className="rounded-full border border-border p-1.5 transition hover:border-text-3 disabled:opacity-40"
+        >
+          <Minus className="size-4" aria-hidden />
+        </button>
+        <span className="w-6 text-center font-semibold tabular-nums" aria-live="polite">
+          {valor}
+        </span>
+        <button
+          type="button"
+          onClick={() => onChange(Math.min(max, valor + 1))}
+          disabled={valor >= max}
+          aria-label={`Mais ${rotulo.toLowerCase()}`}
+          className="rounded-full border border-border p-1.5 transition hover:border-text-3 disabled:opacity-40"
+        >
+          <Plus className="size-4" aria-hidden />
+        </button>
+      </span>
+    </div>
+  );
+}
+
+export function EtapaViajantes({ rascunho, atualizar, erros }: PropsEtapa) {
+  const interesses = rascunho.interesses ?? [];
+  return (
+    <div className="flex flex-col gap-6">
+      <div className="grid gap-2 sm:grid-cols-2">
+        <Contador rotulo="Adultos" icone={User} valor={rascunho.adultos ?? 2} min={1} max={20} onChange={(v) => atualizar({ adultos: v })} />
+        <Contador rotulo="Crianças" icone={Baby} valor={rascunho.criancas ?? 0} min={0} max={20} onChange={(v) => atualizar({ criancas: v })} />
+      </div>
+      {erros.adultos && <p className="text-sm text-red-600">{erros.adultos}</p>}
+
+      <fieldset className="flex flex-col gap-2">
+        <legend className="mb-2 text-sm font-medium">Orçamento</legend>
+        <div className="grid gap-2 sm:grid-cols-2">
+          {ORCAMENTOS.map((o) => {
+            const ativo = (rascunho.orcamento ?? "medio") === o.id;
+            return (
+              <label
+                key={o.id}
+                className={cn(
+                  "flex cursor-pointer flex-col gap-1 rounded-xl border border-border bg-surface p-3 transition hover:border-text-3",
+                  "has-focus-visible:ring-2 has-focus-visible:ring-accent/40",
+                  ativo && "border-accent bg-accent/8 hover:border-accent",
+                )}
+              >
+                <input type="radio" name="orcamento" value={o.id} checked={ativo} onChange={() => atualizar({ orcamento: o.id })} className="sr-only" />
+                <span className={cn("flex items-center justify-between text-sm font-medium", ativo && "text-accent-strong")}>
+                  {o.nome}
+                  {ativo && <Check className="size-4" aria-hidden />}
+                </span>
+                <span className="text-xs text-text-2">{o.descricao}</span>
+              </label>
+            );
+          })}
+        </div>
+      </fieldset>
+
+      <fieldset className="flex flex-col gap-2">
+        <legend className="mb-2 text-sm font-medium">Do que vocês gostam? (opcional)</legend>
+        <div className="flex flex-wrap gap-2">
+          {INTERESSES.map((i) => {
+            const ativo = interesses.includes(i);
+            return (
+              <button
+                key={i}
+                type="button"
+                aria-pressed={ativo}
+                onClick={() => atualizar({ interesses: ativo ? interesses.filter((x) => x !== i) : [...interesses, i] })}
+                className={cn(
+                  "rounded-full border px-3 py-1.5 text-sm transition active:scale-[0.97]",
+                  ativo ? "border-text bg-text text-bg" : "border-border text-text-2 hover:border-text-3 hover:text-text",
+                )}
+              >
+                {i}
+              </button>
+            );
+          })}
+        </div>
+      </fieldset>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// 6. Origem e aeroportos
 // ---------------------------------------------------------------------------
 
 export function EtapaOrigem({ rascunho, atualizar, erros }: PropsEtapa) {
@@ -246,7 +389,7 @@ export function EtapaOrigem({ rascunho, atualizar, erros }: PropsEtapa) {
 }
 
 // ---------------------------------------------------------------------------
-// 6. Ritmo
+// 7. Ritmo
 // ---------------------------------------------------------------------------
 
 const DIAS_POR_RITMO: Record<(typeof RITMOS)[number]["id"], { cidade: string; natureza: string }> = {
@@ -304,7 +447,7 @@ export function EtapaRitmo({ rascunho, atualizar, erros }: PropsEtapa) {
 }
 
 // ---------------------------------------------------------------------------
-// 7. Observações
+// 8. Observações
 // ---------------------------------------------------------------------------
 
 const SUGESTOES = [

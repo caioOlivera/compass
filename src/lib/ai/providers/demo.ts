@@ -48,6 +48,18 @@ export function roteiroDemonstracao(totalDias: number): Itinerary {
     };
   });
 
+  // Plano dia a dia: aproveita o do exemplo e completa com dias livres, numerando a viagem inteira
+  let dia = 0;
+  for (const p of pontos) {
+    p.plano_dias = Array.from({ length: p.dias_alocados }, (_, k) => {
+      dia++;
+      const modelo = p.plano_dias[k];
+      return modelo
+        ? { ...modelo, dia }
+        : { dia, titulo: `Dia livre em ${p.nome_local}`, descricao: "Tempo para descansar ou repetir o que mais gostou." };
+    });
+  }
+
   return {
     titulo: `${base.titulo} (exemplo)`,
     resumo_estrategico: {
@@ -56,6 +68,7 @@ export function roteiroDemonstracao(totalDias: number): Itinerary {
       alertas: [AVISO, ...base.resumo_estrategico.alertas],
     },
     pontos_mapa: pontos,
+    referencias_base: [],
   };
 }
 

@@ -31,6 +31,12 @@ export type ResultadoGeracao = {
 
 export type MotivoFalha = "recusa" | "invalido" | "truncado";
 
+/** Trechos da base de conhecimento enviados ao modelo, cada um com um id curto ([R1], [R2]...). */
+export type ContextoBase = { texto: string; refs: string[] };
+
+/** Pedido de mudança num roteiro já gerado: o modelo parte dele e só muda o que foi pedido. */
+export type Ajuste = { roteiroAtual: Itinerary; pedido: string };
+
 export class GeracaoError extends Error {
   constructor(
     readonly motivo: MotivoFalha,
@@ -42,14 +48,19 @@ export class GeracaoError extends Error {
   }
 }
 
-export async function gerarRoteiro(pedido: ItineraryPromptInput, chamar: ChamadorModelo): Promise<ResultadoGeracao> {
+export async function gerarRoteiro(
+  pedido: ItineraryPromptInput,
+  chamar: ChamadorModelo,
+  contexto?: ContextoBase,
+  ajuste?: Ajuste,
+): Promise<ResultadoGeracao> {
   const inicio = Date.now();
   let inputTokens = 0;
   let outputTokens = 0;
   let anterior: { json: string; erros: string[] } | null = null;
 
   for (let tentativa = 1; tentativa <= MAX_TENTATIVAS; tentativa++) {
-    const resposta = await chamar(montarMensagem(pedido, anterior));
+    const resposta = await chamar(montarMensagem(pedido, anterior, contexto, ajuste));
     inputTokens += resposta.inputTokens;
     outputTokens += resposta.outputTokens;
 
@@ -61,7 +72,7 @@ export async function gerarRoteiro(pedido: ItineraryPromptInput, chamar: Chamado
     const erros =
       resposta.parada === "tamanho"
         ? ["A resposta anterior foi cortada por tamanho. Seja mais conciso nos textos e checklists."]
-        : validar(texto, pedido);
+        : validar(texto, pedido, new Set(contexto?.refs ?? []));
 
     if (erros.length === 0) {
       return {
@@ -97,7 +108,7 @@ export function extrairJson(texto: string): string {
   return inicio !== -1 && fim > inicio ? corpo.slice(inicio, fim + 1) : corpo;
 }
 
-function validar(texto: string, pedido: ItineraryPromptInput): string[] {
+function validar(texto: string, pedido: ItineraryPromptInput, refs: ReadonlySet<string>): string[] {
   let bruto: unknown;
   try {
     bruto = JSON.parse(texto);
@@ -108,11 +119,28 @@ function validar(texto: string, pedido: ItineraryPromptInput): string[] {
   if (!r.success) {
     return r.error.issues.map((i) => `Campo ${i.path.join(".") || "(raiz)"}: ${i.message}`);
   }
-  return checarRegrasDoRoteiro(r.data, pedido);
+  return checarRegrasDoRoteiro(r.data, pedido, refs);
 }
 
-function montarMensagem(pedido: ItineraryPromptInput, anterior: { json: string; erros: string[] } | null): string {
-  const base = `Monte o roteiro para estas respostas do questionário:\n\n${JSON.stringify(pedido, null, 2)}`;
+function montarMensagem(
+  pedido: ItineraryPromptInput,
+  anterior: { json: string; erros: string[] } | null,
+  contexto?: ContextoBase,
+  ajuste?: Ajuste,
+): string {
+  const respostas = ajuste
+    ? [
+        `Respostas do questionário (continuam valendo):\n\n${JSON.stringify(pedido, null, 2)}`,
+        `Roteiro atual do viajante:\n<roteiro_atual>\n${JSON.stringify(ajuste.roteiroAtual)}\n</roteiro_atual>`,
+        `O viajante pediu este ajuste:\n<pedido_de_ajuste>\n${ajuste.pedido}\n</pedido_de_ajuste>`,
+        "Aplique só o que foi pedido e mantenha o resto do roteiro igual (paradas, dias, textos). " +
+          "O total de dias não muda. Se o pedido for impossível com as regras (mudar datas, sair das regiões), " +
+          "mantenha o roteiro e explique em resumo_estrategico.alertas. Devolva o roteiro completo.",
+      ].join("\n\n")
+    : `Monte o roteiro para estas respostas do questionário:\n\n${JSON.stringify(pedido, null, 2)}`;
+  const base = contexto?.texto
+    ? `${respostas}\n\n<base_de_conhecimento>\n${contexto.texto}\n</base_de_conhecimento>`
+    : `${respostas}\n\n(Sem registros da base de conhecimento para este destino: use referencias_base vazio.)`;
   if (!anterior) return base;
   return [
     base,

@@ -10,7 +10,7 @@ export function ChamadaFinal({ foto }: { foto: Foto | null }) {
       <FotoDestino foto={foto} tamanho="grande" corReserva="#1f6f5c" className="rounded-3xl">
         <div className="relative flex min-h-[380px] flex-col justify-end gap-5 bg-black/40 p-8 text-white sm:p-12">
           <h2 className="max-w-2xl text-3xl font-semibold tracking-tight text-balance sm:text-5xl">
-            Sua próxima viagem cabe em sete perguntas
+            Sua próxima viagem cabe em oito perguntas
           </h2>
           <p className="max-w-xl text-lg text-white/90">
             Conte para onde quer ir e qual lugar não pode faltar. O caminho, de uma porta à outra, é com a gente.

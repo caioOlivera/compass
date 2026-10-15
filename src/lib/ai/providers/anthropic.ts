@@ -1,7 +1,6 @@
 import type Anthropic from "@anthropic-ai/sdk";
 import type { ChamadorModelo } from "@/lib/ai/generate";
-import { ITINERARY_SYSTEM_PROMPT } from "@/lib/ai/prompts/itinerary-system";
-import { ITINERARY_JSON_SCHEMA } from "@/lib/ai/schema";
+import { TAREFA_ROTEIRO, type TarefaJson } from "@/lib/ai/providers/openai-compatible";
 
 // Claude via SDK oficial: structured output, streaming (evita timeout HTTP) e, nos modelos
 // que aceitam, fallback do lado do servidor quando o modelo recusa por engano.
@@ -12,18 +11,20 @@ export type OpcoesAnthropic = {
   client: Anthropic;
   modelo: string;
   effort: "low" | "medium" | "high" | "xhigh" | "max";
+  /** Instruções e schema da tarefa; sem eles, a tarefa é gerar roteiro. */
+  tarefa?: TarefaJson;
   signal?: AbortSignal;
 };
 
-export function chamadorAnthropic({ client, modelo, effort, signal }: OpcoesAnthropic): ChamadorModelo {
+export function chamadorAnthropic({ client, modelo, effort, tarefa = TAREFA_ROTEIRO, signal }: OpcoesAnthropic): ChamadorModelo {
   return async (mensagem) => {
     const stream = client.beta.messages.stream(
       {
         model: modelo,
         max_tokens: 32_000,
-        system: ITINERARY_SYSTEM_PROMPT,
+        system: tarefa.sistema,
         messages: [{ role: "user", content: mensagem }],
-        output_config: { effort, format: { type: "json_schema", schema: ITINERARY_JSON_SCHEMA } },
+        output_config: { effort, format: { type: "json_schema", schema: tarefa.schema } },
         // Só alguns modelos aceitam o parâmetro (o Haiku, por exemplo, responde 400).
         ...(MODELOS_COM_FALLBACK.has(modelo)
           ? { betas: ["server-side-fallback-2026-07-01"], fallbacks: "default" as const }

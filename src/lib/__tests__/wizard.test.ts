@@ -1,13 +1,22 @@
 import { describe, expect, it } from "vitest";
 import { TripRequestInputSchema } from "@/lib/validation/trip-request";
-import { etapaDoCampo, inicioDaUrl, RASCUNHO_VAZIO, validarEtapa } from "@/lib/wizard";
+import { etapaDoCampo, inicioDaUrl, migrarRascunho, RASCUNHO_VAZIO, validarEtapa } from "@/lib/wizard";
 
 const HOJE = "2026-10-15";
 
 describe("validarEtapa", () => {
-  it("etapa 1 exige sub-região e ignora os campos das outras etapas", () => {
-    expect(validarEtapa(RASCUNHO_VAZIO, 0, HOJE)).toEqual({ continente_regiao: "Escolha uma sub-região" });
-    expect(validarEtapa({ ...RASCUNHO_VAZIO, continente_regiao: "europa" }, 0, HOJE)).toEqual({});
+  it("etapa 1 exige ao menos uma região, aceita até 4 e ignora os campos das outras etapas", () => {
+    expect(validarEtapa(RASCUNHO_VAZIO, 0, HOJE)).toEqual({ regioes: "Escolha pelo menos uma região" });
+    expect(validarEtapa({ ...RASCUNHO_VAZIO, regioes: ["europa"] }, 0, HOJE)).toEqual({});
+    expect(validarEtapa({ ...RASCUNHO_VAZIO, regioes: ["oriente-medio", "sudeste-asiatico", "asia-leste"] }, 0, HOJE)).toEqual({});
+    const cinco = ["europa", "asia-leste", "asia-sul", "oceania", "oriente-medio"] as const;
+    expect(validarEtapa({ ...RASCUNHO_VAZIO, regioes: [...cinco] }, 0, HOJE)).toEqual({ regioes: "No máximo 4 regiões" });
+  });
+
+  it("rascunho antigo com região única vira lista", () => {
+    expect(migrarRascunho({ continente_regiao: "europa-do-sul", auge_da_viagem: "Roma" })).toEqual({ regioes: ["europa"], auge_da_viagem: "Roma" });
+    expect(migrarRascunho({ regioes: ["asia-leste"] })).toEqual({ regioes: ["asia-leste"] });
+    expect(migrarRascunho({ continente_regiao: "marte" })).toEqual({});
   });
 
   it("etapa 2 pega retorno antes da saída mesmo com o resto do formulário vazio", () => {
@@ -32,14 +41,14 @@ describe("validarEtapa", () => {
   it("formulário completo passa em todas as etapas e no schema", () => {
     const r = {
       ...RASCUNHO_VAZIO,
-      continente_regiao: "europa" as const,
+      regioes: ["europa" as const],
       data_inicio: "2026-11-10",
       data_fim: "2026-11-25",
       auge_da_viagem: "Dolomitas",
       cidade_origem: "Rio de Janeiro",
       ritmo_viagem: "medio" as const,
     };
-    for (let i = 0; i < 7; i++) expect(validarEtapa(r, i, HOJE)).toEqual({});
+    for (let i = 0; i < 8; i++) expect(validarEtapa(r, i, HOJE)).toEqual({});
     expect(TripRequestInputSchema.safeParse(r).success).toBe(true);
   });
 });
@@ -47,7 +56,7 @@ describe("validarEtapa", () => {
 describe("etapaDoCampo", () => {
   it("leva ao primeiro campo com erro vindo da API", () => {
     expect(etapaDoCampo(["cidade_origem", "data_inicio"])).toBe(1);
-    expect(etapaDoCampo(["observacoes"])).toBe(6);
+    expect(etapaDoCampo(["observacoes"])).toBe(7);
   });
 });
 

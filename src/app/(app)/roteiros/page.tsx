@@ -23,11 +23,17 @@ export default async function RoteirosPage() {
 
   const { data } = await supabase
     .from("generated_itineraries")
-    .select("id, title, itinerary, created_at")
+    .select("id, title, itinerary, created_at, version, trip_request_id")
     .order("created_at", { ascending: false })
     .limit(50);
 
-  const validos = (data ?? []).flatMap((r) => {
+  // Ajustes viram novas versões do mesmo pedido: a lista mostra só a mais recente de cada um
+  const ultimas = new Map<string, NonNullable<typeof data>[number]>();
+  for (const r of data ?? []) {
+    const atual = ultimas.get(r.trip_request_id);
+    if (!atual || r.version > atual.version) ultimas.set(r.trip_request_id, r);
+  }
+  const validos = [...ultimas.values()].flatMap((r) => {
     const it = ItinerarySchema.safeParse(r.itinerary);
     return it.success ? [{ ...r, roteiro: it.data }] : [];
   });

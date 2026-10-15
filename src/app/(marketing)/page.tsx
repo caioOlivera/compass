@@ -14,7 +14,7 @@ import { buscarFoto, buscarFotos, type Foto } from "@/lib/images/fotos";
 export const metadata: Metadata = {
   title: "Compass: roteiros de viagem fluidos",
   description:
-    "Roteiros que entram por uma cidade e saem por outra. Responda sete perguntas e receba a rota no mapa, com os dias de cada parada, os trechos e o checklist.",
+    "Roteiros que entram por uma cidade e saem por outra. Responda oito perguntas e receba a rota no mapa, com os dias de cada parada, os trechos e o checklist.",
 };
 
 // As fotos vêm do Unsplash/Pexels (cache de uma semana no servidor). Sem chave ou sem rede, os cartões
@@ -38,7 +38,7 @@ export default async function Home() {
         <Regioes fotos={regioes} />
         <DestinosCarrossel fotos={destinos} />
         <RouteStory />
-        <Moldura titulo="Sete perguntas, nenhuma sobre o caminho" texto="Arraste pelas etapas e veja a tela de cada uma.">
+        <Moldura titulo="Oito perguntas, nenhuma sobre o caminho" texto="Arraste pelas etapas e veja a tela de cada uma.">
           <Stages />
         </Moldura>
         <Moldura titulo="O que você recebe" texto="Mapa, paradas, trechos e voos, tudo no mesmo roteiro.">

@@ -1,4 +1,5 @@
-// Opções fixas do wizard. A IA nunca pode sair da sub-região escolhida (regra imutável).
+// Opções fixas do wizard. A IA nunca pode sair das regiões escolhidas (até 4, para roteiros que
+// cruzam regiões, como Qatar + Tailândia + Coreia).
 export const SUBREGIOES = [
   { id: "america-do-norte", continente: "América", nome: "América do Norte" },
   { id: "america-central", continente: "América", nome: "América Central" },
@@ -36,12 +37,37 @@ export const CATEGORIAS_CHECKLIST = [
   "Logística",
 ] as const;
 
+export const REGIOES_MAX = 4;
+
+export const ORCAMENTOS = [
+  { id: "economico", nome: "Econômico", descricao: "Hostels e pousadas simples, transporte público, comida local." },
+  { id: "medio", nome: "Médio", descricao: "Hotéis 3 estrelas bem localizados, alguns passeios guiados." },
+  { id: "conforto", nome: "Conforto", descricao: "Hotéis 4 estrelas, trens rápidos, restaurantes escolhidos." },
+  { id: "luxo", nome: "Luxo", descricao: "Hotéis 5 estrelas, transfers privados, experiências exclusivas." },
+] as const;
+
+export const INTERESSES = [
+  "Cultura e história",
+  "Natureza e trilhas",
+  "Praias",
+  "Gastronomia",
+  "Vida noturna",
+  "Compras",
+  "Aventura",
+  "Fotografia",
+  "Museus",
+  "Vinhos",
+  "Bem-estar",
+  "Festivais e eventos",
+] as const;
+
 export const FLEXIBILIDADE_MAX_DIAS = 5;
 export const VIAGEM_MAX_DIAS = 90;
 export const LOCAIS_MAX = 15;
 
 export type SubregiaoId = (typeof SUBREGIOES)[number]["id"];
 export type RitmoId = (typeof RITMOS)[number]["id"];
+export type OrcamentoId = (typeof ORCAMENTOS)[number]["id"];
 export type TipoPonto = (typeof TIPOS_PONTO)[number];
 export type CategoriaChecklist = (typeof CATEGORIAS_CHECKLIST)[number];
 
@@ -54,3 +80,4 @@ export const SUBREGIOES_ANTIGAS: Record<string, SubregiaoId> = {
 };
 
 export const RITMO_IDS = RITMOS.map((r) => r.id) as [RitmoId, ...RitmoId[]];
+export const ORCAMENTO_IDS = ORCAMENTOS.map((o) => o.id) as [OrcamentoId, ...OrcamentoId[]];

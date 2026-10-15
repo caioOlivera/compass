@@ -21,6 +21,8 @@ export type OpcoesOpenAICompat = {
   /** Tentados em ordem quando o principal segue sobrecarregado (503) ou no limite (429). */
   modelosReserva?: string[];
   modoJson: ModoJson;
+  /** Instruções e schema da tarefa; sem eles, a tarefa é gerar roteiro. */
+  tarefa?: TarefaJson;
   signal?: AbortSignal;
   fetch?: typeof fetch;
   /** Injetável nos testes para não esperar de verdade. */
@@ -32,12 +34,18 @@ export type OpcoesOpenAICompat = {
 const ESPERAS_MS = [2_000, 6_000];
 const ESPERA_MAX_MS = 15_000;
 
+export type TarefaJson = { nome: string; sistema: string; schema: { [chave: string]: unknown } };
+
+export const TAREFA_ROTEIRO: TarefaJson = { nome: "roteiro", sistema: ITINERARY_SYSTEM_PROMPT, schema: ITINERARY_JSON_SCHEMA };
+
 // O schema vai também no prompt: no modo json_object o modelo não o recebe de outra forma,
 // e modelos menores seguem melhor quando o veem por escrito.
-const SYSTEM_PROMPT = `${ITINERARY_SYSTEM_PROMPT}
+function promptDeSistema(t: TarefaJson) {
+  return `${t.sistema}
 
 Responda somente com um objeto JSON, sem texto antes ou depois e sem bloco de código, seguindo este JSON Schema:
-${JSON.stringify(ITINERARY_JSON_SCHEMA)}`;
+${JSON.stringify(t.schema)}`;
+}
 
 export function chamadorOpenAICompat(opcoes: OpcoesOpenAICompat): ChamadorModelo {
   const url = `${opcoes.baseUrl.replace(/\/+$/, "")}/chat/completions`;
@@ -45,6 +53,8 @@ export function chamadorOpenAICompat(opcoes: OpcoesOpenAICompat): ChamadorModelo
 
   const esperar = opcoes.esperar ?? ((ms: number) => new Promise<void>((r) => setTimeout(r, ms)));
   const modelos = [opcoes.modelo, ...(opcoes.modelosReserva ?? [])];
+  const tarefa = opcoes.tarefa ?? TAREFA_ROTEIRO;
+  const sistema = promptDeSistema(tarefa);
 
   return async (mensagem) => {
     let ultimoErro: ProvedorError | undefined;
@@ -72,11 +82,11 @@ export function chamadorOpenAICompat(opcoes: OpcoesOpenAICompat): ChamadorModelo
       body: JSON.stringify({
         model: modelo,
         messages: [
-          { role: "system", content: SYSTEM_PROMPT },
+          { role: "system", content: sistema },
           { role: "user", content: mensagem },
         ],
         temperature: 0.4,
-        ...formatoResposta(opcoes.modoJson),
+        ...formatoResposta(opcoes.modoJson, tarefa),
       }),
       signal: opcoes.signal,
     });
@@ -105,9 +115,9 @@ export function chamadorOpenAICompat(opcoes: OpcoesOpenAICompat): ChamadorModelo
   }
 }
 
-function formatoResposta(modo: ModoJson) {
+function formatoResposta(modo: ModoJson, tarefa: TarefaJson) {
   if (modo === "json_schema") {
-    return { response_format: { type: "json_schema", json_schema: { name: "roteiro", schema: ITINERARY_JSON_SCHEMA, strict: true } } };
+    return { response_format: { type: "json_schema", json_schema: { name: tarefa.nome, schema: tarefa.schema, strict: true } } };
   }
   if (modo === "json_object") return { response_format: { type: "json_object" } };
   return {};
