@@ -1,7 +1,122 @@
-import { NextResponse } from "next/server";
+import Anthropic from "@anthropic-ai/sdk";
+import { NextResponse, type NextRequest } from "next/server";
+import { z } from "zod";
+import { anthropic } from "@/lib/ai/client";
+import { GeracaoError, gerarRoteiro } from "@/lib/ai/generate";
+import { serverEnv } from "@/lib/env";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { createClient } from "@/lib/supabase/server";
+import { toPromptInput, toTripRequestRow, TripRequestInputSchema } from "@/lib/validation/trip-request";
 
-// Passo 4: valida o payload do wizard com Zod, chama o Claude com o system prompt
-// de src/lib/ai/prompts/itinerary-system.ts e grava o resultado em generated_itineraries.
-export async function POST() {
-  return NextResponse.json({ error: "Ainda não implementado" }, { status: 501 });
+// A geração leva de 30 s a 2 min; na Vercel o padrão de 60 s não basta.
+export const maxDuration = 300;
+
+/**
+ * POST /api/generate-itinerary
+ * Body: TripRequestInput (respostas do wizard, chaves do PRD).
+ * 201 { trip_request_id, itinerary_id } | 400 validação | 401 sem sessão | 429 limite diário | 502/503 falha da IA
+ */
+export async function POST(req: NextRequest) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return erro(401, "Faça login para gerar roteiros.");
+
+  const body = await req.json().catch(() => null);
+  const parsed = TripRequestInputSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: "Revise as respostas do questionário.", campos: z.flattenError(parsed.error).fieldErrors },
+      { status: 400 },
+    );
+  }
+  const input = parsed.data;
+  if (input.data_inicio < ontemUTC()) {
+    return NextResponse.json(
+      { error: "A data de saída já passou.", campos: { data_inicio: ["Escolha uma data a partir de hoje"] } },
+      { status: 400 },
+    );
+  }
+
+  const env = serverEnv();
+  const admin = createAdminClient();
+
+  const { data: usadas, error: erroLimite } = await admin.rpc("generations_last_24h", { p_user_id: user.id });
+  if (erroLimite) return erroInterno("contar gerações", erroLimite);
+  if (usadas >= env.DAILY_GENERATION_LIMIT) {
+    return erro(429, `Você já gerou ${usadas} roteiros nas últimas 24 horas. Tente de novo mais tarde.`);
+  }
+
+  // Inserido com a sessão do usuário: a RLS confere o dono e os grants impedem definir o status.
+  const { data: pedido, error: erroPedido } = await supabase
+    .from("trip_requests")
+    .insert(toTripRequestRow(input))
+    .select("id")
+    .single();
+  if (erroPedido) return erroInterno("salvar pedido", erroPedido);
+
+  const marcarStatus = (status: "generating" | "completed" | "failed", error_message: string | null = null) =>
+    admin.from("trip_requests").update({ status, error_message }).eq("id", pedido.id);
+
+  await marcarStatus("generating");
+
+  try {
+    const resultado = await gerarRoteiro(toPromptInput(input), {
+      client: anthropic(),
+      modelo: env.ANTHROPIC_MODEL,
+      effort: env.ANTHROPIC_EFFORT,
+      signal: req.signal,
+    });
+
+    const { data: roteiro, error: erroRoteiro } = await admin
+      .from("generated_itineraries")
+      .insert({
+        trip_request_id: pedido.id,
+        user_id: user.id,
+        title: resultado.roteiro.titulo,
+        itinerary: resultado.roteiro,
+        model: resultado.modelo,
+        input_tokens: resultado.inputTokens,
+        output_tokens: resultado.outputTokens,
+        latency_ms: resultado.latenciaMs,
+      })
+      .select("id")
+      .single();
+    if (erroRoteiro) throw erroRoteiro;
+
+    await marcarStatus("completed");
+    return NextResponse.json({ trip_request_id: pedido.id, itinerary_id: roteiro.id }, { status: 201 });
+  } catch (e) {
+    const { status, mensagem } = classificarFalha(e);
+    await marcarStatus("failed", mensagem);
+    console.error("[generate-itinerary]", pedido.id, e instanceof GeracaoError ? e.detalhes : e);
+    return NextResponse.json({ error: mensagem, trip_request_id: pedido.id }, { status });
+  }
+}
+
+function classificarFalha(e: unknown): { status: number; mensagem: string } {
+  if (e instanceof GeracaoError) return { status: 502, mensagem: e.message };
+  if (e instanceof Anthropic.APIUserAbortError) return { status: 499, mensagem: "Geração cancelada." };
+  if (e instanceof Anthropic.RateLimitError || e instanceof Anthropic.InternalServerError) {
+    return { status: 503, mensagem: "O serviço de IA está sobrecarregado. Tente de novo em alguns minutos." };
+  }
+  if (e instanceof Anthropic.APIConnectionError) {
+    return { status: 503, mensagem: "Não conseguimos falar com o serviço de IA. Tente de novo." };
+  }
+  return { status: 500, mensagem: "Erro inesperado ao gerar o roteiro." };
+}
+
+function erro(status: number, mensagem: string) {
+  return NextResponse.json({ error: mensagem }, { status });
+}
+
+function erroInterno(etapa: string, e: unknown) {
+  console.error(`[generate-itinerary] falha ao ${etapa}`, e);
+  return erro(500, "Erro inesperado. Tente de novo.");
+}
+
+/** Data de ontem em UTC: margem para quem está atrás de UTC no fuso. */
+function ontemUTC(): string {
+  return new Date(Date.now() - 86_400_000).toISOString().slice(0, 10);
 }

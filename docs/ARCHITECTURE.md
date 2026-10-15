@@ -33,6 +33,26 @@ Landing ─► Cadastro/Login (senha ou OTP) ─► Wizard (7 etapas)
                        /roteiros/[id] ─► Mapa: pins, polylines, drawer com checklist
 ```
 
+### Geração (`src/lib/ai/generate.ts`)
+
+- Modelo `ANTHROPIC_MODEL` (padrão `claude-opus-5-5`), esforço `ANTHROPIC_EFFORT` (padrão `medium`), streaming
+  para não esbarrar em timeout HTTP, `max_tokens` 32 000.
+- Structured output com o JSON Schema gerado de `ItinerarySchema`. A validação Zod é feita por nós
+  (não pelo `parse()` do SDK) para que os erros voltem ao modelo.
+- Fallback do lado do servidor (`fallbacks: "default"`): se o modelo recusar por engano, a própria API
+  refaz no modelo alternativo.
+- Até 2 tentativas. A segunda recebe o JSON anterior e a lista exata de erros.
+- `stop_reason: "refusal"` encerra sem nova tentativa; `max_tokens` pede concisão na segunda.
+
+### Rota (`POST /api/generate-itinerary`)
+
+1. Sessão do Supabase obrigatória (401).
+2. Zod no body, data de saída não pode ter passado (400 com erros por campo).
+3. Limite diário `DAILY_GENERATION_LIMIT` via `generations_last_24h` (429).
+4. Cria `trip_requests` com a sessão do usuário (RLS) → `generating`.
+5. Gera, grava `generated_itineraries` com service_role → `completed` → 201 `{ trip_request_id, itinerary_id }`.
+6. Falha → `failed` + `error_message`; 502 (IA inconsistente/recusa), 503 (sobrecarga/conexão), 499 (cancelado).
+
 Checagens de negócio feitas no servidor depois da IA (o modelo pode errar, o código não deixa passar):
 soma de `dias_alocados` = total de dias, nenhum ponto em `locais_a_evitar`, `proximo_deslocamento`
 null só no último ponto e apontando para o próximo `id_ponto`, coordenadas dentro da sub-região.
@@ -135,7 +155,7 @@ Ajustes em relação ao JSON do PRD:
 1. ~~Estrutura e arquitetura~~
 2. ~~Schema do banco: `profiles`, `trip_requests`, `generated_itineraries`, RLS~~
 3. ~~Tipos e schemas Zod de entrada, saída e estado do mapa~~
-4. `POST /api/generate-itinerary` com Claude, retry e checagens
+4. ~~`POST /api/generate-itinerary` com Claude, retry e checagens~~
 5. Mapa interativo (pins, linhas, drawer com checklist)
 6. Autenticação (senha + OTP) e `proxy.ts`
 7. Wizard de 7 etapas
