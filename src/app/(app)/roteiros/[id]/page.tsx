@@ -41,6 +41,7 @@ export default async function RoteiroPage({ params }: Props) {
       checklistInicial={checklist}
       itineraryId={id}
       voltar={{ href: "/roteiros", rotulo: "Meus roteiros" }}
+      pdfHref={`/api/itineraries/${id}/pdf`}
     />
   );
 }

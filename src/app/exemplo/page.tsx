@@ -13,5 +13,5 @@ export const metadata: Metadata = {
 export default async function ExemploPage() {
   const roteiro = roteiroPRD();
   const fotos = await fotosDoRoteiro(roteiro, (q) => buscarFoto(q, { idioma: "pt-BR" }));
-  return <ItineraryView roteiro={roteiro} fotos={fotos} checklistInicial={{}} voltar={{ href: "/", rotulo: "Início" }} />;
+  return <ItineraryView roteiro={roteiro} fotos={fotos} checklistInicial={{}} voltar={{ href: "/", rotulo: "Início" }} pdfHref="/exemplo/pdf" />;
 }

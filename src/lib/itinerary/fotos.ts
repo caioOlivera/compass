@@ -17,3 +17,8 @@ export async function fotosDoRoteiro(
   const fotos = await Promise.all(roteiro.pontos_mapa.map((p) => buscar(consultaDaParada(p.nome_local))));
   return Object.fromEntries(roteiro.pontos_mapa.map((p, i) => [p.id_ponto, fotos[i]]));
 }
+
+/** A parada que vira capa do roteiro: o auge; sem auge, a primeira. */
+export function pontoDeCapa(roteiro: Itinerary): Itinerary["pontos_mapa"][number] {
+  return roteiro.pontos_mapa.find((p) => p.tipo_ponto === "auge_viagem") ?? roteiro.pontos_mapa[0];
+}

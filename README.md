@@ -57,6 +57,15 @@ Variables, depois um Redeploy). As buscas rodam só no servidor e ficam em cache
 chave, os cartões mostram a cor e o emoji de cada destino. Os créditos dos fotógrafos aparecem no
 rodapé e em cada parada.
 
+## Perfil e PDF
+
+- **Perfil** (`/perfil`): nome, telefone e foto. A foto é recortada e reduzida para 512px no navegador e
+  vai para o bucket público `avatars` do Supabase Storage, na pasta do usuário (migração
+  `20261015000400_perfil_avatar.sql`). O e-mail aparece só para leitura.
+- **Exportar PDF**: botão na capa do roteiro. Gerado no servidor com `@react-pdf/renderer`
+  (`/api/itineraries/[id]/pdf`, só o dono; `/exemplo/pdf` para o exemplo), com a foto do auge, o desenho
+  da rota, o checklist como está marcado e os trechos. A fonte Inter (OFL) fica em `assets/fonts`.
+
 ## Banco de dados
 
 O projeto Supabase `compass` já tem as migrações de `supabase/migrations/` aplicadas. Para um projeto

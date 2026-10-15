@@ -27,9 +27,11 @@ type Props = {
   /** Sem id = demonstração: o checklist não é salvo. */
   itineraryId?: string;
   voltar: { href: string; rotulo: string };
+  /** Link para baixar o roteiro em PDF */
+  pdfHref?: string;
 };
 
-export function ItineraryView({ roteiro, fotos = {}, checklistInicial, itineraryId, voltar }: Props) {
+export function ItineraryView({ roteiro, fotos = {}, checklistInicial, itineraryId, voltar, pdfHref }: Props) {
   const [selecao, setSelecao] = useState<Selecao>(null);
   const checklist = useChecklist(checklistInicial, itineraryId);
   const desktop = useIsDesktop();
@@ -55,6 +57,7 @@ export function ItineraryView({ roteiro, fotos = {}, checklistInicial, itinerary
             status={checklist.status}
             onTentarDeNovo={checklist.tentarDeNovo}
             voltar={voltar}
+            pdfHref={pdfHref}
           />
         </aside>
         <main className="relative order-1 h-[52dvh] shrink-0 lg:order-2 lg:h-auto lg:flex-1">
