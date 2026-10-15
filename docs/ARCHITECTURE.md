@@ -94,7 +94,7 @@ Regras de organização:
 
 ## Modelo de dados
 
-Migração: `supabase/migrations/20261015000000_initial_schema.sql`.
+Migrações em `supabase/migrations/`, já aplicadas no projeto Supabase `compass`.
 
 | Tabela | O que guarda | Usuário (RLS) | Servidor (service_role) |
 |---|---|---|---|
@@ -112,18 +112,29 @@ Migração: `supabase/migrations/20261015000000_initial_schema.sql`.
 
 ## Contrato da IA
 
-Entrada: o JSON do wizard (campos do PRD) mais `total_dias_viagem`, calculado no servidor a partir
-das datas. Saída: `resumo_estrategico` + `pontos_mapa[]`, como no PRD, com dois ajustes:
+Fonte da verdade: `src/lib/validation/` (Zod). Os tipos de domínio saem de `z.infer`.
 
-- `estratégia_deslocamento` vira `estrategia_deslocamento` (chaves sem acento evitam bugs de acesso em JS/SQL).
-- Novo campo `resumo_estrategico.alertas: string[]` para o que a IA não conseguiu cumprir
-  (local fora da sub-região, desvio grande, ritmo que não cabe nos dias, taxa de devolução do carro).
+| Arquivo | O que define |
+|---|---|
+| `trip-request.ts` | `TripRequestInputSchema`: respostas do wizard com as chaves do PRD (validadas no cliente e na API); mapeamento para as colunas de `trip_requests`; `toPromptInput` acrescenta `total_dias_viagem` |
+| `itinerary.ts` | `ItinerarySchema`: saída da IA, enviada ao Claude como structured output; `ChecklistStateSchema` |
+| `../itinerary/rules.ts` | regras que o schema não expressa (soma de dias, ids e ordem, deslocamentos encadeados, hubs nas pontas, local repetido, local a evitar, coordenada fora da sub-região) |
+| `../itinerary/map.ts` | estado da tela do mapa: trechos, limites para `fitBounds`, seleção, checklist |
+| `../../types/database.ts` | tipos das tabelas, gerados pelo Supabase |
+
+Ajustes em relação ao JSON do PRD:
+
+- `estratégia_deslocamento` → `estrategia_deslocamento` (chaves sem acento evitam bugs em JS/SQL).
+- `resumo_estrategico.alertas: string[]`: o que a IA não conseguiu cumprir (local fora da
+  sub-região, desvio grande, ritmo que não cabe nos dias, taxa de devolução do carro).
+- `titulo`: nome curto da viagem, usado na lista de roteiros.
+- Categorias do checklist fechadas em 10 opções (`CATEGORIAS_CHECKLIST`) para dar cor e filtro na UI.
 
 ## Roadmap de commits
 
 1. ~~Estrutura e arquitetura~~
 2. ~~Schema do banco: `profiles`, `trip_requests`, `generated_itineraries`, RLS~~
-3. Tipos e schemas Zod de entrada, saída e estado do mapa
+3. ~~Tipos e schemas Zod de entrada, saída e estado do mapa~~
 4. `POST /api/generate-itinerary` com Claude, retry e checagens
 5. Mapa interativo (pins, linhas, drawer com checklist)
 6. Autenticação (senha + OTP) e `proxy.ts`

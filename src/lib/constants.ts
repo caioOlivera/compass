@@ -22,4 +22,28 @@ export const RITMOS = [
 
 export const TIPOS_PONTO = ["hub_entrada", "base_intermediaria", "auge_viagem", "hub_saida"] as const;
 
+// Mesma lista do system prompt (src/lib/ai/prompts/itinerary-system.ts)
+export const CATEGORIAS_CHECKLIST = [
+  "Imperdível",
+  "Cultura",
+  "Gastronomia",
+  "Natureza",
+  "Cênico",
+  "Aventura",
+  "Compras",
+  "Caminhada",
+  "Vida noturna",
+  "Logística",
+] as const;
+
 export const FLEXIBILIDADE_MAX_DIAS = 5;
+export const VIAGEM_MAX_DIAS = 90;
+export const LOCAIS_MAX = 15;
+
+export type SubregiaoId = (typeof SUBREGIOES)[number]["id"];
+export type RitmoId = (typeof RITMOS)[number]["id"];
+export type TipoPonto = (typeof TIPOS_PONTO)[number];
+export type CategoriaChecklist = (typeof CATEGORIAS_CHECKLIST)[number];
+
+export const SUBREGIAO_IDS = SUBREGIOES.map((s) => s.id) as [SubregiaoId, ...SubregiaoId[]];
+export const RITMO_IDS = RITMOS.map((r) => r.id) as [RitmoId, ...RitmoId[]];

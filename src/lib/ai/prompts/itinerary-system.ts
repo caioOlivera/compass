@@ -54,5 +54,7 @@ com tempo por base ajustado ao ritmo e ao tipo de destino, pronto para ser desen
 # FORMATO
 
 Responda somente com o objeto no schema fornecido, todo o texto em português do Brasil.
+"titulo" é um nome curto para a viagem (ex.: "Itália de Roma às Dolomitas").
+"id_ponto" segue a ordem da rota: "p1", "p2", "p3"...
 Não invente preços nem horários exatos de voos ou trens; fale em tempos médios.
 `.trim();
