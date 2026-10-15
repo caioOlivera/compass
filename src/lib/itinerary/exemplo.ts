@@ -1,3 +1,4 @@
+// Roteiro de exemplo do PRD. Usado nos testes e na página /exemplo (demonstração sem login nem IA).
 import type { Itinerary } from "@/lib/validation/itinerary";
 import { toPromptInput, TripRequestInputSchema } from "@/lib/validation/trip-request";
 

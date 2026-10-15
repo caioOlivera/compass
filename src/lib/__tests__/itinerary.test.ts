@@ -1,8 +1,15 @@
 import { describe, expect, it } from "vitest";
 import { dentroDaSubregiao } from "@/lib/geo/subregions";
-import { alternarItem, limitesDoRoteiro, progressoChecklist, trechosDoRoteiro } from "@/lib/itinerary/map";
+import {
+  alternarItem,
+  geojsonDosTrechos,
+  limitesDoRoteiro,
+  progressoChecklist,
+  tipoTransporte,
+  trechosDoRoteiro,
+} from "@/lib/itinerary/map";
 import { checarRegrasDoRoteiro } from "@/lib/itinerary/rules";
-import { pedidoPRD, roteiroPRD } from "./fixtures";
+import { pedidoPRD, roteiroPRD } from "@/lib/itinerary/exemplo";
 
 describe("checarRegrasDoRoteiro", () => {
   it("o roteiro do PRD passa sem erros", () => {
@@ -98,5 +105,25 @@ describe("estado do mapa", () => {
 
   it("progresso ignora índices que não existem mais", () => {
     expect(progressoChecklist(roteiroPRD(), { p1: [0, 1, 9], p4: [0] })).toEqual({ marcados: 3, total: 7 });
+  });
+});
+
+describe("transporte", () => {
+  it.each([
+    ["Trem Frecciarossa", "trem"],
+    ["Carro alugado", "carro"],
+    ["Voo low-cost Ryanair", "voo"],
+    ["Ferry com carro para Santorini", "barco"],
+    ["Ônibus FlixBus", "onibus"],
+    ["A pé", "outro"],
+  ] as const)("%s → %s", (meio, tipo) => {
+    expect(tipoTransporte(meio)).toBe(tipo);
+  });
+
+  it("GeoJSON com uma linha por trecho, [lng, lat]", () => {
+    const fc = geojsonDosTrechos(trechosDoRoteiro(roteiroPRD()));
+    expect(fc.features).toHaveLength(3);
+    expect(fc.features[0].properties).toEqual({ id: "p1-p2", tipo: "trem" });
+    expect(fc.features[0].geometry.coordinates[0]).toEqual([12.4964, 41.9028]);
   });
 });

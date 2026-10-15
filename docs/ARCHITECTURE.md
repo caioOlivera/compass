@@ -130,6 +130,26 @@ Migrações em `supabase/migrations/`, já aplicadas no projeto Supabase `compas
 - `generations_last_24h(user_id)` conta gerações do dia para o limite por plano; só o servidor executa.
 - Apagar a conta em `auth.users` apaga perfil, pedidos e roteiros em cascata.
 
+## Mapa interativo
+
+Tela `/roteiros/[id]` (e `/exemplo`, demonstração pública com o roteiro do PRD).
+
+| Peça | Arquivo |
+|---|---|
+| Composição, seleção, layout desktop/celular | `components/itinerary/itinerary-view.tsx` |
+| Mapa (MapLibre via react-map-gl): pins por tipo, linhas por transporte, popup do trecho | `components/map/itinerary-map.tsx` |
+| Painel da parada: dias, checklist, próximo trecho, navegação | `components/map/point-drawer.tsx` |
+| Lista lateral: resumo, alertas, progresso, rota | `components/itinerary/route-sidebar.tsx` |
+| Checklist otimista com PATCH agrupado | `hooks/use-checklist.ts` → `PATCH /api/itineraries/[id]` |
+
+- Linhas: voo tracejado, barco pontilhado, terrestre contínuo; cor por meio de transporte
+  (`tipoTransporte` classifica o texto livre da IA). São retas entre as bases, não o traçado da estrada.
+- O MapLibre 6 roda num worker carregado de arquivo separado; `scripts/copy-maplibre-worker.mjs`
+  (postinstall) copia o worker para `public/` e o mapa aponta para ele com `setWorkerUrl`.
+- Estilo do mapa: `NEXT_PUBLIC_MAP_STYLE_URL`, padrão OpenFreeMap Positron (sem token).
+- Componentes de UI no padrão shadcn (Radix + Tailwind) em `components/ui`; animações com Motion,
+  respeitando `prefers-reduced-motion`.
+
 ## Contrato da IA
 
 Fonte da verdade: `src/lib/validation/` (Zod). Os tipos de domínio saem de `z.infer`.
@@ -156,7 +176,7 @@ Ajustes em relação ao JSON do PRD:
 2. ~~Schema do banco: `profiles`, `trip_requests`, `generated_itineraries`, RLS~~
 3. ~~Tipos e schemas Zod de entrada, saída e estado do mapa~~
 4. ~~`POST /api/generate-itinerary` com Claude, retry e checagens~~
-5. Mapa interativo (pins, linhas, drawer com checklist)
+5. ~~Mapa interativo (pins, linhas, drawer com checklist)~~
 6. Autenticação (senha + OTP) e `proxy.ts`
 7. Wizard de 7 etapas
 

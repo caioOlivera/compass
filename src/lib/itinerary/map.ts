@@ -30,6 +30,70 @@ export const ROTULO_TIPO_PONTO: Record<TipoPonto, string> = {
   hub_saida: "Porta de saída",
 };
 
+/** Variáveis de cor definidas em globals.css (pins, legenda e badges). */
+export const COR_PONTO: Record<TipoPonto, string> = {
+  hub_entrada: "var(--pin-hub-entrada)",
+  base_intermediaria: "var(--pin-base)",
+  auge_viagem: "var(--pin-auge)",
+  hub_saida: "var(--pin-hub-saida)",
+};
+
+export type TipoTransporte = "voo" | "trem" | "barco" | "onibus" | "carro" | "outro";
+
+export const ROTULO_TRANSPORTE: Record<TipoTransporte, string> = {
+  voo: "Voo",
+  trem: "Trem",
+  barco: "Barco",
+  onibus: "Ônibus",
+  carro: "Carro",
+  outro: "Deslocamento",
+};
+
+// A IA escreve o meio de transporte em texto livre ("Trem Frecciarossa", "Carro alugado").
+// A ordem importa: "ferry com carro" é barco, "voo + transfer de carro" é voo.
+const PADROES_TRANSPORTE: [TipoTransporte, RegExp][] = [
+  ["voo", /\b(voo|aere[oa]|aviao|low.?cost|flight)/],
+  ["barco", /\b(ferry|balsa|barco|navio|catamara|lancha|cruzeiro)/],
+  ["trem", /\b(trem|ferrovi|frecciarossa|italo|tgv|ice|eurostar|shinkansen|rail|metro)/],
+  ["onibus", /\b(onibus|bus|flixbus)/],
+  ["carro", /\b(carro|auto|estrada|motorhome|campervan|transfer|taxi)/],
+];
+
+export function tipoTransporte(meio: string): TipoTransporte {
+  const t = meio.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
+  return PADROES_TRANSPORTE.find(([, re]) => re.test(t))?.[0] ?? "outro";
+}
+
+/** Linhas dos trechos em GeoJSON para o <Source> do mapa. id e tipo vão nas properties. */
+export function geojsonDosTrechos(trechos: Trecho[]): GeoJSON.FeatureCollection<GeoJSON.LineString> {
+  return {
+    type: "FeatureCollection",
+    features: trechos.map((t) => ({
+      type: "Feature",
+      properties: { id: t.id, tipo: tipoTransporte(t.deslocamento.meio_transporte) },
+      geometry: {
+        type: "LineString",
+        coordinates: [
+          [t.de.coordenadas.lng, t.de.coordenadas.lat],
+          [t.para.coordenadas.lng, t.para.coordenadas.lat],
+        ],
+      },
+    })),
+  };
+}
+
+export function pontoMedio(t: Trecho): { lat: number; lng: number } {
+  return {
+    lat: (t.de.coordenadas.lat + t.para.coordenadas.lat) / 2,
+    lng: (t.de.coordenadas.lng + t.para.coordenadas.lng) / 2,
+  };
+}
+
+/** "Dolomitas (base Cortina d'Ampezzo)" → "Dolomitas", para rótulos curtos no mapa. */
+export function nomeCurto(nome: string): string {
+  return nome.replace(/\s*\(.*\)\s*$/, "") || nome;
+}
+
 export function trechosDoRoteiro(roteiro: Itinerary): Trecho[] {
   const porId = new Map(roteiro.pontos_mapa.map((p) => [p.id_ponto, p]));
   return roteiro.pontos_mapa.flatMap((de) => {

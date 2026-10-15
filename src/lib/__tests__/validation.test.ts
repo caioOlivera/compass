@@ -8,7 +8,7 @@ import {
   toTripRequestRow,
   TripRequestInputSchema,
 } from "@/lib/validation/trip-request";
-import { pedidoPRD, roteiroPRD } from "./fixtures";
+import { pedidoPRD, roteiroPRD } from "@/lib/itinerary/exemplo";
 
 const base = {
   continente_regiao: "europa-do-sul",

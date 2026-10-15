@@ -38,7 +38,10 @@ export default function Home() {
           >
             Criar meu roteiro
           </Link>
-          <Link href="/login" className="rounded-lg border border-border px-5 py-3 font-medium hover:bg-surface-2">
+          <Link href="/exemplo" className="rounded-lg border border-border px-5 py-3 font-medium hover:bg-surface-2">
+            Ver um exemplo
+          </Link>
+          <Link href="/login" className="px-2 py-3 font-medium text-text-2 hover:text-text">
             Já tenho conta
           </Link>
         </div>

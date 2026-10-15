@@ -1,7 +1,7 @@
 import type Anthropic from "@anthropic-ai/sdk";
 import { describe, expect, it } from "vitest";
 import { GeracaoError, gerarRoteiro } from "@/lib/ai/generate";
-import { pedidoPRD, roteiroPRD } from "./fixtures";
+import { pedidoPRD, roteiroPRD } from "@/lib/itinerary/exemplo";
 
 type Resposta = { texto: string; stop_reason?: string };
 
