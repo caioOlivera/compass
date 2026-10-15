@@ -33,6 +33,20 @@ Landing ─► Cadastro/Login (senha ou OTP) ─► Wizard (7 etapas)
                        /roteiros/[id] ─► Mapa: pins, polylines, drawer com checklist
 ```
 
+### Provedores (`src/lib/ai/`)
+
+`AI_PROVIDER` escolhe o motor em `lib/ai/index.ts`:
+
+| Valor | Arquivo | Como chama |
+|---|---|---|
+| `anthropic` | `providers/anthropic.ts` | SDK oficial, structured output, streaming, fallback de recusa |
+| `openai-compatible` | `providers/openai-compatible.ts` | `fetch` em `{AI_BASE_URL}/chat/completions` (Ollama, LM Studio, Gemini, Groq, OpenRouter, Mistral) com `response_format` conforme `AI_JSON_MODE`; o schema também vai no prompt |
+| `demo` | `providers/demo.ts` | sem IA: roteiro de exemplo com os dias redistribuídos e aviso de demonstração |
+
+`generate.ts` é independente do provedor: recebe um `ChamadorModelo` (mensagem → texto + motivo
+de parada + tokens), valida e refaz. `extrairJson` tolera bloco de código e `<think>` de modelos locais.
+O schema (`schema.ts`) vai sem `$ref`, porque alguns provedores não aceitam referências.
+
 ### Geração (`src/lib/ai/generate.ts`)
 
 - Modelo `ANTHROPIC_MODEL` (padrão `claude-opus-5-5`), esforço `ANTHROPIC_EFFORT` (padrão `medium`), streaming

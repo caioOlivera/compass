@@ -1,6 +1,7 @@
 import type Anthropic from "@anthropic-ai/sdk";
 import { describe, expect, it } from "vitest";
 import { GeracaoError, gerarRoteiro } from "@/lib/ai/generate";
+import { chamadorAnthropic } from "@/lib/ai/providers/anthropic";
 import { pedidoPRD, roteiroPRD } from "@/lib/itinerary/exemplo";
 
 type Resposta = { texto: string; stop_reason?: string };
@@ -29,7 +30,7 @@ function clienteFalso(respostas: Resposta[]) {
   return { client, chamadas };
 }
 
-const opcoes = (client: Anthropic) => ({ client, modelo: "claude-opus-5-5", effort: "medium" as const });
+const opcoes = (client: Anthropic, modelo = "claude-opus-5-5") => chamadorAnthropic({ client, modelo, effort: "medium" });
 const ok = JSON.stringify(roteiroPRD());
 
 function semDias() {
@@ -54,7 +55,7 @@ describe("gerarRoteiro", () => {
 
   it("não envia fallback para modelo que não aceita (Haiku)", async () => {
     const { client, chamadas } = clienteFalso([{ texto: ok }]);
-    await gerarRoteiro(pedidoPRD, { ...opcoes(client), modelo: "claude-haiku-5-5" });
+    await gerarRoteiro(pedidoPRD, opcoes(client, "claude-haiku-5-5"));
     expect(chamadas[0]).not.toHaveProperty("fallbacks");
     expect(chamadas[0]).not.toHaveProperty("betas");
   });

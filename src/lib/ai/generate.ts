@@ -1,21 +1,24 @@
-import type Anthropic from "@anthropic-ai/sdk";
-import { betaZodOutputFormat } from "@anthropic-ai/sdk/helpers/beta/zod";
-import { ITINERARY_SYSTEM_PROMPT } from "@/lib/ai/prompts/itinerary-system";
 import { checarRegrasDoRoteiro } from "@/lib/itinerary/rules";
 import { ItinerarySchema, type Itinerary } from "@/lib/validation/itinerary";
 import type { ItineraryPromptInput } from "@/lib/validation/trip-request";
 
-// Motor de roteiros: Claude com structured output + validação Zod + regras de negócio.
-// Se o roteiro vier com problema, uma nova tentativa leva o JSON anterior e a lista de erros.
+// Motor de roteiros, independente do provedor de IA: chama o modelo, valida com Zod e com as
+// regras de negócio e, se o roteiro vier com problema, faz uma nova tentativa com o JSON
+// anterior e a lista de erros. Cada provedor só implementa um ChamadorModelo (providers/).
 
 const MAX_TENTATIVAS = 2;
 
-const MODELOS_COM_FALLBACK = new Set(["claude-fable-5-1", "claude-opus-5-5", "claude-opus-5", "claude-sonnet-5-5"]);
+export type RespostaModelo = {
+  texto: string;
+  /** fim = terminou normalmente; tamanho = cortado por limite de tokens; recusa = o modelo recusou */
+  parada: "fim" | "tamanho" | "recusa";
+  modelo: string;
+  inputTokens: number;
+  outputTokens: number;
+};
 
-// Só o JSON Schema; sem o parse automático do SDK, que lança exceção e perderia os erros
-// de validação que queremos devolver ao modelo.
-const { type, schema } = betaZodOutputFormat(ItinerarySchema);
-const FORMATO_SAIDA = { type, schema };
+/** Recebe a mensagem do usuário (o system prompt é responsabilidade de cada provedor). */
+export type ChamadorModelo = (mensagem: string) => Promise<RespostaModelo>;
 
 export type ResultadoGeracao = {
   roteiro: Itinerary;
@@ -39,53 +42,31 @@ export class GeracaoError extends Error {
   }
 }
 
-export type OpcoesGeracao = {
-  client: Anthropic;
-  modelo: string;
-  effort: "low" | "medium" | "high" | "xhigh" | "max";
-  signal?: AbortSignal;
-};
-
-export async function gerarRoteiro(pedido: ItineraryPromptInput, opcoes: OpcoesGeracao): Promise<ResultadoGeracao> {
+export async function gerarRoteiro(pedido: ItineraryPromptInput, chamar: ChamadorModelo): Promise<ResultadoGeracao> {
   const inicio = Date.now();
   let inputTokens = 0;
   let outputTokens = 0;
   let anterior: { json: string; erros: string[] } | null = null;
 
   for (let tentativa = 1; tentativa <= MAX_TENTATIVAS; tentativa++) {
-    const stream = opcoes.client.beta.messages.stream(
-      {
-        model: opcoes.modelo,
-        max_tokens: 32_000,
-        system: ITINERARY_SYSTEM_PROMPT,
-        messages: [{ role: "user", content: montarMensagem(pedido, anterior) }],
-        output_config: { effort: opcoes.effort, format: FORMATO_SAIDA },
-        // Se o modelo principal recusar por engano, a API refaz no modelo de fallback.
-        // Só alguns modelos aceitam o parâmetro (o Haiku, por exemplo, responde 400).
-        ...(MODELOS_COM_FALLBACK.has(opcoes.modelo)
-          ? { betas: ["server-side-fallback-2026-07-01"], fallbacks: "default" as const }
-          : {}),
-      },
-      { signal: opcoes.signal },
-    );
-    const resposta: Anthropic.Beta.BetaMessage = await stream.finalMessage();
-    inputTokens += resposta.usage.input_tokens;
-    outputTokens += resposta.usage.output_tokens;
+    const resposta = await chamar(montarMensagem(pedido, anterior));
+    inputTokens += resposta.inputTokens;
+    outputTokens += resposta.outputTokens;
 
-    if (resposta.stop_reason === "refusal") {
+    if (resposta.parada === "recusa") {
       throw new GeracaoError("recusa", "A IA não aceitou gerar este roteiro. Revise as observações e tente de novo.");
     }
 
-    const texto: string = resposta.content.flatMap((b) => (b.type === "text" ? [b.text] : [])).join("");
+    const texto = extrairJson(resposta.texto);
     const erros =
-      resposta.stop_reason === "max_tokens"
+      resposta.parada === "tamanho"
         ? ["A resposta anterior foi cortada por tamanho. Seja mais conciso nos textos e checklists."]
         : validar(texto, pedido);
 
     if (erros.length === 0) {
       return {
         roteiro: ItinerarySchema.parse(JSON.parse(texto)),
-        modelo: resposta.model,
+        modelo: resposta.modelo,
         tentativas: tentativa,
         inputTokens,
         outputTokens,
@@ -95,7 +76,7 @@ export async function gerarRoteiro(pedido: ItineraryPromptInput, opcoes: OpcoesG
 
     anterior = { json: texto, erros };
     if (tentativa === MAX_TENTATIVAS) {
-      const motivo: MotivoFalha = resposta.stop_reason === "max_tokens" ? "truncado" : "invalido";
+      const motivo: MotivoFalha = resposta.parada === "tamanho" ? "truncado" : "invalido";
       throw new GeracaoError(motivo, "Não conseguimos montar um roteiro consistente. Tente de novo.", erros);
     }
   }
@@ -103,12 +84,25 @@ export async function gerarRoteiro(pedido: ItineraryPromptInput, opcoes: OpcoesG
   throw new Error("inalcançável");
 }
 
+/**
+ * Modelos sem saída estruturada (comum em modelos locais) às vezes embrulham o JSON em
+ * ```json ... ``` ou escrevem o raciocínio em <think>...</think> antes. Fica só o objeto.
+ */
+export function extrairJson(texto: string): string {
+  const semPensamento = texto.replace(/<think>[\s\S]*?<\/think>/g, "").trim();
+  const cerca = semPensamento.match(/```(?:json)?\s*([\s\S]*?)```/);
+  const corpo = (cerca ? cerca[1] : semPensamento).trim();
+  const inicio = corpo.indexOf("{");
+  const fim = corpo.lastIndexOf("}");
+  return inicio !== -1 && fim > inicio ? corpo.slice(inicio, fim + 1) : corpo;
+}
+
 function validar(texto: string, pedido: ItineraryPromptInput): string[] {
   let bruto: unknown;
   try {
     bruto = JSON.parse(texto);
   } catch {
-    return ["A resposta não era um JSON válido."];
+    return ["A resposta não era um JSON válido. Responda apenas com o objeto JSON, sem texto em volta."];
   }
   const r = ItinerarySchema.safeParse(bruto);
   if (!r.success) {

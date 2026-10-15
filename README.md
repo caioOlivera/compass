@@ -11,6 +11,42 @@ cp .env.example .env.local   # preencha as chaves (Supabase e Anthropic)
 npm run dev        # http://localhost:3000
 ```
 
+## Provedor de IA (dá para começar de graça)
+
+Escolha em `AI_PROVIDER` no `.env.local`. Só a chamada ao modelo muda: as checagens do roteiro
+(soma de dias, locais a evitar, coordenadas na sub-região, sem bate-e-volta) valem para todos, e o
+roteiro com erro volta para o modelo corrigir.
+
+| Opção | Custo | Para quê |
+|---|---|---|
+| `demo` | grátis, sem IA | testar o fluxo inteiro; devolve sempre o roteiro de exemplo (Roma → Dolomitas) |
+| Ollama / LM Studio no seu computador | grátis | desenvolver com IA de verdade, sem os dados saírem da máquina |
+| Gemini, Groq, OpenRouter (planos grátis) | grátis com limite | testar com modelos maiores; confira nos termos se o plano grátis usa seus dados e se permite uso comercial |
+| `anthropic` (Claude) | pago | produção |
+
+**Ollama (local)**
+
+1. Instale em https://ollama.com e baixe um modelo: `ollama pull qwen3:14b`
+   (máquina mais modesta: `qwen3:8b`; modelos menores erram mais em geografia).
+2. No `.env.local`:
+   ```
+   AI_PROVIDER=openai-compatible
+   AI_BASE_URL=http://localhost:11434/v1
+   AI_MODEL=qwen3:14b
+   ```
+   Funciona só rodando o app no seu computador (`npm run dev`): um site publicado não enxerga o
+   `localhost` da sua máquina. Gerar pode levar alguns minutos, dependendo do computador.
+
+**Gemini (Google AI Studio)**: crie a chave em https://aistudio.google.com e use
+`AI_BASE_URL=https://generativelanguage.googleapis.com/v1beta/openai`, `AI_API_KEY=<sua chave>` e em
+`AI_MODEL` um modelo listado no AI Studio.
+
+**Groq**: chave em https://console.groq.com, `AI_BASE_URL=https://api.groq.com/openai/v1`. Se o modelo
+escolhido não aceitar `json_schema`, use `AI_JSON_MODE=json_object`.
+
+**OpenRouter**: chave em https://openrouter.ai, `AI_BASE_URL=https://openrouter.ai/api/v1` e um
+modelo com `:free` no nome.
+
 ## Banco de dados
 
 O projeto Supabase `compass` já tem as migrações de `supabase/migrations/` aplicadas. Para um projeto

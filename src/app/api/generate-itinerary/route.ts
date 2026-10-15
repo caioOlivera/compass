@@ -1,8 +1,9 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
-import { anthropic } from "@/lib/ai/client";
-import { GeracaoError, gerarRoteiro } from "@/lib/ai/generate";
+import { GeracaoError } from "@/lib/ai/generate";
+import { gerarComProvedorConfigurado } from "@/lib/ai";
+import { ProvedorError } from "@/lib/ai/providers/openai-compatible";
 import { serverEnv } from "@/lib/env";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
@@ -62,12 +63,7 @@ export async function POST(req: NextRequest) {
   await marcarStatus("generating");
 
   try {
-    const resultado = await gerarRoteiro(toPromptInput(input), {
-      client: anthropic(),
-      modelo: env.ANTHROPIC_MODEL,
-      effort: env.ANTHROPIC_EFFORT,
-      signal: req.signal,
-    });
+    const resultado = await gerarComProvedorConfigurado(toPromptInput(input), req.signal);
 
     const { data: roteiro, error: erroRoteiro } = await admin
       .from("generated_itineraries")
@@ -109,6 +105,17 @@ function classificarFalha(e: unknown): { status: number; mensagem: string } {
   }
   if (e instanceof Anthropic.APIConnectionError) {
     return { status: 503, mensagem: "Não conseguimos falar com o serviço de IA. Tente de novo." };
+  }
+  // Provedores no formato OpenAI (Ollama, Gemini, Groq...)
+  if (e instanceof ProvedorError) {
+    return e.status === 429 || e.status >= 500
+      ? { status: 503, mensagem: "O serviço de IA está no limite de uso. Tente de novo em alguns minutos." }
+      : { status: 502, mensagem: "O serviço de IA recusou o pedido. Confira a configuração do provedor." };
+  }
+  if (e instanceof DOMException && e.name === "AbortError") return { status: 499, mensagem: "Geração cancelada." };
+  // fetch sem resposta: Ollama desligado, endereço errado, sem internet
+  if (e instanceof TypeError && e.message === "fetch failed") {
+    return { status: 503, mensagem: "Não conseguimos falar com o serviço de IA. Ele está ligado?" };
   }
   return { status: 500, mensagem: "Erro inesperado ao gerar o roteiro." };
 }
