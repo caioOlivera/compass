@@ -7,6 +7,7 @@ export const SUBREGIOES = [
   { id: "europa-do-sul", continente: "Europa", nome: "Europa do Sul" },
   { id: "europa-central-leste", continente: "Europa", nome: "Europa Central/Leste" },
   { id: "asia-leste", continente: "Ásia", nome: "Ásia Leste" },
+  { id: "asia-sul", continente: "Ásia", nome: "Sul da Ásia" },
   { id: "oriente-medio", continente: "Ásia", nome: "Oriente Médio" },
   { id: "sudeste-asiatico", continente: "Ásia", nome: "Sudeste Asiático" },
   { id: "africa-do-norte", continente: "África", nome: "África do Norte" },

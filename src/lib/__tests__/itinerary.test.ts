@@ -74,6 +74,9 @@ describe("sub-regiões", () => {
     ["oceania", -17.53, -149.57], // Taiti
     ["oceania", -45.03, 168.66], // Queenstown
     ["asia-leste", 35.68, 139.69], // Tóquio
+    ["asia-sul", 27.17, 78.04], // Agra
+    ["asia-sul", 4.17, 73.51], // Malé, Maldivas
+    ["asia-sul", 6.93, 79.85], // Colombo
   ] as const)("%s contém (%d, %d)", (sub, lat, lng) => {
     expect(dentroDaSubregiao(sub, { lat, lng })).toBe(true);
   });

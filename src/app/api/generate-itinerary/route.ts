@@ -98,6 +98,12 @@ export async function POST(req: NextRequest) {
 function classificarFalha(e: unknown): { status: number; mensagem: string } {
   if (e instanceof GeracaoError) return { status: 502, mensagem: e.message };
   if (e instanceof Anthropic.APIUserAbortError) return { status: 499, mensagem: "Geração cancelada." };
+  // Teto de gasto mensal da conta Anthropic: mesmo tipo de erro do rate limit, mas não volta
+  // até o mês virar ou o limite subir. Precisa de ação nossa, não do usuário.
+  if (e instanceof Anthropic.RateLimitError && codigoErroAnthropic(e) === "enforced_spend_limit_reached") {
+    console.error("[generate-itinerary] ALERTA: teto de gasto mensal da Anthropic atingido");
+    return { status: 503, mensagem: "A geração de roteiros está temporariamente indisponível. Já fomos avisados." };
+  }
   if (e instanceof Anthropic.RateLimitError || e instanceof Anthropic.InternalServerError) {
     return { status: 503, mensagem: "O serviço de IA está sobrecarregado. Tente de novo em alguns minutos." };
   }
@@ -105,6 +111,11 @@ function classificarFalha(e: unknown): { status: number; mensagem: string } {
     return { status: 503, mensagem: "Não conseguimos falar com o serviço de IA. Tente de novo." };
   }
   return { status: 500, mensagem: "Erro inesperado ao gerar o roteiro." };
+}
+
+function codigoErroAnthropic(e: InstanceType<typeof Anthropic.APIError>): string | undefined {
+  const corpo = e.error as { error?: { details?: { error_code?: string } } } | undefined;
+  return corpo?.error?.details?.error_code;
 }
 
 function erro(status: number, mensagem: string) {

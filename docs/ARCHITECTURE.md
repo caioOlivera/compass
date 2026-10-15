@@ -43,6 +43,8 @@ Landing ─► Cadastro/Login (senha ou OTP) ─► Wizard (7 etapas)
   refaz no modelo alternativo.
 - Até 2 tentativas. A segunda recebe o JSON anterior e a lista exata de erros.
 - `stop_reason: "refusal"` encerra sem nova tentativa; `max_tokens` pede concisão na segunda.
+- Teto de gasto mensal da Anthropic atingido (429 `enforced_spend_limit_reached`) é registrado como
+  alerta e mostrado como indisponibilidade, separado do rate limit comum.
 
 ### Rota (`POST /api/generate-itinerary`)
 
