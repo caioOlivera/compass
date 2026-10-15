@@ -1,9 +1,8 @@
 import type { Metadata } from "next";
-import "@fontsource-variable/inter-tight";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Compass: roteiros de viagem sem volta",
+  title: "Compass: roteiros de viagem fluidos",
   description: "Roteiros de viagem sem bate-e-volta, montados por IA e mostrados num mapa interativo.",
 };
 

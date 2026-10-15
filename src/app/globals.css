@@ -2,33 +2,48 @@
 
 :root {
   color-scheme: light;
-  /* Identidade Compass: azul-marinho sobre branco, tangerina só na ação principal */
-  --bg: #ffffff;
-  --surface: #f4f4f2;
-  --surface-2: #e9e8e4;
-  --border: #e3e1dc;
-  --text: #1f2b4d;
-  --text-2: #4a5472;
-  --text-3: #6a7186;
-  --accent: #f7941d;
-  --accent-contrast: #1f2b4d;
-  /* Tangerina escura: texto e ícones de destaque sobre fundo claro (5.3:1) */
-  --accent-strong: #a8560a;
-  --field-dark: #05070a;
-  --field-dark-ink: #ffffff;
-  --field-warm: #e3e1dc;
+  /* Identidade Compass: verde-floresta sobre papel quente */
+  --bg: #f7f6f2;
+  --surface: #fdfcf9;
+  --surface-2: #efede6;
+  --border: #e2dfd6;
+  --text: #13140f;
+  --text-2: #4f5048;
+  --text-3: #8a8a80;
+  --accent: #1f6f5c;
+  --accent-contrast: #ffffff;
+  /* Texto e ícones de destaque (no claro é o próprio verde) */
+  --accent-strong: #1f6f5c;
+  --field-dark: #13140f;
+  --field-dark-ink: #f7f6f2;
+  --field-warm: #efede6;
 
   /* Tipos de ponto no mapa (pins, legenda e badges) */
-  --pin-hub-entrada: #1f2b4d;
-  --pin-base: #6a7186;
-  --pin-auge: #f7941d;
-  --pin-hub-saida: #0e7c86;
+  --pin-hub-entrada: #2a78d6;
+  --pin-base: #8a8a80;
+  --pin-auge: #eb6834;
+  --pin-hub-saida: #6250d6;
+}
 
-  --font-sans: "Inter Tight Variable", ui-sans-serif, system-ui, sans-serif;
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --bg: #11120f;
+    --surface: #191a16;
+    --surface-2: #22231e;
+    --border: #2e2f29;
+    --text: #f1f0ea;
+    --text-2: #b4b3aa;
+    --text-3: #7d7c74;
+    --accent: #4fb89b;
+    --accent-contrast: #0b1712;
+    --accent-strong: #4fb89b;
+    --field-dark: #0b0c0a;
+    --field-warm: #22231e;
+  }
 }
 
 @theme inline {
-  --font-sans: var(--font-sans);
   --color-bg: var(--bg);
   --color-surface: var(--surface);
   --color-surface-2: var(--surface-2);
@@ -47,8 +62,6 @@
 body {
   background: var(--bg);
   color: var(--text);
-  font-family: var(--font-sans);
-  letter-spacing: -0.01em;
 }
 
 ::selection {
@@ -107,7 +120,7 @@ body {
   }
 }
 
-/* Slider de etapas da landing: trilho de 8px, parte percorrida em tinta cheia, polegar quadrado tangerina */
+/* Slider de etapas da landing: trilho de 8px, parte percorrida em tinta cheia, polegar na cor de destaque */
 .stage-range {
   appearance: none;
   height: 32px;

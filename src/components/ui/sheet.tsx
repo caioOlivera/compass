@@ -44,7 +44,7 @@ export function SheetContent({
         {...props}
       >
         {children}
-        <SheetPrimitive.Close className="absolute top-4 right-4 rounded-md p-1 text-text-2 transition hover:bg-surface-2 hover:text-text focus-visible:outline-2 focus-visible:outline-accent">
+        <SheetPrimitive.Close className="absolute top-3 right-3 z-10 rounded-full bg-surface/90 p-1.5 text-text-2 shadow-sm transition hover:bg-surface hover:text-text focus-visible:outline-2 focus-visible:outline-accent">
           <XIcon className="size-5" aria-hidden />
           <span className="sr-only">Fechar</span>
         </SheetPrimitive.Close>

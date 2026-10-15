@@ -49,6 +49,14 @@ escolhido não aceitar `json_schema`, use `AI_JSON_MODE=json_object`.
 **OpenRouter**: chave em https://openrouter.ai, `AI_BASE_URL=https://openrouter.ai/api/v1` e um
 modelo com `:free` no nome.
 
+## Fotos (Pexels, grátis)
+
+A landing e as paradas do roteiro usam fotos do [Pexels](https://www.pexels.com). Crie uma chave
+gratuita em https://www.pexels.com/api, defina `PEXELS_API_KEY` (na Vercel: Settings → Environment
+Variables, depois um Redeploy). As buscas rodam só no servidor e ficam em cache por uma semana; sem
+chave, os cartões mostram a cor e o emoji de cada destino. Os créditos dos fotógrafos aparecem no
+rodapé e em cada parada.
+
 ## Banco de dados
 
 O projeto Supabase `compass` já tem as migrações de `supabase/migrations/` aplicadas. Para um projeto

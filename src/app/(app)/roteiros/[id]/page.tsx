@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { z } from "zod";
 import { ItineraryView } from "@/components/itinerary/itinerary-view";
+import { buscarFoto } from "@/lib/images/pexels";
+import { fotosDoRoteiro } from "@/lib/itinerary/fotos";
 import { createClient } from "@/lib/supabase/server";
 import { ChecklistStateSchema, ItinerarySchema } from "@/lib/validation/itinerary";
 
@@ -30,9 +32,12 @@ export default async function RoteiroPage({ params }: Props) {
   const roteiro = ItinerarySchema.parse(data.itinerary);
   const checklist = ChecklistStateSchema.catch({}).parse(data.checklist_state);
 
+  const fotos = await fotosDoRoteiro(roteiro, (q) => buscarFoto(q, { idioma: "pt-BR" }));
+
   return (
     <ItineraryView
       roteiro={roteiro}
+      fotos={fotos}
       checklistInicial={checklist}
       itineraryId={id}
       voltar={{ href: "/roteiros", rotulo: "Meus roteiros" }}

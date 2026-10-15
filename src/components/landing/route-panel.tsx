@@ -40,7 +40,7 @@ export function RoutePanel({ ativa }: { ativa: number }) {
                 y1={p.y}
                 x2={q.x}
                 y2={q.y}
-                stroke="#f7941d"
+                stroke="#4fb89b"
                 strokeWidth={4}
                 strokeLinecap="round"
                 initial={false}
@@ -61,8 +61,8 @@ export function RoutePanel({ ativa }: { ativa: number }) {
                 cy={p.y}
                 initial={false}
                 animate={{ r: foco ? 13 : 8 }}
-                fill={ligada ? "#f7941d" : "#05070a"}
-                stroke={ligada ? "#f7941d" : "white"}
+                fill={ligada ? "#4fb89b" : "#13140f"}
+                stroke={ligada ? "#4fb89b" : "white"}
                 strokeWidth={3}
               />
               <text

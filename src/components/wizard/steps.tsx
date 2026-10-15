@@ -168,7 +168,7 @@ export function EtapaAuge({ rascunho, atualizar, erros }: PropsEtapa) {
                 className={cn(
                   "rounded-full border px-3 py-1.5 text-sm transition active:scale-[0.97]",
                   ativa
-                    ? "border-text bg-text text-white"
+                    ? "border-text bg-text text-bg"
                     : "border-border text-text-2 hover:border-text-3 hover:text-text",
                 )}
               >

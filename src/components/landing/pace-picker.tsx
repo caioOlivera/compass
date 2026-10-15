@@ -25,7 +25,7 @@ export function PacePicker() {
             onClick={() => setRitmo(r)}
             className={cn(
               "min-h-11 px-3 text-[15px] font-medium transition-colors active:scale-[0.98]",
-              ritmo === r ? "bg-text text-white" : "text-text-2 hover:bg-white hover:text-text",
+              ritmo === r ? "bg-text text-bg" : "text-text-2 hover:bg-bg hover:text-text",
             )}
           >
             {RITMOS_EXEMPLO[r].rotulo}
@@ -47,7 +47,7 @@ export function PacePicker() {
               style={{ flexGrow: p.dias, flexBasis: 0 }}
               className={cn(
                 "flex items-center justify-center overflow-hidden text-[15px] font-medium tabular-nums",
-                "auge" in p && p.auge ? "bg-accent text-accent-contrast" : "bg-text text-white",
+                "auge" in p && p.auge ? "bg-[var(--pin-auge)] text-white" : "bg-text text-bg",
               )}
             >
               {p.dias}

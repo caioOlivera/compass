@@ -8,6 +8,7 @@ import { PointDrawer } from "@/components/map/point-drawer";
 import { useChecklist } from "@/hooks/use-checklist";
 import { useIsDesktop } from "@/hooks/use-media-query";
 import { progressoChecklist, trechosDoRoteiro, type Selecao } from "@/lib/itinerary/map";
+import type { FotosPorPonto } from "@/lib/itinerary/fotos";
 import type { ChecklistState, Itinerary } from "@/lib/validation/itinerary";
 
 // MapLibre usa window/WebGL: carrega só no navegador, e só nesta tela.
@@ -20,13 +21,15 @@ const LARGURA_PAINEL = 420;
 
 type Props = {
   roteiro: Itinerary;
+  /** Foto de cada parada (Pexels); vazio sem chave */
+  fotos?: FotosPorPonto;
   checklistInicial: ChecklistState;
   /** Sem id = demonstração: o checklist não é salvo. */
   itineraryId?: string;
   voltar: { href: string; rotulo: string };
 };
 
-export function ItineraryView({ roteiro, checklistInicial, itineraryId, voltar }: Props) {
+export function ItineraryView({ roteiro, fotos = {}, checklistInicial, itineraryId, voltar }: Props) {
   const [selecao, setSelecao] = useState<Selecao>(null);
   const checklist = useChecklist(checklistInicial, itineraryId);
   const desktop = useIsDesktop();
@@ -44,6 +47,7 @@ export function ItineraryView({ roteiro, checklistInicial, itineraryId, voltar }
         <aside className="order-2 min-h-0 flex-1 overflow-y-auto border-border lg:order-1 lg:w-[400px] lg:flex-none lg:border-r">
           <RouteSidebar
             roteiro={roteiro}
+            fotos={fotos}
             trechos={trechos}
             selecao={selecao}
             onSelecionar={setSelecao}
@@ -67,6 +71,7 @@ export function ItineraryView({ roteiro, checklistInicial, itineraryId, voltar }
 
       <PointDrawer
         ponto={pontoAberto}
+        fotos={fotos}
         pontos={roteiro.pontos_mapa}
         lado={desktop ? "right" : "bottom"}
         checklist={checklist.estado}

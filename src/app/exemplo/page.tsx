@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { ItineraryView } from "@/components/itinerary/itinerary-view";
+import { buscarFoto } from "@/lib/images/pexels";
+import { fotosDoRoteiro } from "@/lib/itinerary/fotos";
 import { roteiroPRD } from "@/lib/itinerary/exemplo";
 
 export const metadata: Metadata = {
@@ -8,6 +10,8 @@ export const metadata: Metadata = {
 };
 
 // Demonstração pública: roteiro fixo, checklist só no navegador.
-export default function ExemploPage() {
-  return <ItineraryView roteiro={roteiroPRD()} checklistInicial={{}} voltar={{ href: "/", rotulo: "Início" }} />;
+export default async function ExemploPage() {
+  const roteiro = roteiroPRD();
+  const fotos = await fotosDoRoteiro(roteiro, (q) => buscarFoto(q, { idioma: "pt-BR" }));
+  return <ItineraryView roteiro={roteiro} fotos={fotos} checklistInicial={{}} voltar={{ href: "/", rotulo: "Início" }} />;
 }

@@ -172,7 +172,7 @@ export default function ItineraryMap({ pontos, trechos, selecao, onSelecionar, d
           type="line"
           filter={filtroDestaque}
           layout={{ "line-cap": "round" }}
-          paint={{ "line-color": "#1f2b4d", "line-width": 2, "line-gap-width": 5, "line-opacity": 0.6 }}
+          paint={{ "line-color": "#13140f", "line-width": 2, "line-gap-width": 5, "line-opacity": 0.6 }}
         />
       </Source>
 

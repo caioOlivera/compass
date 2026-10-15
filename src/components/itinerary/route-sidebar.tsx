@@ -4,6 +4,8 @@ import { AlertTriangle, ArrowLeft, CalendarDays, Gauge, Plane } from "lucide-rea
 import { motion } from "motion/react";
 import Link from "next/link";
 import { LegResumo } from "@/components/itinerary/leg-info";
+import { FotoDestino } from "@/components/ui/foto";
+import type { FotosPorPonto } from "@/lib/itinerary/fotos";
 import type { StatusSalvamento } from "@/hooks/use-checklist";
 import { COR_PONTO, ROTULO_TIPO_PONTO, type Selecao, type Trecho } from "@/lib/itinerary/map";
 import type { Itinerary } from "@/lib/validation/itinerary";
@@ -11,6 +13,7 @@ import { cn } from "@/lib/utils";
 
 type Props = {
   roteiro: Itinerary;
+  fotos: FotosPorPonto;
   trechos: Trecho[];
   selecao: Selecao;
   onSelecionar: (s: Selecao) => void;
@@ -20,7 +23,7 @@ type Props = {
   voltar: { href: string; rotulo: string };
 };
 
-export function RouteSidebar({ roteiro, trechos, selecao, onSelecionar, progresso, status, onTentarDeNovo, voltar }: Props) {
+export function RouteSidebar({ roteiro, fotos, trechos, selecao, onSelecionar, progresso, status, onTentarDeNovo, voltar }: Props) {
   const r = roteiro.resumo_estrategico;
   const pct = progresso.total ? Math.round((progresso.marcados / progresso.total) * 100) : 0;
 
@@ -107,6 +110,9 @@ export function RouteSidebar({ roteiro, trechos, selecao, onSelecionar, progress
                   >
                     {p.ordem}
                   </span>
+                  {fotos[p.id_ponto] && (
+                    <FotoDestino foto={fotos[p.id_ponto]} className="size-11 shrink-0 rounded-lg" />
+                  )}
                   <span className="flex min-w-0 flex-1 flex-col">
                     <span className="truncate font-medium">
                       <span aria-hidden>{p.emoji} </span>

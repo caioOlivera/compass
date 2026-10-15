@@ -15,8 +15,8 @@ export function Showcase() {
   const [saida, setSaida] = useState<Saida>("O mapa");
 
   return (
-    <section id="o-que-voce-recebe" aria-label="O que você recebe" className="grid gap-8 py-16 lg:grid-cols-12 lg:gap-0 lg:py-0">
-      <div className="flex flex-col justify-center gap-6 px-5 sm:px-8 lg:col-span-5 lg:py-24">
+    <div id="o-que-voce-recebe" className="grid grid-cols-[minmax(0,1fr)] gap-8 py-16 lg:grid-cols-12 lg:gap-0 lg:py-0">
+      <div className="flex flex-col justify-center gap-6 px-5 sm:px-8 lg:col-span-5 lg:py-16">
         <div
           role="tablist"
           aria-label="Saídas do roteiro"
@@ -44,7 +44,7 @@ export function Showcase() {
         </p>
       </div>
 
-      <div className="relative h-[70svh] overflow-hidden bg-surface lg:col-span-7 lg:h-[88svh]">
+      <div className="relative h-[70svh] overflow-hidden bg-bg lg:col-span-7 lg:h-[600px]">
         <AnimatePresence mode="wait" initial={false}>
           <motion.div
             key={saida}
@@ -61,7 +61,7 @@ export function Showcase() {
           </motion.div>
         </AnimatePresence>
       </div>
-    </section>
+    </div>
   );
 }
 
@@ -71,7 +71,7 @@ function FolhaMapa() {
   const W = 480;
   const H = 560;
   const pts = ROTA.map((p) => ({ ...p, ...projetar(p.lat, p.lng, W, H) }));
-  const cores = ["#1f2b4d", "#6a7186", "#f7941d", "#0e7c86"];
+  const cores = ["#2a78d6", "#8a8a80", "#eb6834", "#6250d6"];
   return (
     <div data-ui className={cn(folha, "w-[min(560px,88vw)]")}>
       <p className="text-[clamp(1.25rem,1.1rem+0.7vw,1.5rem)] font-medium">Itália de Roma às Dolomitas</p>
@@ -80,7 +80,7 @@ function FolhaMapa() {
         <polyline
           points={pts.map((p) => `${p.x},${p.y}`).join(" ")}
           fill="none"
-          stroke="#1f2b4d"
+          stroke="#1f6f5c"
           strokeWidth={4}
           strokeLinejoin="round"
         />
@@ -92,7 +92,7 @@ function FolhaMapa() {
               y={p.y + 7}
               textAnchor={p.id === "milao" ? "end" : "start"}
               fontSize={32}
-              fill="#1f2b4d"
+              fill="currentColor"
             >
               {p.nome} · {p.dias}d
             </text>

@@ -3,6 +3,8 @@
 import { ChevronLeft, ChevronRight, MoonStar } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { LegDetalhe } from "@/components/itinerary/leg-info";
+import { FotoDestino } from "@/components/ui/foto";
+import type { FotosPorPonto } from "@/lib/itinerary/fotos";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { COR_PONTO, itemMarcado, ROTULO_TIPO_PONTO } from "@/lib/itinerary/map";
@@ -12,6 +14,7 @@ import { cn } from "@/lib/utils";
 type Props = {
   ponto: PontoMapa | undefined;
   pontos: PontoMapa[];
+  fotos: FotosPorPonto;
   lado: "right" | "bottom";
   checklist: ChecklistState;
   onAlternar: (idPonto: string, indice: number) => void;
@@ -19,7 +22,8 @@ type Props = {
   onFechar: () => void;
 };
 
-export function PointDrawer({ ponto, pontos, lado, checklist, onAlternar, onIrPara, onFechar }: Props) {
+export function PointDrawer({ ponto, pontos, fotos, lado, checklist, onAlternar, onIrPara, onFechar }: Props) {
+  const foto = ponto ? fotos[ponto.id_ponto] : null;
   const indice = ponto ? pontos.indexOf(ponto) : -1;
   const anterior = pontos[indice - 1];
   const proximo = pontos[indice + 1];
@@ -44,7 +48,18 @@ export function PointDrawer({ ponto, pontos, lado, checklist, onAlternar, onIrPa
               transition={{ duration: 0.18 }}
               className="flex min-h-0 flex-1 flex-col"
             >
-              <SheetHeader>
+              {foto && (
+                <figure className="shrink-0">
+                  <FotoDestino foto={foto} className="h-44 sm:h-52" />
+                  <figcaption className="px-5 pt-1.5 text-[11px] text-text-3">
+                    Foto:{" "}
+                    <a href={foto.paginaUrl} target="_blank" rel="noreferrer" className="underline hover:text-text-2">
+                      {foto.autor} / Pexels
+                    </a>
+                  </figcaption>
+                </figure>
+              )}
+              <SheetHeader className={foto ? "pt-3" : undefined}>
                 <span className="flex items-center gap-2 text-xs font-medium text-text-2">
                   <span
                     className="flex size-6 items-center justify-center rounded-full text-xs font-semibold text-white"

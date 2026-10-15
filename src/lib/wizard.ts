@@ -1,6 +1,9 @@
+import { SUBREGIAO_IDS, SUBREGIOES_ANTIGAS, type SubregiaoId } from "@/lib/constants";
+import { SUGESTOES_AUGE } from "@/lib/sugestoes-auge";
 import {
   checarDatas,
   checarLocais,
+  normalizarNome,
   TripRequestInputSchema,
   type TripRequestDraft,
 } from "@/lib/validation/trip-request";
@@ -83,4 +86,25 @@ export function etapaDoCampo(campos: string[]): number {
 export function hojeLocal(agora = new Date()): string {
   const d = new Date(agora.getTime() - agora.getTimezoneOffset() * 60_000);
   return d.toISOString().slice(0, 10);
+}
+
+export type InicioQuestionario = { regiao?: SubregiaoId; auge?: string };
+
+/**
+ * Lê `?regiao=&auge=` vindos da landing. Região desconhecida é ignorada; sem região, tenta
+ * deduzi-la pelo auge quando ele é uma das sugestões de alguma região.
+ */
+export function inicioDaUrl(params: { regiao?: string | string[]; auge?: string | string[] }): InicioQuestionario {
+  const um = (v?: string | string[]) => (Array.isArray(v) ? v[0] : v)?.trim();
+  const bruta = um(params.regiao);
+  const auge = um(params.auge)?.slice(0, 120) || undefined;
+  let regiao: SubregiaoId | undefined =
+    bruta && (SUBREGIAO_IDS as string[]).includes(bruta) ? (bruta as SubregiaoId) : bruta ? SUBREGIOES_ANTIGAS[bruta] : undefined;
+  if (!regiao && auge) {
+    const chave = normalizarNome(auge);
+    regiao = (Object.keys(SUGESTOES_AUGE) as SubregiaoId[]).find((id) =>
+      SUGESTOES_AUGE[id].some((s) => normalizarNome(s.nome) === chave),
+    );
+  }
+  return { ...(regiao ? { regiao } : {}), ...(auge ? { auge } : {}) };
 }

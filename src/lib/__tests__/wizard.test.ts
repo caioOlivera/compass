@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { TripRequestInputSchema } from "@/lib/validation/trip-request";
-import { etapaDoCampo, RASCUNHO_VAZIO, validarEtapa } from "@/lib/wizard";
+import { etapaDoCampo, inicioDaUrl, RASCUNHO_VAZIO, validarEtapa } from "@/lib/wizard";
 
 const HOJE = "2026-10-15";
 
@@ -67,5 +67,18 @@ describe("sugestões de auge", () => {
     const { SUBREGIOES } = await import("@/lib/constants");
     const { SUGESTOES_AUGE } = await import("@/lib/sugestoes-auge");
     for (const r of SUBREGIOES) expect(SUGESTOES_AUGE[r.id].length).toBeGreaterThanOrEqual(5);
+  });
+});
+
+describe("inicioDaUrl", () => {
+  it("aceita região válida e auge", () => {
+    expect(inicioDaUrl({ regiao: "europa", auge: "Dolomitas" })).toEqual({ regiao: "europa", auge: "Dolomitas" });
+  });
+  it("ignora região desconhecida e deduz pelo auge", () => {
+    expect(inicioDaUrl({ regiao: "marte", auge: "capadocia" })).toEqual({ regiao: "oriente-medio", auge: "capadocia" });
+  });
+  it("auge fora das sugestões fica sem região; vazio vira nada", () => {
+    expect(inicioDaUrl({ auge: "Vila do interior" })).toEqual({ auge: "Vila do interior" });
+    expect(inicioDaUrl({ regiao: "", auge: "  " })).toEqual({});
   });
 });

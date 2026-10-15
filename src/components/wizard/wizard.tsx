@@ -19,7 +19,15 @@ import {
 } from "@/components/wizard/steps";
 import { TripRequestInputSchema, type TripRequestDraft } from "@/lib/validation/trip-request";
 import { SUBREGIOES_ANTIGAS } from "@/lib/constants";
-import { ETAPAS, etapaDoCampo, hojeLocal, RASCUNHO_VAZIO, validarEtapa, type ErrosEtapa } from "@/lib/wizard";
+import {
+  ETAPAS,
+  etapaDoCampo,
+  hojeLocal,
+  RASCUNHO_VAZIO,
+  validarEtapa,
+  type ErrosEtapa,
+  type InicioQuestionario,
+} from "@/lib/wizard";
 
 const COMPONENTES: ((p: PropsEtapa) => React.ReactNode)[] = [
   EtapaRegiao,
@@ -54,7 +62,7 @@ function salvarRascunho(valor: { rascunho: TripRequestDraft; etapa: number } | n
 
 type Envio = { estado: "parado" } | { estado: "gerando" } | { estado: "erro"; mensagem: string };
 
-export function Wizard() {
+export function Wizard({ inicio = {} }: { inicio?: InicioQuestionario }) {
   const router = useRouter();
   const [rascunho, setRascunho] = useState<TripRequestDraft>(RASCUNHO_VAZIO);
   const [etapa, setEtapa] = useState(0);
@@ -79,6 +87,15 @@ export function Wizard() {
         ...(regiao && SUBREGIOES_ANTIGAS[regiao] ? { continente_regiao: SUBREGIOES_ANTIGAS[regiao] } : {}),
       });
       setEtapa(Math.min(Math.max(salvo.etapa, 0), ETAPAS.length - 1));
+    }
+    // Vindo de um cartão da landing: a escolha feita lá vale por cima do rascunho
+    if (inicio.regiao || inicio.auge) {
+      setRascunho((r) => ({
+        ...r,
+        ...(inicio.regiao ? { continente_regiao: inicio.regiao } : {}),
+        ...(inicio.auge ? { auge_da_viagem: inicio.auge } : {}),
+      }));
+      setEtapa(inicio.regiao ? 1 : 0);
     }
     setRestaurado(true);
   }, []);

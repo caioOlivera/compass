@@ -18,7 +18,7 @@ export function Stages() {
   const pct = (etapa / (ETAPAS.length - 1)) * 100;
 
   return (
-    <section id="como-funciona" aria-labelledby="etapa-atual" className="flex flex-col bg-surface lg:min-h-[88svh]">
+    <div id="etapas" role="group" aria-labelledby="etapa-atual" className="flex flex-col bg-surface lg:min-h-[640px]">
       <div className="grid flex-1 lg:grid-cols-2">
         <div className="order-2 flex flex-col justify-between gap-8 px-5 py-10 sm:px-8 lg:order-1 lg:py-16">
           <AnimatePresence mode="wait" initial={false}>
@@ -91,7 +91,7 @@ export function Stages() {
           ))}
         </div>
       </div>
-    </section>
+    </div>
   );
 }
 
@@ -105,7 +105,7 @@ function Fragmento({ etapa }: { etapa: number }) {
           {["América do Norte", "América do Sul", "Europa", "Ásia Leste", "Oriente Médio", "Oceania"].map((r) => (
             <span
               key={r}
-              className={cn("px-3 py-3", r === "Europa" ? "bg-text font-medium text-white" : "bg-surface")}
+              className={cn("px-3 py-3", r === "Europa" ? "bg-text font-medium text-bg" : "bg-surface")}
             >
               {r}
             </span>
@@ -153,10 +153,10 @@ function Fragmento({ etapa }: { etapa: number }) {
       <p className="mt-1 text-text-2">Entrada por Roma (FCO), saída por Milão (MXP)</p>
       <ul className="mt-5 flex flex-col gap-2.5">
         {[
-          ["Roma", "3 dias", "bg-text"],
-          ["Florença", "2 dias", "bg-text-3"],
-          ["Dolomitas", "8 dias", "bg-accent"],
-          ["Milão", "2 dias", "bg-[#0e7c86]"],
+          ["Roma", "3 dias", "bg-[var(--pin-hub-entrada)]"],
+          ["Florença", "2 dias", "bg-[var(--pin-base)]"],
+          ["Dolomitas", "8 dias", "bg-[var(--pin-auge)]"],
+          ["Milão", "2 dias", "bg-[var(--pin-hub-saida)]"],
         ].map(([n, d, cor]) => (
           <li key={n} className="flex items-center gap-3">
             <span className={cn("size-3.5 rounded-full", cor)} aria-hidden />
