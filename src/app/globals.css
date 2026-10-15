@@ -1,0 +1,52 @@
+@import "tailwindcss";
+
+:root {
+  color-scheme: light;
+  --bg: #f7f6f2;
+  --surface: #fdfcf9;
+  --surface-2: #efede6;
+  --border: #e2dfd6;
+  --text: #13140f;
+  --text-2: #4f5048;
+  --text-3: #8a8a80;
+  --accent: #1f6f5c;
+  --accent-contrast: #ffffff;
+
+  /* Tipos de ponto no mapa (ordem fixa, usados nos pins e na legenda) */
+  --pin-hub-entrada: #2a78d6;
+  --pin-base: #8a8a80;
+  --pin-auge: #eb6834;
+  --pin-hub-saida: #6250d6;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --bg: #11120f;
+    --surface: #191a16;
+    --surface-2: #22231e;
+    --border: #2e2f29;
+    --text: #f1f0ea;
+    --text-2: #b4b3aa;
+    --text-3: #7d7c74;
+    --accent: #4fb89b;
+    --accent-contrast: #0b1712;
+  }
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-border: var(--border);
+  --color-text: var(--text);
+  --color-text-2: var(--text-2);
+  --color-text-3: var(--text-3);
+  --color-accent: var(--accent);
+  --color-accent-contrast: var(--accent-contrast);
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+}
