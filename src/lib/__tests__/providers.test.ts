@@ -80,11 +80,62 @@ describe("chamadorOpenAICompat", () => {
     expect(e.motivo).toBe("truncado");
   });
 
-  it("HTTP 429 do plano grátis vira ProvedorError com status", async () => {
-    const { f } = fetchFalso([{ status: 429 }]);
-    const e = await gerarRoteiro(pedidoPRD, chamadorOpenAICompat({ baseUrl: "http://x/v1", modelo: "m", modoJson: "json_schema", fetch: f })).catch((x) => x);
+  it("429 persistente: repete com espera e então desiste com ProvedorError", async () => {
+    const { f, chamadas } = fetchFalso([{ status: 429 }, { status: 429 }, { status: 429 }]);
+    const esperas: number[] = [];
+    const chamar = chamadorOpenAICompat({
+      baseUrl: "http://x/v1",
+      modelo: "m",
+      modoJson: "json_schema",
+      fetch: f,
+      esperar: async (ms) => void esperas.push(ms),
+    });
+    const e = await gerarRoteiro(pedidoPRD, chamar).catch((x) => x);
     expect(e).toBeInstanceOf(ProvedorError);
     expect(e.status).toBe(429);
+    expect(chamadas).toHaveLength(3);
+    expect(esperas).toEqual([2000, 6000]);
+  });
+
+  it("503 momentâneo (modelo sobrecarregado): a repetição resolve", async () => {
+    const { f, chamadas } = fetchFalso([{ status: 503 }, { conteudo: ok }]);
+    const r = await gerarRoteiro(
+      pedidoPRD,
+      chamadorOpenAICompat({ baseUrl: "http://x/v1", modelo: "m", modoJson: "json_schema", fetch: f, esperar: async () => {} }),
+    );
+    expect(r.roteiro.pontos_mapa).toHaveLength(4);
+    expect(chamadas).toHaveLength(2);
+  });
+
+  it("modelo principal segue sobrecarregado: passa para o reserva", async () => {
+    const { f, chamadas } = fetchFalso([{ status: 503 }, { status: 503 }, { status: 503 }, { conteudo: ok }]);
+    await gerarRoteiro(
+      pedidoPRD,
+      chamadorOpenAICompat({
+        baseUrl: "http://x/v1",
+        modelo: "gemini-3.8-flash",
+        modelosReserva: ["gemini-3.5-flash-lite"],
+        modoJson: "json_schema",
+        fetch: f,
+        esperar: async () => {},
+      }),
+    );
+    expect(chamadas.map((c) => c.corpo.model)).toEqual([
+      "gemini-3.8-flash",
+      "gemini-3.8-flash",
+      "gemini-3.8-flash",
+      "gemini-3.5-flash-lite",
+    ]);
+  });
+
+  it("erro de configuração (400/401) não repete", async () => {
+    const { f, chamadas } = fetchFalso([{ status: 401 }]);
+    const e = await gerarRoteiro(
+      pedidoPRD,
+      chamadorOpenAICompat({ baseUrl: "http://x/v1", modelo: "m", modelosReserva: ["n"], modoJson: "json_schema", fetch: f, esperar: async () => {} }),
+    ).catch((x) => x);
+    expect(e.status).toBe(401);
+    expect(chamadas).toHaveLength(1);
   });
 });
 

@@ -39,7 +39,9 @@ roteiro com erro volta para o modelo corrigir.
 
 **Gemini (Google AI Studio)**: crie a chave em https://aistudio.google.com e use
 `AI_BASE_URL=https://generativelanguage.googleapis.com/v1beta/openai`, `AI_API_KEY=<sua chave>` e em
-`AI_MODEL` um modelo listado no AI Studio.
+`AI_MODEL` um modelo listado no AI Studio. Modelos recém-lançados ficam sobrecarregados (erro 503)
+com frequência: o app repete sozinho e, se você definir `AI_FALLBACK_MODELS` (ex.: um modelo Flash Lite),
+passa para o reserva.
 
 **Groq**: chave em https://console.groq.com, `AI_BASE_URL=https://api.groq.com/openai/v1`. Se o modelo
 escolhido não aceitar `json_schema`, use `AI_JSON_MODE=json_object`.

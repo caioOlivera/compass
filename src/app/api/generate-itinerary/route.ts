@@ -108,9 +108,13 @@ function classificarFalha(e: unknown): { status: number; mensagem: string } {
   }
   // Provedores no formato OpenAI (Ollama, Gemini, Groq...)
   if (e instanceof ProvedorError) {
-    return e.status === 429 || e.status >= 500
-      ? { status: 503, mensagem: "O serviço de IA está no limite de uso. Tente de novo em alguns minutos." }
-      : { status: 502, mensagem: "O serviço de IA recusou o pedido. Confira a configuração do provedor." };
+    if (e.status === 429) {
+      return { status: 503, mensagem: "Atingimos o limite de uso do serviço de IA. Tente de novo em alguns minutos." };
+    }
+    if (e.status >= 500) {
+      return { status: 503, mensagem: "O serviço de IA está sobrecarregado agora. Tente de novo em alguns minutos." };
+    }
+    return { status: 502, mensagem: "O serviço de IA recusou o pedido. Confira a configuração do provedor." };
   }
   if (e instanceof DOMException && e.name === "AbortError") return { status: 499, mensagem: "Geração cancelada." };
   // fetch sem resposta: Ollama desligado, endereço errado, sem internet

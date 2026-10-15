@@ -18,6 +18,7 @@ export function gerarComProvedorConfigurado(pedido: ItineraryPromptInput, signal
         baseUrl: env.AI_BASE_URL!,
         apiKey: env.AI_API_KEY,
         modelo: env.AI_MODEL!,
+        modelosReserva: env.AI_FALLBACK_MODELS?.split(",").map((m) => m.trim()).filter(Boolean),
         modoJson: env.AI_JSON_MODE,
         signal,
       });

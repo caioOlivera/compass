@@ -20,6 +20,8 @@ const ServerEnvSchema = z
     AI_BASE_URL: z.url().optional(),
     AI_API_KEY: z.string().optional(),
     AI_MODEL: z.string().optional(),
+    // Modelos reserva, separados por vírgula, usados se o principal estiver sobrecarregado ou no limite
+    AI_FALLBACK_MODELS: z.string().optional(),
     AI_JSON_MODE: z.enum(["json_schema", "json_object", "nenhum"]).default("json_schema"),
 
     DAILY_GENERATION_LIMIT: z.coerce.number().int().min(1).default(5),

@@ -1,4 +1,4 @@
-import type { ChamadorModelo } from "@/lib/ai/generate";
+import type { ChamadorModelo, RespostaModelo } from "@/lib/ai/generate";
 import { ITINERARY_SYSTEM_PROMPT } from "@/lib/ai/prompts/itinerary-system";
 import { ITINERARY_JSON_SCHEMA } from "@/lib/ai/schema";
 
@@ -18,10 +18,19 @@ export type OpcoesOpenAICompat = {
   baseUrl: string;
   apiKey?: string;
   modelo: string;
+  /** Tentados em ordem quando o principal segue sobrecarregado (503) ou no limite (429). */
+  modelosReserva?: string[];
   modoJson: ModoJson;
   signal?: AbortSignal;
   fetch?: typeof fetch;
+  /** Injetável nos testes para não esperar de verdade. */
+  esperar?: (ms: number) => Promise<void>;
 };
+
+// Por modelo: 1 chamada + 2 repetições com espera crescente antes de passar ao reserva.
+// Total no pior caso fica bem abaixo do maxDuration da rota (300 s).
+const ESPERAS_MS = [2_000, 6_000];
+const ESPERA_MAX_MS = 15_000;
 
 // O schema vai também no prompt: no modo json_object o modelo não o recebe de outra forma,
 // e modelos menores seguem melhor quando o veem por escrito.
@@ -34,7 +43,26 @@ export function chamadorOpenAICompat(opcoes: OpcoesOpenAICompat): ChamadorModelo
   const url = `${opcoes.baseUrl.replace(/\/+$/, "")}/chat/completions`;
   const executar = opcoes.fetch ?? fetch;
 
+  const esperar = opcoes.esperar ?? ((ms: number) => new Promise<void>((r) => setTimeout(r, ms)));
+  const modelos = [opcoes.modelo, ...(opcoes.modelosReserva ?? [])];
+
   return async (mensagem) => {
+    let ultimoErro: ProvedorError | undefined;
+    for (const modelo of modelos) {
+      for (let tentativa = 0; tentativa <= ESPERAS_MS.length; tentativa++) {
+        try {
+          return await chamar(modelo, mensagem);
+        } catch (e) {
+          if (!(e instanceof ProvedorError) || !e.temporario) throw e;
+          ultimoErro = e;
+          if (tentativa < ESPERAS_MS.length) await esperar(Math.min(e.retryAfterMs ?? ESPERAS_MS[tentativa], ESPERA_MAX_MS));
+        }
+      }
+    }
+    throw ultimoErro!;
+  };
+
+  async function chamar(modelo: string, mensagem: string) {
     const res = await executar(url, {
       method: "POST",
       headers: {
@@ -42,7 +70,7 @@ export function chamadorOpenAICompat(opcoes: OpcoesOpenAICompat): ChamadorModelo
         ...(opcoes.apiKey ? { Authorization: `Bearer ${opcoes.apiKey}` } : {}),
       },
       body: JSON.stringify({
-        model: opcoes.modelo,
+        model: modelo,
         messages: [
           { role: "system", content: SYSTEM_PROMPT },
           { role: "user", content: mensagem },
@@ -55,7 +83,12 @@ export function chamadorOpenAICompat(opcoes: OpcoesOpenAICompat): ChamadorModelo
 
     if (!res.ok) {
       const corpo = await res.text().catch(() => "");
-      throw new ProvedorError(res.status, `${opcoes.modelo} respondeu ${res.status}: ${corpo.slice(0, 300)}`);
+      const retryAfter = Number(res.headers.get("retry-after"));
+      throw new ProvedorError(
+        res.status,
+        `${modelo} respondeu ${res.status}: ${corpo.slice(0, 300)}`,
+        Number.isFinite(retryAfter) && retryAfter > 0 ? retryAfter * 1000 : undefined,
+      );
     }
 
     const dados = (await res.json()) as RespostaChat;
@@ -65,11 +98,11 @@ export function chamadorOpenAICompat(opcoes: OpcoesOpenAICompat): ChamadorModelo
     return {
       texto: escolha.message?.content ?? "",
       parada: escolha.finish_reason === "length" ? "tamanho" : escolha.message?.refusal ? "recusa" : "fim",
-      modelo: dados.model ?? opcoes.modelo,
+      modelo: dados.model ?? modelo,
       inputTokens: dados.usage?.prompt_tokens ?? 0,
       outputTokens: dados.usage?.completion_tokens ?? 0,
-    };
-  };
+    } satisfies RespostaModelo;
+  }
 }
 
 function formatoResposta(modo: ModoJson) {
@@ -85,9 +118,15 @@ export class ProvedorError extends Error {
   constructor(
     readonly status: number,
     message: string,
+    readonly retryAfterMs?: number,
   ) {
     super(message);
     this.name = "ProvedorError";
+  }
+
+  /** Sobrecarga ou limite: vale esperar e repetir, ou trocar de modelo. */
+  get temporario() {
+    return this.status === 429 || this.status >= 500;
   }
 }
 
