@@ -42,7 +42,9 @@ export function resumirUso(linhas: LinhaUso[], precos: Record<string, number>) {
     if (!l.trip_request_id) continue;
     const atual = porConsulta.get(l.trip_request_id) ?? { produto: l.produto ?? "roteiro", custo: 0 };
     atual.custo += Number(l.custo_brl);
-    if (INICIAIS.has(l.tipo) && l.produto) atual.produto = l.produto;
+    if (INICIAIS.has(l.tipo) && l.produto && atual.produto !== "completo") atual.produto = l.produto;
+    // Cotou passagens ou hotéis: a consulta virou "completo"
+    if (l.tipo === "busca_voo" || l.tipo === "busca_hotel") atual.produto = "completo";
     porConsulta.set(l.trip_request_id, atual);
   }
   const porProduto: ResumoProduto[] = agrupar([...porConsulta.values()], (c) => c.produto).map(([produto, cs]) => {

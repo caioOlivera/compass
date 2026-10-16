@@ -29,7 +29,7 @@ export default async function MedicaoPage({ searchParams }: { searchParams: Prom
   const dias = PERIODOS.find((p) => String(p) === pedido) ?? 30;
   const desde = new Date(Date.now() - dias * 86_400_000).toISOString();
 
-  const [{ data: linhas }, { data: precos }] = await Promise.all([
+  const [{ data: linhas }, { data: precos }, { data: pagos }] = await Promise.all([
     supabase
       .from("eventos_uso")
       .select("tipo, produto, user_id, trip_request_id, custo_brl, input_tokens, output_tokens, sucesso, created_at")
@@ -37,7 +37,9 @@ export default async function MedicaoPage({ searchParams }: { searchParams: Prom
       .order("created_at")
       .limit(20000),
     supabase.from("configuracoes").select("valor").eq("chave", "precos_produtos").maybeSingle(),
+    supabase.from("pedidos").select("valor").eq("status", "pago").gte("pago_em", desde),
   ]);
+  const receita = (pagos ?? []).reduce((s, p) => s + Number(p.valor), 0);
   const r = resumirUso((linhas ?? []) as LinhaUso[], (precos?.valor as Record<string, number>) ?? {});
   const maxDia = Math.max(...r.porDia.map((d) => d.custo), 0.0001);
 
@@ -66,6 +68,8 @@ export default async function MedicaoPage({ searchParams }: { searchParams: Prom
         <Numero rotulo="Chamadas registradas" valor={String(r.eventos)} />
         <Numero rotulo="Falhas" valor={String(r.falhas)} />
         <Numero rotulo="Custo médio por chamada" valor={reais(r.eventos ? r.custoTotal / r.eventos : 0, 4)} />
+        <Numero rotulo="Receita (pedidos pagos)" valor={reais(receita)} />
+        <Numero rotulo="Resultado (receita − custo)" valor={reais(receita - r.custoTotal)} />
       </dl>
 
       <section className="flex flex-col gap-3">
