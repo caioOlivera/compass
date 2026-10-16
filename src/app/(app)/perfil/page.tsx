@@ -5,7 +5,8 @@ import { redirect } from "next/navigation";
 import { sair } from "@/app/actions/auth";
 import { AppHeader } from "@/components/app-header";
 import { PerfilForm } from "@/components/perfil/perfil-form";
-import { NOME_STATUS_PEDIDO, PRODUTOS, saldo, type ProdutoAvulso } from "@/lib/creditos";
+import { acessoGratisAtivo, garantirBoasVindas, NOME_STATUS_PEDIDO, PRODUTOS, saldo, type ProdutoAvulso } from "@/lib/creditos";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { formatarPreco } from "@/lib/motor/catalogo";
 import { urlDoAvatar } from "@/lib/perfil";
 import { createClient } from "@/lib/supabase/server";
@@ -21,6 +22,10 @@ export default async function PerfilPage() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login?next=/perfil");
 
+  // O roteiro de boas-vindas aparece no saldo já na primeira visita
+  const admin = createAdminClient();
+  await garantirBoasVindas(admin, user.id).catch(() => {});
+  const cortesia = await acessoGratisAtivo(admin, user.id, user.email).catch(() => null);
   const [{ data: perfil }, { count }, meu, { data: pedidos }, { data: consultorias }] = await Promise.all([
     supabase.from("profiles").select("full_name, phone, avatar_path").eq("id", user.id).maybeSingle(),
     supabase.from("generated_itineraries").select("id", { count: "exact", head: true }),
@@ -63,6 +68,12 @@ export default async function PerfilPage() {
               Comprar
             </Link>
           </div>
+          {cortesia && (
+            <p className="rounded-lg bg-accent/10 px-3 py-2 text-sm text-accent-strong">
+              Acesso liberado a tudo, com passagens e hotéis
+              {cortesia.valido_ate ? ` até ${new Date(cortesia.valido_ate).toLocaleDateString("pt-BR")}` : ""}.
+            </p>
+          )}
           <p className="text-sm text-text-2">
             {tipos.length ? tipos.map((t) => `${meu[t]} ${PRODUTOS[t].titulo.toLowerCase()}`).join(" · ") : "Nenhum crédito disponível."}
           </p>

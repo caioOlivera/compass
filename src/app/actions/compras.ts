@@ -35,11 +35,16 @@ async function usuario() {
 const ProdutoSchema = z.enum(["roteiro", "assinado", "completo", "consultoria"]);
 
 /** Cria o pedido e devolve o link do Checkout Pro (Pix ou cartão). */
-export async function iniciarCompra(produto: ProdutoAvulso, referencia: { roteiro_base_id?: string } = {}): Promise<Resultado> {
+export async function iniciarCompra(
+  produto: ProdutoAvulso,
+  referencia: { roteiro_base_id?: string } = {},
+  aceitouTermos = false,
+): Promise<Resultado> {
   const { user } = await usuario();
   if (!user) return { ok: false, mensagem: "Entre na sua conta para comprar." };
   const p = ProdutoSchema.safeParse(produto);
   if (!p.success) return { ok: false, mensagem: "Produto inválido." };
+  if (!aceitouTermos) return { ok: false, mensagem: "Confirme que leu as condições de reembolso." };
   if (!mercadoPagoConfigurado()) return { ok: false, mensagem: SEM_PAGAMENTO };
 
   const db = createAdminClient();
@@ -47,7 +52,7 @@ export async function iniciarCompra(produto: ProdutoAvulso, referencia: { roteir
   const ref = referencia.roteiro_base_id && z.uuid().safeParse(referencia.roteiro_base_id).success ? { roteiro_base_id: referencia.roteiro_base_id } : {};
   const { data: pedido, error } = await db
     .from("pedidos")
-    .insert({ user_id: user.id, produto: p.data, valor, referencia: ref as Json })
+    .insert({ user_id: user.id, produto: p.data, valor, referencia: ref as Json, termos_aceitos_em: new Date().toISOString() })
     .select("id")
     .single();
   if (error || !pedido) return { ok: false, mensagem: "Não foi possível criar o pedido." };
@@ -159,6 +164,10 @@ export async function reembolsarPedido(pedidoId: string): Promise<Resultado> {
   const { data: lotes } = await db.from("creditos").select("id").eq("pedido_id", pedidoId).gt("quantidade", 0);
   const { data: saldo } = await db.from("creditos_lotes").select("restante").in("id", (lotes ?? []).map((l) => l.id));
   if (!saldo?.length || saldo.some((l) => (l.restante ?? 0) < 1)) return { ok: false, mensagem: "O crédito deste pedido já foi usado." };
+  if (pedido.produto === "consultoria") {
+    const { data: c } = await db.from("consultorias").select("status").eq("pedido_id", pedidoId).maybeSingle();
+    if (c && (c.status === "em_andamento" || c.status === "entregue")) return { ok: false, mensagem: "A consultoria já começou." };
+  }
 
   try {
     await reembolsar(pedido.provedor_id, `reembolso-${pedidoId}`);

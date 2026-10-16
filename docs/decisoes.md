@@ -5,6 +5,13 @@ Status: **decidida**, **proposta** (espera aprovação) ou **revista**.
 
 ---
 
+## 2026-10-17 · Regras de produto: sem upsell, completo entregue de uma vez, cortesias (decidida)
+- **Sem upsell:** quem compra o roteiro recebe o roteiro. Passagens e hotéis só no Completo, que já é gerado com tudo na mesma hora (a tela do roteiro é o produto). Planos de agência e acessos cortesia geram sempre completo.
+- **Atualização:** passagens e hotéis do Completo são atualizados 1 vez ao dia durante 15 dias (config `atualizacao_completo`), por agendamento da Vercel (`/api/cron/cotacoes`, protegido por `CRON_SECRET`). As cotações têm cache (voo 24 h, hotel 72 h), então hotel é cotado de novo a cada 3 dias.
+- **Boas-vindas:** toda conta ganha 1 roteiro grátis (sem passagens e hotéis), uma vez só (`boas_vindas`).
+- **Reembolso:** em até 7 dias e só com crédito não usado; gerar o roteiro é a entrega do conteúdo digital. A pessoa aceita isso antes de pagar (`pedidos.termos_aceitos_em`). Consultoria: até o atendimento começar. **Validar com advogado** (CDC art. 49).
+- **Acessos gratuitos:** concedidos e revogados pelo admin em /admin/acessos, por e-mail, com prazo ou sem fim.
+
 ## 2026-10-17 · Método: portas por hubs, companhia livre, open-jaw aninhado (decidida)
 - **Decisão:** o voo internacional sempre entra e sai por hubs com voo direto ou de uma conexão saindo de GRU (lista no prompt do motor). Do hub até o miolo, trem, carro ou voo curto, inclusive open-jaw dentro do open-jaw. Nenhum roteiro prende companhia, aliança ou stopover; stopover só como sugestão opcional.
 - **Roteiros assinados:** tratados como o miolo. A adaptação escolhe as portas e, se a viagem tiver mais dias, acrescenta cidades antes e depois. Os textos foram revisados para ficar generalistas (revisão sugerida em `configuracoes.revisao_assinados`, aplicada pelo editor em /admin/base/roteiros).

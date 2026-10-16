@@ -57,7 +57,9 @@ export default async function PedidoPage({ params, searchParams }: Props) {
           ? { href: "/roteiros-assinados", rotulo: "Escolher o roteiro assinado" }
           : produto === "consultoria" && consultoria
             ? { href: `/consultoria/${consultoria.id}`, rotulo: "Preencher o briefing" }
-            : { href: "/nova-viagem", rotulo: "Montar meu roteiro" };
+            : produto === "completo"
+              ? { href: "/nova-viagem?produto=completo", rotulo: "Montar meu roteiro completo" }
+              : { href: "/nova-viagem", rotulo: "Montar meu roteiro" };
 
   const Icone = pedido.status === "pago" ? CheckCircle2 : pedido.status === "pendente" ? Clock : XCircle;
 

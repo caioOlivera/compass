@@ -45,6 +45,8 @@ const ServerEnvSchema = z
     SERPAPI_KEY: z.string().optional(),
     // Suporte: e-mails de aviso pelo Resend (opcional) e quem recebe os chamados
     RESEND_API_KEY: z.string().optional(),
+    // Senha que a Vercel manda no agendamento diário (atualização das cotações)
+    CRON_SECRET: z.string().optional(),
     EMAIL_REMETENTE: z.string().optional(),
     SUPORTE_EMAIL: z.string().optional(),
     // Script "Drive" da Travelpayouts (só páginas públicas), ex.: https://emrldtp.com/XXXX.js?t=586529

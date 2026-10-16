@@ -7,6 +7,7 @@ import { Field, FormAlert } from "@/components/ui/field";
 import type { Plano, ProdutoAvulso } from "@/lib/creditos";
 
 /** Cria o pedido e leva para o Checkout do Mercado Pago (Pix ou cartão). */
+/** Cria o pedido e leva para o Checkout do Mercado Pago (Pix ou cartão), depois do aceite das condições. */
 export function BotaoComprar({
   produto,
   roteiroBaseId,
@@ -19,23 +20,36 @@ export function BotaoComprar({
   variante?: "primario" | "secundario";
 }) {
   const [erro, setErro] = useState("");
+  const [confirmando, setConfirmando] = useState(false);
   const [ocupado, iniciar] = useTransition();
+  if (!confirmando) {
+    return (
+      <Button type="button" variante={variante} onClick={() => setConfirmando(true)}>
+        {rotulo}
+      </Button>
+    );
+  }
   return (
     <div className="flex flex-col gap-2">
+      <p className="rounded-lg bg-surface-2 p-3 text-xs text-text-2">
+        {produto === "consultoria"
+          ? "Você pode pedir reembolso em até 7 dias, enquanto o consultor não começar o atendimento."
+          : "Você pode pedir reembolso em até 7 dias se o crédito não for usado. O roteiro é entregue na hora em que é gerado; a partir daí o crédito não é mais reembolsável. Não gostou do resultado? Você tem 3 ajustes incluídos e o nosso suporte."}
+      </p>
       <Button
         type="button"
-        variante={variante}
+        variante="primario"
         carregando={ocupado}
         onClick={() =>
           iniciar(async () => {
             setErro("");
-            const r = await iniciarCompra(produto, roteiroBaseId ? { roteiro_base_id: roteiroBaseId } : {});
+            const r = await iniciarCompra(produto, roteiroBaseId ? { roteiro_base_id: roteiroBaseId } : {}, true);
             if (r.ok && r.url) window.location.href = r.url;
             else setErro(r.ok ? "Não foi possível abrir o pagamento." : r.mensagem);
           })
         }
       >
-        {rotulo}
+        Concordo e ir para o pagamento
       </Button>
       <FormAlert>{erro}</FormAlert>
     </div>

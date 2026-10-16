@@ -1,7 +1,7 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Itinerary } from "@/lib/validation/itinerary";
-import type { Database } from "@/types/database";
+import type { Database, Json } from "@/types/database";
 import { linkBuscaAviasales } from "./aviasales";
 import { estadiasDoRoteiro, trechosDoRoteiro, type EstadiaCotada, type Extras, type PedidoBase, type TrechoCotado } from "./completo-plano";
 import { cotarHoteis, cotarVoo } from "./cotar";
@@ -75,4 +75,40 @@ export async function montarExtras(
   }
 
   return { versao: 1, gerado_em: new Date().toISOString(), trechos, estadias };
+}
+
+/**
+ * Cota e grava passagens e hotéis de uma versão do roteiro. Falha não derruba a entrega: o roteiro
+ * sai sem os extras e a tela oferece tentar de novo (sem cobrar outra vez).
+ */
+export async function completarRoteiro(
+  db: Db,
+  p: {
+    itineraryId: string;
+    roteiro: Itinerary;
+    input: { cidade_origem: string; data_inicio: string; data_fim: string; adultos?: number; criancas?: number; orcamento?: string };
+    userId: string;
+    tripRequestId: string;
+  },
+): Promise<boolean> {
+  try {
+    const extras = await montarExtras(
+      db,
+      p.roteiro,
+      {
+        cidade_origem: p.input.cidade_origem,
+        data_inicio: p.input.data_inicio,
+        data_fim: p.input.data_fim,
+        adultos: p.input.adultos ?? 2,
+        criancas: p.input.criancas ?? 0,
+        orcamento: p.input.orcamento ?? "medio",
+      },
+      { userId: p.userId, tripRequestId: p.tripRequestId, itineraryId: p.itineraryId },
+    );
+    await db.from("generated_itineraries").update({ extras: extras as unknown as Json }).eq("id", p.itineraryId);
+    return true;
+  } catch (e) {
+    console.error("[completo]", p.itineraryId, e);
+    return false;
+  }
 }

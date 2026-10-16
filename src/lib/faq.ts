@@ -50,6 +50,18 @@ export const FAQ_COMPLETO: GrupoFaq[] = [
         r: "Não. Mostramos preços de referência, com a data da consulta, e links para comprar no site do parceiro. Podemos receber comissão por esses links, sem custo extra para você.",
       },
       {
+        p: "Comprei o roteiro. Dá para adicionar passagens e hotéis depois?",
+        r: "Não. Passagens e hotéis fazem parte do Completo, que já é gerado com tudo de uma vez. Se quiser, compre um Completo e gere a viagem de novo.",
+      },
+      {
+        p: "Por quanto tempo os preços do Completo são atualizados?",
+        r: "Durante 15 dias, uma vez por dia. É o prazo para você decidir e comprar as passagens. Depois disso, o roteiro mostra a última cotação, com a data.",
+      },
+      {
+        p: "Existe roteiro grátis?",
+        r: "Sim. Toda conta nova ganha o primeiro roteiro grátis (sem passagens e hotéis).",
+      },
+      {
         p: "Os preços das passagens são garantidos?",
         r: "Não. São preços encontrados recentemente, com a data da cotação, para você ter uma ideia de quanto vai gastar. O valor final aparece no site onde você comprar.",
       },
@@ -67,7 +79,7 @@ export const FAQ_COMPLETO: GrupoFaq[] = [
       { p: "Quanto tempo vale o que eu comprar?", r: "Os créditos avulsos valem 12 meses a partir da compra." },
       {
         p: "Posso pedir reembolso?",
-        r: "Sim, em até 7 dias depois da compra, desde que o crédito ainda não tenha sido usado. Abra um chamado em Ajuda e devolvemos pelo mesmo meio de pagamento.",
+        r: "Sim, em até 7 dias depois da compra, desde que o crédito ainda não tenha sido usado. Como o roteiro é conteúdo digital entregue na hora em que é gerado, depois de gerado o crédito não é mais reembolsável; para isso existem os 3 ajustes incluídos e o nosso suporte. Na consultoria, o reembolso vale até o consultor começar o atendimento. Para pedir, abra um chamado em Ajuda.",
       },
       { p: "E se a geração do roteiro falhar?", r: "O crédito volta para a sua conta automaticamente." },
     ],

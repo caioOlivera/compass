@@ -6,6 +6,7 @@ import { lerConfig } from "@/lib/configuracoes";
 import { serverEnv } from "@/lib/env";
 import { cobrancaAtiva, exigirCredito, type ProdutoAvulso } from "@/lib/creditos";
 import { registrarUso } from "@/lib/medicao";
+import { completarRoteiro } from "@/lib/viagem/completo";
 import { montarContextoBase } from "@/lib/motor/contexto";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
@@ -67,7 +68,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       return erro(402, `Você já usou os ${inclusos} ajustes incluídos nesta consulta.`);
     }
     const produto = (["roteiro", "assinado", "completo"].includes(atual.trip_requests.product) ? atual.trip_requests.product : "roteiro") as ProdutoAvulso;
-    const credito = await exigirCredito(admin, { userId: user.id, produto, tripRequestId: atual.trip_request_id, motivo: "ajuste_extra" });
+    const credito = await exigirCredito(admin, { userId: user.id, email: user.email, produto, tripRequestId: atual.trip_request_id, motivo: "ajuste_extra" });
     // Falha na geração não devolve: o pacote de ajustes já foi liberado e continua valendo
     if (!credito.ok) return NextResponse.json({ error: credito.mensagem, comprar: credito.comprar }, { status: credito.status });
   }
@@ -103,6 +104,16 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       .single();
     if (error) throw error;
 
+    // Consulta completa: a nova versão também sai com passagens e hotéis (as cidades podem ter mudado)
+    if (atual.trip_requests.product === "completo") {
+      await completarRoteiro(admin, {
+        itineraryId: nova.id,
+        roteiro: r.roteiro,
+        input: fromTripRequestRow(atual.trip_requests),
+        userId: user.id,
+        tripRequestId: atual.trip_request_id,
+      });
+    }
     await registrarUso(admin, {
       tipo: "ajuste",
       userId: user.id,

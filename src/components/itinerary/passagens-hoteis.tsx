@@ -1,7 +1,6 @@
 "use client";
 
-import { BedDouble, Loader2, Plane, RefreshCw, Star } from "lucide-react";
-import Link from "next/link";
+import { BedDouble, Loader2, Plane, Star } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -10,8 +9,8 @@ import type { Extras } from "@/lib/viagem/completo-plano";
 export type InfoCompleto = {
   itineraryId: string;
   extras: Extras | null;
-  /** Texto do custo ao adicionar: "Incluído", "1 crédito Completo (R$ 49,90)", "Grátis por enquanto" */
-  custo: string;
+  /** Até quando os preços são atualizados (1 vez ao dia) */
+  atualizaAte: string | null;
 };
 
 const brl = (v: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 }).format(v);
@@ -25,14 +24,14 @@ export function PassagensHoteis({ info }: { info: InfoCompleto }) {
   const [erro, setErro] = useState<{ texto: string; comprar?: string } | null>(null);
   const x = info.extras;
 
-  async function pedir(atualizar = false) {
+  async function pedir() {
     setEnviando(true);
     setErro(null);
     try {
       const res = await fetch(`/api/itineraries/${info.itineraryId}/completo`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ atualizar }),
+        body: "{}",
       });
       const corpo = await res.json().catch(() => ({}));
       if (!res.ok) setErro({ texto: corpo.error ?? "Não foi possível consultar os preços.", comprar: corpo.comprar });
@@ -43,33 +42,24 @@ export function PassagensHoteis({ info }: { info: InfoCompleto }) {
     setEnviando(false);
   }
 
+  // Consulta completa sem os extras: a cotação falhou na geração; tenta de novo sem cobrar
   if (!x) {
     return (
       <section className="flex flex-col gap-3 rounded-xl border border-border bg-surface p-4">
         <h2 className="flex items-center gap-2 text-sm font-medium">
           <Plane className="size-4 text-accent-strong" aria-hidden /> Passagens e hotéis
         </h2>
-        <p className="text-sm text-text-2">Preço de referência das passagens e 2 ou 3 hotéis por cidade, nas datas do roteiro.</p>
-        {erro && (
-          <p className="text-sm text-red-600">
-            {erro.texto}{" "}
-            {erro.comprar && (
-              <Link href={erro.comprar} className="font-medium underline">
-                Comprar
-              </Link>
-            )}
-          </p>
-        )}
+        <p className="text-sm text-text-2">Não conseguimos consultar os preços na hora da geração. Já estão incluídos na sua consulta.</p>
+        {erro && <p className="text-sm text-red-600">{erro.texto}</p>}
         <Button type="button" onClick={() => pedir()} disabled={enviando} className="h-10">
           {enviando ? (
             <>
               <Loader2 className="size-4 animate-spin" aria-hidden /> Consultando preços…
             </>
           ) : (
-            "Adicionar passagens e hotéis"
+            "Buscar passagens e hotéis"
           )}
         </Button>
-        <p className="text-xs text-text-3">{info.custo}</p>
       </section>
     );
   }
@@ -81,14 +71,6 @@ export function PassagensHoteis({ info }: { info: InfoCompleto }) {
         <h2 className="flex items-center gap-2 text-sm font-medium">
           <Plane className="size-4 text-accent-strong" aria-hidden /> Passagens e hotéis
         </h2>
-        <button
-          type="button"
-          onClick={() => pedir(true)}
-          disabled={enviando}
-          className="inline-flex items-center gap-1 text-xs text-text-2 hover:text-text disabled:opacity-60"
-        >
-          <RefreshCw className={enviando ? "size-3 animate-spin" : "size-3"} aria-hidden /> Atualizar preços
-        </button>
       </div>
 
       {x.trechos.length === 0 && <p className="text-sm text-text-2">Não identificamos os aeroportos deste roteiro.</p>}
@@ -170,10 +152,12 @@ export function PassagensHoteis({ info }: { info: InfoCompleto }) {
         ))}
       </ul>
 
-      {erro && <p className="text-sm text-red-600">{erro.texto}</p>}
-      <p className="text-xs text-text-3">
-        Preços de referência, consultados na data indicada. Podem mudar até a compra. Podemos receber comissão pelos links, sem custo extra
-        para você.
+      <p className="rounded-lg bg-accent/5 p-3 text-xs text-text-2">
+        Preços de referência: podem mudar até a compra.
+        {info.atualizaAte && new Date(info.atualizaAte) > new Date()
+          ? ` Atualizamos 1 vez por dia até ${dataCurta(info.atualizaAte)}: é o tempo para você decidir e comprar as passagens.`
+          : " A atualização diária já terminou; confira o valor final no site do parceiro."}{" "}
+        Podemos receber comissão pelos links, sem custo extra para você.
       </p>
     </section>
   );

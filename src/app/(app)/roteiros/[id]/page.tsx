@@ -6,7 +6,6 @@ import { buscarFoto } from "@/lib/images/fotos";
 import { fotosDoRoteiro } from "@/lib/itinerary/fotos";
 import { lerConfig } from "@/lib/configuracoes";
 import { cobrancaAtiva } from "@/lib/creditos";
-import { formatarPreco } from "@/lib/motor/catalogo";
 import { lerExtras } from "@/lib/viagem/completo-plano";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
@@ -28,7 +27,7 @@ export default async function RoteiroPage({ params }: Props) {
 
   const { data } = await supabase
     .from("generated_itineraries")
-    .select("itinerary, checklist_state, kb_refs, version, trip_request_id, extras, trip_requests(product)")
+    .select("itinerary, checklist_state, kb_refs, version, trip_request_id, extras, trip_requests(product, created_at)")
     .eq("id", id)
     .maybeSingle();
   if (!data) notFound();
@@ -47,20 +46,11 @@ export default async function RoteiroPage({ params }: Props) {
   ]);
   const ultimaVersao = versoes?.at(-1)?.version ?? data.version;
   const extras = lerExtras(data.extras);
-  let custoCompleto = "Grátis por enquanto.";
-  if (cobranca) {
-    const { count: usouCompleto } = await admin
-      .from("creditos")
-      .select("id", { count: "exact", head: true })
-      .eq("trip_request_id", data.trip_request_id)
-      .eq("tipo", "completo")
-      .lt("quantidade", 0);
-    const precos = await lerConfig<Record<string, number>>(admin, "precos_produtos", {});
-    custoCompleto =
-      data.trip_requests?.product === "completo" || (usouCompleto ?? 0) > 0
-        ? "Incluído na sua consulta."
-        : `Consome 1 crédito Completo (${formatarPreco(precos.completo ?? 49.9)}).`;
-  }
+  // Completo: passagens e hotéis atualizados 1 vez ao dia durante N dias a partir da consulta
+  const ehCompleto = data.trip_requests?.product === "completo";
+  const janela = ehCompleto ? await lerConfig<{ dias: number }>(admin, "atualizacao_completo", { dias: 15 }) : null;
+  const atualizaAte =
+    janela && data.trip_requests?.created_at ? new Date(new Date(data.trip_requests.created_at).getTime() + janela.dias * 86_400_000).toISOString() : null;
 
   return (
     <ItineraryView
@@ -78,7 +68,7 @@ export default async function RoteiroPage({ params }: Props) {
         versoes: (versoes ?? []).map((v) => ({ id: v.id, versao: v.version })),
         versaoAtual: data.version,
       }}
-      completo={{ itineraryId: id, extras, custo: custoCompleto }}
+      completo={ehCompleto ? { itineraryId: id, extras, atualizaAte } : undefined}
     />
   );
 }

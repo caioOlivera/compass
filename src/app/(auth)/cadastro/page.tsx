@@ -13,7 +13,7 @@ export default async function CadastroPage({ searchParams }: Props) {
   return (
     <AuthShell
       titulo="Criar conta"
-      subtitulo="Leva um minuto. Depois é só responder o questionário da viagem."
+      subtitulo="Leva um minuto, e o seu primeiro roteiro é grátis. Depois é só responder o questionário da viagem."
       rodape={
         <>
           Já tem conta?{" "}

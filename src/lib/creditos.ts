@@ -54,60 +54,126 @@ export async function planoDoUsuario(db: Db, userId: string): Promise<{ organiza
 }
 
 export type ResultadoCredito =
-  | { ok: true; usoId: string | null; gratis?: boolean; premium?: boolean }
+  | {
+      ok: true;
+      usoId: string | null;
+      /** O roteiro sai com passagens e hotéis (completo, plano de agência ou acesso cortesia) */
+      completo: boolean;
+      origem: "lancamento" | "cortesia" | "plano" | "credito";
+      /** Lançamento grátis: vale o limite diário de gerações */
+      gratis?: boolean;
+    }
   | { ok: false; status: 402 | 429; mensagem: string; comprar?: string };
 
+/** Acesso gratuito concedido pelo admin (por e-mail ou conta), ainda válido e não revogado. */
+export async function acessoGratisAtivo(db: Db, userId: string, email?: string | null) {
+  const agora = new Date().toISOString();
+  const ativos = () => db.from("acessos_gratis").select("id, valido_ate, motivo").is("revogado_em", null).or(`valido_ate.is.null,valido_ate.gt.${agora}`).limit(1);
+  const { data: porConta } = await ativos().eq("user_id", userId);
+  if (porConta?.length) return porConta[0];
+  // Concedido antes de a pessoa criar a conta: o e-mail é guardado em minúsculas
+  if (!email) return null;
+  const { data: porEmail } = await ativos().eq("email", email.trim().toLowerCase());
+  return porEmail?.[0] ?? null;
+}
+
+/** Toda conta ganha 1 roteiro grátis (sem passagens e hotéis), uma vez só. */
+export async function garantirBoasVindas(db: Db, userId: string) {
+  if ((await lerConfig(db, "roteiro_boas_vindas", true)) !== true) return;
+  const { data } = await db.from("boas_vindas").upsert({ user_id: userId }, { onConflict: "user_id", ignoreDuplicates: true }).select("user_id");
+  if (!data?.length) return; // já recebeu
+  const meses = Number(await lerConfig(db, "validade_meses_b2c", 12));
+  await db.from("creditos").insert({ user_id: userId, tipo: "roteiro", quantidade: 1, motivo: "cortesia", valido_ate: somarMeses(new Date(), meses).toISOString() });
+}
+
+/** Limite por hora de quem gera sem crédito (Premium e cortesia): contra automação. */
+async function dentroDoUsoJusto(db: Db, ids: string[]): Promise<boolean> {
+  const uso = await lerConfig<{ alerta_mes: number; limite_hora: number }>(db, "uso_justo_premium", { alerta_mes: 150, limite_hora: 20 });
+  const umaHora = new Date(Date.now() - 3_600_000).toISOString();
+  const { count } = await db.from("trip_requests").select("id", { count: "exact", head: true }).in("user_id", ids).gte("created_at", umaHora);
+  return (count ?? 0) <= uso.limite_hora;
+}
+
+const MUITAS = { ok: false as const, status: 429 as const, mensagem: "Muitas consultas na última hora. Tente de novo em alguns minutos." };
+
 /**
- * Antes de gerar: libera pelo lançamento grátis, pelo Premium da agência (com uso justo) ou
- * consumindo 1 crédito (da agência primeiro, depois o pessoal). Créditos "completo" servem para
- * qualquer consulta, menos consultoria.
+ * Antes de gerar. Ordem: acesso cortesia do admin → lançamento grátis (cobrança desligada) →
+ * Premium da agência (uso justo) → créditos (agência primeiro). Plano de agência e cortesia geram
+ * sempre com passagens e hotéis; nos créditos, o produto pedido decide.
  */
 export async function exigirCredito(
   db: Db,
-  p: { userId: string; produto: ProdutoAvulso; tripRequestId?: string | null; motivo?: "uso" | "ajuste_extra" },
+  p: { userId: string; email?: string | null; produto: ProdutoAvulso; tripRequestId?: string | null; motivo?: "uso" | "ajuste_extra" },
 ): Promise<ResultadoCredito> {
-  if (!(await cobrancaAtiva(db))) return { ok: true, usoId: null, gratis: true };
+  if (await acessoGratisAtivo(db, p.userId, p.email)) {
+    return (await dentroDoUsoJusto(db, [p.userId])) ? { ok: true, usoId: null, completo: true, origem: "cortesia" } : MUITAS;
+  }
+  if (!(await cobrancaAtiva(db))) return { ok: true, usoId: null, completo: false, origem: "lancamento", gratis: true };
 
   const agencia = await planoDoUsuario(db, p.userId);
   if (agencia?.plano === "premium") {
-    const uso = await lerConfig<{ alerta_mes: number; limite_hora: number }>(db, "uso_justo_premium", { alerta_mes: 150, limite_hora: 20 });
     const { data: membros } = await db.from("organizacao_membros").select("user_id").eq("organizacao_id", agencia.organizacaoId);
     const ids = (membros ?? []).map((m) => m.user_id);
-    const umaHora = new Date(Date.now() - 3_600_000).toISOString();
-    const { count } = await db.from("trip_requests").select("id", { count: "exact", head: true }).in("user_id", ids).gte("created_at", umaHora);
-    if ((count ?? 0) > uso.limite_hora) {
-      return { ok: false, status: 429, mensagem: "Muitas consultas na última hora. Tente de novo em alguns minutos." };
-    }
+    if (!(await dentroDoUsoJusto(db, ids))) return MUITAS;
     // Alerta interno de uso justo: só avisa (logs da Vercel), não bloqueia
+    const uso = await lerConfig<{ alerta_mes: number }>(db, "uso_justo_premium", { alerta_mes: 150 });
     const inicioMes = new Date();
     inicioMes.setUTCDate(1);
     inicioMes.setUTCHours(0, 0, 0, 0);
     const { count: noMes } = await db.from("trip_requests").select("id", { count: "exact", head: true }).in("user_id", ids).gte("created_at", inicioMes.toISOString());
     if ((noMes ?? 0) >= uso.alerta_mes) console.warn(`[uso-justo] agência ${agencia.organizacaoId}: ${noMes} consultas no mês`);
-    return { ok: true, usoId: null, premium: true };
+    return { ok: true, usoId: null, completo: true, origem: "plano" };
   }
 
-  // Primeiro o crédito do próprio produto; "completo" (mais caro) só quando não houver
-  const tentativas = p.produto === "consultoria" || p.produto === "completo" ? [[p.produto]] : [[p.produto], ["completo"]];
-  let usoId: string | null = null;
+  await garantirBoasVindas(db, p.userId);
+
+  // Basic: os créditos da agência são "completo". Assinado aceita o próprio crédito ou um completo.
+  const tentativas =
+    agencia?.plano === "basic" && p.produto !== "consultoria"
+      ? p.produto === "assinado"
+        ? [["assinado"], ["completo"]]
+        : [["completo"]]
+      : p.produto === "assinado"
+        ? [["assinado"], ["completo"]]
+        : [[p.produto]];
   for (const tipos of tentativas) {
-    const { data } = await db.rpc("consumir_credito", {
+    const { data: usoId } = await db.rpc("consumir_credito", {
       p_user_id: p.userId,
       p_organizacao_id: agencia?.organizacaoId ?? null,
       p_tipos: tipos,
       p_motivo: p.motivo ?? "uso",
       p_trip_request_id: p.tripRequestId ?? null,
     });
-    usoId = data;
-    if (usoId) break;
+    if (usoId) return { ok: true, usoId, completo: tipos[0] === "completo", origem: "credito" };
   }
-  if (usoId) return { ok: true, usoId };
   return {
     ok: false,
     status: 402,
     mensagem: p.motivo === "ajuste_extra" ? "Os ajustes incluídos acabaram. Um novo ajuste consome um novo crédito." : "Você não tem créditos para este produto.",
     comprar: `/comprar?produto=${p.produto}`,
   };
+}
+
+export type OpcoesGeracao = {
+  /** cortesia/plano: tudo liberado com passagens e hotéis; lancamento: grátis sem passagens; creditos: escolhe */
+  modo: "cortesia" | "plano" | "lancamento" | "creditos";
+  roteiro: number;
+  completo: number;
+  assinado: number;
+};
+
+/** O que a pessoa pode gerar agora (para o questionário mostrar a escolha certa). */
+export async function opcoesDeGeracao(db: Db, userId: string, email?: string | null): Promise<OpcoesGeracao> {
+  const zero = { roteiro: 0, completo: 0, assinado: 0 };
+  if (await acessoGratisAtivo(db, userId, email)) return { modo: "cortesia", ...zero };
+  if (!(await cobrancaAtiva(db))) return { modo: "lancamento", ...zero };
+  const agencia = await planoDoUsuario(db, userId);
+  if (agencia?.plano === "premium") return { modo: "plano", ...zero };
+  await garantirBoasVindas(db, userId);
+  const meu = await saldo(db, { userId });
+  const daAgencia = agencia?.plano === "basic" ? await saldo(db, { organizacaoId: agencia.organizacaoId }) : {};
+  if (agencia?.plano === "basic") return { modo: "plano", roteiro: 0, completo: daAgencia.completo ?? 0, assinado: 0 };
+  return { modo: "creditos", roteiro: meu.roteiro ?? 0, completo: meu.completo ?? 0, assinado: meu.assinado ?? 0 };
 }
 
 /** Liga o uso ao pedido de viagem criado depois do consumo. */

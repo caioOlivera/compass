@@ -18,7 +18,12 @@ const ORDEM: ProdutoAvulso[] = ["roteiro", "assinado", "completo", "consultoria"
 const INCLUI: Record<ProdutoAvulso, string[]> = {
   roteiro: ["Roteiro dia a dia no mapa", "Dicas da base de relatos reais", "3 ajustes incluídos", "PDF para levar"],
   assinado: ["Um roteiro pronto do consultor", "Adaptado às suas datas e ao seu ritmo", "3 ajustes incluídos", "PDF para levar"],
-  completo: ["Tudo do roteiro", "Passagens recomendadas com data da cotação", "2 ou 3 hotéis por cidade", "3 ajustes incluídos"],
+  completo: [
+    "Tudo do roteiro, entregue de uma vez",
+    "Passagens recomendadas e 2 ou 3 hotéis por cidade",
+    "Preços atualizados 1 vez por dia durante 15 dias",
+    "3 ajustes incluídos (com passagens e hotéis refeitos)",
+  ],
   consultoria: [
     "Contato direto com o consultor",
     "Suporte 24 horas pelo WhatsApp, inclusive durante a viagem",

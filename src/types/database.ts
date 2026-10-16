@@ -935,6 +935,7 @@ export type Database = {
           provedor_id: string | null
           referencia: Json
           status: string
+          termos_aceitos_em: string | null
           updated_at: string
           user_id: string
           valor: number
@@ -950,6 +951,7 @@ export type Database = {
           provedor_id?: string | null
           referencia?: Json
           status?: string
+          termos_aceitos_em?: string | null
           updated_at?: string
           user_id: string
           valor: number
@@ -965,6 +967,7 @@ export type Database = {
           provedor_id?: string | null
           referencia?: Json
           status?: string
+          termos_aceitos_em?: string | null
           updated_at?: string
           user_id?: string
           valor?: number
@@ -984,6 +987,18 @@ export type Database = {
           chave?: string
           created_at?: string
         }
+        Relationships: []
+      }
+      acessos_gratis: {
+        Row: { id: string; email: string; user_id: string | null; valido_ate: string | null; motivo: string; concedido_por: string | null; revogado_em: string | null; created_at: string }
+        Insert: { id?: string; email: string; user_id?: string | null; valido_ate?: string | null; motivo?: string; concedido_por?: string | null; revogado_em?: string | null; created_at?: string }
+        Update: { id?: string; email?: string; user_id?: string | null; valido_ate?: string | null; motivo?: string; concedido_por?: string | null; revogado_em?: string | null; created_at?: string }
+        Relationships: []
+      }
+      boas_vindas: {
+        Row: { user_id: string; created_at: string }
+        Insert: { user_id: string; created_at?: string }
+        Update: { user_id?: string; created_at?: string }
         Relationships: []
       }
       chamados: {
@@ -1248,6 +1263,7 @@ export type Database = {
       minha_organizacao: { Args: never; Returns: string }
       sou_dono_da_organizacao: { Args: never; Returns: boolean }
       is_admin: { Args: never; Returns: boolean }
+      usuario_por_email: { Args: { p_email: string }; Returns: string | null }
     }
     Enums: {
       [_ in never]: never

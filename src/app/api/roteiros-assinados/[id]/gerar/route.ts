@@ -5,6 +5,7 @@ import { GeracaoError } from "@/lib/ai/generate";
 import { serverEnv } from "@/lib/env";
 import { devolverCredito, exigirCredito, vincularUso } from "@/lib/creditos";
 import { registrarUso } from "@/lib/medicao";
+import { completarRoteiro } from "@/lib/viagem/completo";
 import { carregarRoteiroAssinado } from "@/lib/motor/assinado";
 import { EscolhasAssinadoSchema, pedidoDoAssinado } from "@/lib/motor/assinado-pedido";
 import { montarContextoBase } from "@/lib/motor/contexto";
@@ -48,7 +49,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     return erro(500, "Este roteiro ainda não está pronto para adaptação (faltam coordenadas das cidades).");
   }
 
-  const credito = await exigirCredito(admin, { userId: user.id, produto: "assinado" });
+  const credito = await exigirCredito(admin, { userId: user.id, email: user.email, produto: "assinado" });
   if (!credito.ok) {
     const comprar = `/comprar?produto=assinado&roteiro=${id}`;
     return NextResponse.json({ error: credito.mensagem, comprar: credito.status === 402 ? comprar : undefined }, { status: credito.status });
@@ -93,6 +94,10 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       .select("id")
       .single();
     if (error) throw error;
+    if (credito.completo) {
+      await admin.from("trip_requests").update({ product: "completo" }).eq("id", pedido.id);
+      await completarRoteiro(admin, { itineraryId: roteiro.id, roteiro: r.roteiro, input, userId: user.id, tripRequestId: pedido.id });
+    }
     await admin.from("trip_requests").update({ status: "completed" }).eq("id", pedido.id);
     await registrarUso(admin, {
       tipo: "adaptacao",

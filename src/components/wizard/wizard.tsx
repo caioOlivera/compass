@@ -7,7 +7,9 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { FormAlert } from "@/components/ui/field";
+import { EscolhaProduto, produtoPadrao, type ProdutoGeracao } from "@/components/wizard/escolha-produto";
 import { Gerando } from "@/components/wizard/generating";
+import type { OpcoesGeracao } from "@/lib/creditos";
 import {
   EtapaAuge,
   EtapaDatas,
@@ -65,7 +67,15 @@ function salvarRascunho(valor: { rascunho: TripRequestDraft; etapa: number } | n
 
 type Envio = { estado: "parado" } | { estado: "gerando" } | { estado: "erro"; mensagem: string; comprar?: string };
 
-export function Wizard({ inicio = {} }: { inicio?: InicioQuestionario }) {
+export function Wizard({
+  inicio = {},
+  opcoes = null,
+  produtoInicial,
+}: {
+  inicio?: InicioQuestionario;
+  opcoes?: OpcoesGeracao | null;
+  produtoInicial?: ProdutoGeracao;
+}) {
   const router = useRouter();
   const [rascunho, setRascunho] = useState<TripRequestDraft>(RASCUNHO_VAZIO);
   const [etapa, setEtapa] = useState(0);
@@ -73,6 +83,7 @@ export function Wizard({ inicio = {} }: { inicio?: InicioQuestionario }) {
   const [erros, setErros] = useState<ErrosEtapa>({});
   const [envio, setEnvio] = useState<Envio>({ estado: "parado" });
   const [hoje, setHoje] = useState("");
+  const [produto, setProduto] = useState<ProdutoGeracao>(produtoPadrao(opcoes, produtoInicial));
   // Só salva depois de restaurar: senão o primeiro render grava o rascunho vazio por cima do salvo
   const [restaurado, setRestaurado] = useState(false);
   const titulo = useRef<HTMLHeadingElement>(null);
@@ -140,7 +151,7 @@ export function Wizard({ inicio = {} }: { inicio?: InicioQuestionario }) {
       const res = await fetch("/api/generate-itinerary", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(r.data),
+        body: JSON.stringify({ ...r.data, produto }),
       });
       const corpo = await res.json().catch(() => ({}));
       if (res.ok) {
@@ -168,6 +179,7 @@ export function Wizard({ inicio = {} }: { inicio?: InicioQuestionario }) {
   }
 
   if (envio.estado === "gerando") return <Gerando auge={rascunho.auge_da_viagem} />;
+  const semCredito = opcoes?.modo === "creditos" && opcoes[produto] === 0;
 
   const Atual = COMPONENTES[etapa];
   const ultima = etapa === ETAPAS.length - 1;
@@ -217,6 +229,8 @@ export function Wizard({ inicio = {} }: { inicio?: InicioQuestionario }) {
           </motion.section>
         </AnimatePresence>
 
+        {ultima && opcoes && <EscolhaProduto opcoes={opcoes} produto={produto} onMudar={setProduto} />}
+
         {envio.estado === "erro" && <FormAlert>{envio.mensagem}</FormAlert>}
         {envio.estado === "erro" && envio.comprar && (
           <Link href={envio.comprar} className="self-start text-sm font-medium text-accent-strong underline">
@@ -225,10 +239,10 @@ export function Wizard({ inicio = {} }: { inicio?: InicioQuestionario }) {
         )}
 
         <div className="flex justify-end">
-          <Button type="submit" className="min-w-40">
+          <Button type="submit" className="min-w-40" disabled={ultima && semCredito}>
             {ultima ? (
               <>
-                <Sparkles className="size-4" aria-hidden /> {envio.estado === "erro" ? "Tentar de novo" : "Gerar meu roteiro"}
+                <Sparkles className="size-4" aria-hidden /> {envio.estado === "erro" ? "Tentar de novo" : produto === "completo" || opcoes?.modo === "cortesia" || opcoes?.modo === "plano" ? "Gerar roteiro completo" : "Gerar meu roteiro"}
               </>
             ) : (
               <>

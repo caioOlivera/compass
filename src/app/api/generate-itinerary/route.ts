@@ -7,6 +7,7 @@ import { ProvedorError } from "@/lib/ai/providers/openai-compatible";
 import { serverEnv } from "@/lib/env";
 import { devolverCredito, exigirCredito, vincularUso } from "@/lib/creditos";
 import { registrarUso } from "@/lib/medicao";
+import { completarRoteiro } from "@/lib/viagem/completo";
 import { montarContextoBase } from "@/lib/motor/contexto";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
@@ -47,7 +48,9 @@ export async function POST(req: NextRequest) {
   const admin = createAdminClient();
 
   // Com a cobrança ligada, cada roteiro consome 1 crédito; desligada, vale só o limite diário
-  const credito = await exigirCredito(admin, { userId: user.id, produto: "roteiro" });
+  // Produto escolhido no questionário: "completo" traz passagens e hotéis na mesma hora
+  const produto = (body as { produto?: string } | null)?.produto === "completo" ? "completo" : "roteiro";
+  const credito = await exigirCredito(admin, { userId: user.id, email: user.email, produto });
   if (!credito.ok) return NextResponse.json({ error: credito.mensagem, comprar: credito.comprar }, { status: credito.status });
   if (credito.gratis) {
     const { data: usadas, error: erroLimite } = await admin.rpc("generations_last_24h", { p_user_id: user.id });
@@ -99,6 +102,11 @@ export async function POST(req: NextRequest) {
       .single();
     if (erroRoteiro) throw erroRoteiro;
 
+    if (credito.completo) {
+      // Passagens e hotéis entram antes de entregar: a tela do roteiro já abre completa
+      await admin.from("trip_requests").update({ product: "completo" }).eq("id", pedido.id);
+      await completarRoteiro(admin, { itineraryId: roteiro.id, roteiro: resultado.roteiro, input, userId: user.id, tripRequestId: pedido.id });
+    }
     await marcarStatus("completed");
     await registrarUso(admin, {
       tipo: "geracao",
