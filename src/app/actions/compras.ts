@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { headers } from "next/headers";
 import { z } from "zod";
 import { exigirAdmin } from "@/lib/admin";
 import { lerConfig } from "@/lib/configuracoes";
@@ -13,6 +14,15 @@ import type { Json } from "@/types/database";
 type Resultado = { ok: true; url?: string; mensagem?: string } | { ok: false; mensagem: string };
 
 const SEM_PAGAMENTO = "O pagamento ainda não está ligado. Fale com a gente para comprar.";
+
+/** Endereço de onde veio o pedido (https://dominio), para os links de volta do Mercado Pago. */
+async function siteDaRequisicao(): Promise<string | null> {
+  const h = await headers();
+  const host = h.get("x-forwarded-host") ?? h.get("host");
+  if (!host) return null;
+  const proto = h.get("x-forwarded-proto") ?? (host.startsWith("localhost") ? "http" : "https");
+  return `${proto.split(",")[0].trim()}://${host.split(",")[0].trim()}`;
+}
 
 async function usuario() {
   const supabase = await createClient();
@@ -43,7 +53,7 @@ export async function iniciarCompra(produto: ProdutoAvulso, referencia: { roteir
   if (error || !pedido) return { ok: false, mensagem: "Não foi possível criar o pedido." };
 
   try {
-    const pref = await criarPreferencia({ pedidoId: pedido.id, titulo: `Compass: ${PRODUTOS[p.data].titulo}`, valor, email: user.email });
+    const pref = await criarPreferencia({ pedidoId: pedido.id, titulo: `Compass: ${PRODUTOS[p.data].titulo}`, valor, email: user.email, site: await siteDaRequisicao() });
     return { ok: true, url: linkDoCheckout(pref) };
   } catch (e) {
     console.error("criarPreferencia", e);
@@ -70,7 +80,7 @@ export async function assinarPlano(plano: Plano): Promise<Resultado> {
     .single();
   if (error || !assinatura) return { ok: false, mensagem: "Não foi possível iniciar a assinatura." };
   try {
-    const mp = await criarAssinaturaMP({ assinaturaId: assinatura.id, titulo: PLANOS[plano].titulo, valor, email: user.email });
+    const mp = await criarAssinaturaMP({ assinaturaId: assinatura.id, titulo: PLANOS[plano].titulo, valor, email: user.email, site: await siteDaRequisicao() });
     await db.from("assinaturas").update({ provedor_id: mp.id }).eq("id", assinatura.id);
     if (!mp.init_point) return { ok: false, mensagem: "O Mercado Pago não devolveu o link da assinatura." };
     return { ok: true, url: mp.init_point };

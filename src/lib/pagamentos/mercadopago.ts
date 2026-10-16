@@ -32,8 +32,14 @@ export function mercadoPagoConfigurado(): boolean {
   return !!credenciaisMP().token;
 }
 
-export function urlDoSite(): string {
-  return (serverEnv().NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000").replace(/\/$/, "");
+/**
+ * Endereço público do site para os links de volta e o aviso. O Mercado Pago só aceita https
+ * público: vale NEXT_PUBLIC_SITE_URL quando for https; senão, o endereço de onde veio o pedido.
+ */
+export function urlDoSite(daRequisicao?: string | null): string {
+  const env = serverEnv().NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "");
+  if (env?.startsWith("https://")) return env;
+  return (daRequisicao ?? env ?? "http://localhost:3000").replace(/\/$/, "");
 }
 
 async function chamar<T>(caminho: string, init: RequestInit & { idempotencia?: string } = {}): Promise<T> {
@@ -62,18 +68,21 @@ export function linkDoCheckout(p: { init_point: string; sandbox_init_point?: str
 }
 
 /** Checkout Pro: página do Mercado Pago com Pix e cartão. external_reference = id do pedido. */
-export function criarPreferencia(p: { pedidoId: string; titulo: string; valor: number; email?: string }): Promise<Preferencia> {
-  const site = urlDoSite();
+export function criarPreferencia(p: { pedidoId: string; titulo: string; valor: number; email?: string; site?: string | null }): Promise<Preferencia> {
+  const site = urlDoSite(p.site);
+  const publico = site.startsWith("https://");
   return chamar<Preferencia>("/checkout/preferences", {
     method: "POST",
     idempotencia: p.pedidoId,
     body: JSON.stringify({
       items: [{ id: p.pedidoId, title: p.titulo, quantity: 1, unit_price: p.valor, currency_id: "BRL" }],
       external_reference: p.pedidoId,
-      payer: p.email ? { email: p.email } : undefined,
-      notification_url: `${site}/api/webhooks/mercadopago`,
+      // No modo teste quem paga é uma conta compradora de teste; o e-mail real atrapalharia
+      payer: p.email && !modoTeste() ? { email: p.email } : undefined,
+      // Fora de https (desenvolvimento local) o Mercado Pago recusa o aviso e a volta automática
+      ...(publico ? { notification_url: `${site}/api/webhooks/mercadopago` } : {}),
       back_urls: { success: `${site}/pedidos/${p.pedidoId}`, pending: `${site}/pedidos/${p.pedidoId}`, failure: `${site}/pedidos/${p.pedidoId}` },
-      auto_return: "approved",
+      ...(publico ? { auto_return: "approved" } : {}),
       payment_methods: { installments: 1 },
       statement_descriptor: "COMPASS",
     }),
@@ -108,7 +117,7 @@ export type Assinatura = {
 };
 
 /** Assinatura mensal no cartão; o cliente autoriza no init_point. external_reference = id da assinatura local. */
-export function criarAssinaturaMP(p: { assinaturaId: string; titulo: string; valor: number; email: string }): Promise<Assinatura> {
+export function criarAssinaturaMP(p: { assinaturaId: string; titulo: string; valor: number; email: string; site?: string | null }): Promise<Assinatura> {
   return chamar<Assinatura>("/preapproval", {
     method: "POST",
     idempotencia: p.assinaturaId,
@@ -116,7 +125,7 @@ export function criarAssinaturaMP(p: { assinaturaId: string; titulo: string; val
       reason: p.titulo,
       external_reference: p.assinaturaId,
       payer_email: p.email,
-      back_url: `${urlDoSite()}/agencia`,
+      back_url: `${urlDoSite(p.site)}/agencia`,
       auto_recurring: { frequency: 1, frequency_type: "months", transaction_amount: p.valor, currency_id: "BRL" },
       status: "pending",
     }),
