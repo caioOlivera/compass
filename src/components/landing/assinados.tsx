@@ -23,14 +23,28 @@ export function Assinados({ itens, fotos, preco }: { itens: ItemCatalogo[]; foto
       </div>
       <ul className="grid gap-5 md:grid-cols-3">
         {itens.slice(0, 3).map((r, i) => (
-          <li key={r.id}>
-            <Link href={`/roteiros-assinados/${r.id}`} className="group block overflow-hidden rounded-2xl border border-border bg-surface transition hover:border-text-3">
-              <FotoDestino foto={fotos[i]} emoji="🧭" corReserva="#1f6f5c" className="aspect-[4/3]" imgClassName="transition-transform duration-500 group-hover:scale-105" />
-              <span className="flex flex-col gap-1 p-4">
-                <span className="font-semibold text-balance">{r.titulo}</span>
-                <span className="inline-flex items-center gap-1.5 text-sm text-text-2">
-                  <CalendarDays className="size-4" aria-hidden /> {r.duracao_dias} dias · {r.cidades.slice(0, 4).join(", ")}
-                  {r.cidades.length > 4 ? "…" : ""}
+          <li key={r.id} className="flex">
+            <Link
+              href={`/roteiros-assinados/${r.id}`}
+              className="group flex w-full flex-col overflow-hidden rounded-2xl border border-border bg-surface transition hover:border-text-3"
+            >
+              <FotoDestino foto={fotos[i]} emoji="🧭" corReserva="#1f6f5c" className="aspect-[4/3] shrink-0" imgClassName="transition-transform duration-500 group-hover:scale-105" />
+              <span className="flex flex-1 flex-col gap-2 p-4">
+                <span className="line-clamp-2 min-h-[3rem] font-semibold text-balance">{r.titulo}</span>
+                <span className="inline-flex items-start gap-1.5 text-sm text-text-2">
+                  <CalendarDays className="mt-0.5 size-4 shrink-0" aria-hidden />
+                  <span className="line-clamp-1">
+                    {r.duracao_dias} dias · {r.cidades.join(", ")}
+                  </span>
+                </span>
+                <span className="mt-auto flex items-end justify-between gap-3 border-t border-border pt-3">
+                  <span className="flex flex-col">
+                    <span className="text-xs text-text-2">Adaptado às suas datas</span>
+                    <span className="text-2xl font-semibold tabular-nums">{preco}</span>
+                  </span>
+                  <span className="inline-flex items-center gap-1 text-sm font-medium text-accent-strong group-hover:underline">
+                    Ver roteiro <ArrowRight className="size-4" aria-hidden />
+                  </span>
                 </span>
               </span>
             </Link>

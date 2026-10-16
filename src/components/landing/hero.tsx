@@ -128,21 +128,21 @@ export function Hero({ fotos }: { fotos: (Foto | null)[] }) {
         >
           <p className="text-sm font-semibold">Itália de Roma às Dolomitas</p>
           <p className="text-xs text-text-2">15 dias · entra por Roma, sai por Milão</p>
-          <ol className="mt-3 flex items-center gap-1.5 text-xs">
+          <ol className="relative mt-3 grid grid-cols-4 text-xs">
+            {/* Linha da rota passando pelo centro das bolinhas, da primeira à última coluna */}
+            <span className="absolute top-[5px] right-[12.5%] left-[12.5%] h-0.5 bg-border" aria-hidden />
             {[
               ["🏛️", "Roma", "var(--pin-hub-entrada)"],
               ["🎨", "Florença", "var(--pin-base)"],
               ["🏔️", "Dolomitas", "var(--pin-auge)"],
               ["⛪", "Milão", "var(--pin-hub-saida)"],
-            ].map(([e, n, cor], i, arr) => (
-              <li key={n} className="flex items-center gap-1.5">
-                <span className="flex flex-col items-center gap-1">
-                  <span className="size-2.5 rounded-full" style={{ background: cor }} aria-hidden />
-                  <span>
-                    <span aria-hidden>{e}</span> {n}
-                  </span>
+            ].map(([e, n, cor]) => (
+              <li key={n} className="relative flex flex-col items-center gap-1 text-center">
+                <span className="size-3 rounded-full ring-2 ring-surface" style={{ background: cor }} aria-hidden />
+                <span className="text-base leading-none" aria-hidden>
+                  {e}
                 </span>
-                {i < arr.length - 1 && <span className="mb-4 h-0.5 w-3 bg-border" aria-hidden />}
+                <span>{n}</span>
               </li>
             ))}
           </ol>

@@ -4,12 +4,13 @@ import { useEffect, useRef, useState } from "react";
 import { ROTA } from "@/components/landing/data";
 import { PacePicker } from "@/components/landing/pace-picker";
 import { RoutePanel } from "@/components/landing/route-panel";
+import type { Foto } from "@/lib/images/fotos";
 
 /**
  * Como a rota é desenhada: o painel fixo mostra o exemplo (Roma → Milão) e acende uma parada a
  * cada bloco de texto lido. Antes do primeiro bloco, nada aceso.
  */
-export function RouteStory() {
+export function RouteStory({ fotos = [] }: { fotos?: (Foto | null)[] }) {
   const [ativa, setAtiva] = useState(-1);
   const blocos = useRef<(HTMLElement | null)[]>([]);
   const intro = useRef<HTMLDivElement>(null);
@@ -43,7 +44,7 @@ export function RouteStory() {
 
       <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-12">
         <div className="h-[440px] lg:sticky lg:top-24 lg:h-[calc(100svh-8rem)]">
-          <RoutePanel ativa={ativa} />
+          <RoutePanel ativa={ativa} fotos={fotos} />
         </div>
 
         <div className="flex flex-col">

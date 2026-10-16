@@ -25,14 +25,15 @@ export const revalidate = 604800;
 
 export default async function Home() {
   const [assinados, preco] = await Promise.all([catalogoAssinados(), precoAssinado()]);
-  const [mosaico, regioes, destinos, chamada, fotosAssinados] = await Promise.all([
+  const [mosaico, regioes, destinos, chamada, fotosAssinados, fotosRota] = await Promise.all([
     Promise.all(MOSAICO_HERO.map((m, i) => buscarFoto(m.busca, { orientacao: i === 0 ? "portrait" : "landscape" }))),
     buscarFotos(REGIOES_LANDING.map((r) => r.busca), { orientacao: "landscape" }),
     buscarFotos(DESTINOS_LANDING.map((d) => d.busca), { orientacao: "portrait" }),
     buscarFoto("airplane window clouds", { orientacao: "landscape" }),
     buscarFotos(assinados.slice(0, 3).map((a) => a.cidades[Math.min(1, a.cidades.length - 1)] ?? a.titulo), { idioma: "pt-BR" }),
+    buscarFotos(["Rome Colosseum", "Florence Duomo", "Dolomites Seceda", "Milan Duomo"], { orientacao: "portrait" }),
   ]);
-  const creditos = [...mosaico, ...regioes, ...destinos, chamada, ...fotosAssinados].filter((f): f is Foto => f !== null);
+  const creditos = [...mosaico, ...regioes, ...destinos, chamada, ...fotosAssinados, ...fotosRota].filter((f): f is Foto => f !== null);
 
   return (
     <div className="bg-bg text-text">
@@ -42,9 +43,9 @@ export default async function Home() {
         <Regioes fotos={regioes} />
         <DestinosCarrossel fotos={destinos} />
         <Assinados itens={assinados} fotos={fotosAssinados} preco={formatarPreco(preco)} />
-        <RouteStory />
-        <Moldura titulo="Oito perguntas, nenhuma sobre o caminho" texto="Arraste pelas etapas e veja a tela de cada uma.">
-          <Stages />
+        <RouteStory fotos={fotosRota} />
+        <Moldura titulo="Oito perguntas, nenhuma sobre o caminho" texto="Você conta o que quer; o caminho é com a gente. Passe pelas etapas para ver cada tela.">
+          <Stages fotoAuge={fotosRota[2]} />
         </Moldura>
         <Moldura titulo="O que você recebe" texto="Mapa, paradas, trechos e voos, tudo no mesmo roteiro.">
           <Showcase />
