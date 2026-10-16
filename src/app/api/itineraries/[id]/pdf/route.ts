@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
-import { respostaPdf } from "@/lib/pdf/resposta";
+import { marcaDaAgencia, respostaPdf } from "@/lib/pdf/resposta";
 import { createClient } from "@/lib/supabase/server";
 import { ChecklistStateSchema, ItinerarySchema } from "@/lib/validation/itinerary";
 
@@ -27,7 +27,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
 
   const roteiro = ItinerarySchema.safeParse(data.itinerary);
   if (!roteiro.success) return NextResponse.json({ error: "Roteiro inválido." }, { status: 500 });
-  return respostaPdf(roteiro.data, ChecklistStateSchema.catch({}).parse(data.checklist_state), "privado");
+  return respostaPdf(roteiro.data, ChecklistStateSchema.catch({}).parse(data.checklist_state), "privado", await marcaDaAgencia(supabase));
 }
 
 function naoEncontrado() {

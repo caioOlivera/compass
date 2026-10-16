@@ -49,6 +49,17 @@ export default async function PerfilPage() {
           />
         </div>
 
+        <Link
+          href="/agencia"
+          className="flex items-center justify-between rounded-2xl border border-border bg-surface p-5 transition hover:border-text-3"
+        >
+          <span className="flex flex-col gap-1">
+            <span className="font-medium">Minha agência</span>
+            <span className="text-sm text-text-2">Equipe, marca no PDF e planos para agências.</span>
+          </span>
+          <span aria-hidden className="text-accent-strong">→</span>
+        </Link>
+
         <form action={sair}>
           <button type="submit" className="inline-flex items-center gap-2 text-sm text-text-2 hover:text-text">
             <LogOut className="size-4" aria-hidden />

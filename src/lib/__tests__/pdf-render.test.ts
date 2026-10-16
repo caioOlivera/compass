@@ -23,4 +23,16 @@ describe("gerarPdfRoteiro", () => {
     expect(pdf.byteLength).toBeGreaterThan(5_000);
     expect(pdf.toString("latin1")).toContain("Inter");
   }, 20_000);
+
+  it("com a marca de uma agência, o nome dela aparece no lugar da Compass", async () => {
+    const { gerarPdfRoteiro } = await import("@/lib/pdf/roteiro-pdf");
+    const pdf = await gerarPdfRoteiro({
+      roteiro: roteiroPRD(),
+      checklist: {},
+      marca: { nome: "Rota Viagens", cor: "#aa3311", contato: "contato@rota.com", logo: null },
+    });
+    expect(pdf.subarray(0, 5).toString()).toBe("%PDF-");
+    // Título do documento vai nos metadados (texto do PDF é comprimido)
+    expect(pdf.toString("latin1")).toMatch(/Rota Viagens/);
+  }, 20_000);
 });

@@ -47,6 +47,8 @@ export type DadosPdf = {
   /** Miniatura de cada parada, por id_ponto */
   miniaturas?: Record<string, FotoPdf | null>;
   geradoEm?: Date;
+  /** Agência (B2B): o PDF sai com a marca dela no lugar da Compass */
+  marca?: { nome: string; cor: string; contato: string; logo?: ImagemPdf | null } | null;
 };
 
 const s = StyleSheet.create({
@@ -75,7 +77,9 @@ const s = StyleSheet.create({
 const LARGURA_MAPA = 515;
 const ALTURA_MAPA = 190;
 
-function DocumentoRoteiro({ roteiro, checklist, capa, miniaturas = {}, geradoEm = new Date() }: DadosPdf) {
+function DocumentoRoteiro({ roteiro, checklist, capa, miniaturas = {}, geradoEm = new Date(), marca }: DadosPdf) {
+  const acento = marca?.cor ?? COR.verde;
+  const autor = marca?.nome ?? "Compass";
   const r = roteiro.resumo_estrategico;
   const pontos = roteiro.pontos_mapa;
   const auge = pontos.find((p) => p.tipo_ponto === "auge_viagem") ?? pontos[0];
@@ -85,11 +89,18 @@ function DocumentoRoteiro({ roteiro, checklist, capa, miniaturas = {}, geradoEm 
   const creditos = [capa, ...Object.values(miniaturas)].filter((f): f is FotoPdf => !!f).map((f) => `${f.autor} / ${f.fonte}`);
 
   return (
-    <Document title={titulo} author="Compass" subject="Roteiro de viagem" creator="Compass" language="pt-BR">
+    <Document title={titulo} author={autor} subject="Roteiro de viagem" creator={autor} language="pt-BR">
       <Page size="A4" style={s.pagina}>
         <View style={s.topo}>
-          <Text style={s.marca}>Compass</Text>
-          <Text style={s.pequeno}>Roteiro gerado em {data}</Text>
+          {marca?.logo ? (
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+              <Image src={marca.logo} style={{ height: 30, maxWidth: 140, objectFit: "contain" }} />
+              <Text style={[s.marca, { color: acento }]}>{semEmoji(marca.nome)}</Text>
+            </View>
+          ) : (
+            <Text style={[s.marca, { color: acento }]}>{semEmoji(autor)}</Text>
+          )}
+          <Text style={s.pequeno}>{marca ? `Roteiro preparado em ${data}` : `Roteiro gerado em ${data}`}</Text>
         </View>
 
         {capa && (
@@ -134,7 +145,7 @@ function DocumentoRoteiro({ roteiro, checklist, capa, miniaturas = {}, geradoEm 
             <Svg width={LARGURA_MAPA} height={ALTURA_MAPA}>
               {projetados.slice(0, -1).map((a, i) => {
                 const b = projetados[i + 1];
-                return <Line key={a.ponto.id_ponto} x1={a.x} y1={a.y} x2={b.x} y2={b.y} stroke={COR.verde} strokeWidth={2} />;
+                return <Line key={a.ponto.id_ponto} x1={a.x} y1={a.y} x2={b.x} y2={b.y} stroke={acento} strokeWidth={2} />;
               })}
               {projetados.map(({ x, y, ponto }) => (
                 <Circle key={ponto.id_ponto} cx={x} cy={y} r={7} fill={COR_PIN[ponto.tipo_ponto]} stroke="#ffffff" strokeWidth={2} />
@@ -193,7 +204,7 @@ function DocumentoRoteiro({ roteiro, checklist, capa, miniaturas = {}, geradoEm 
                 <View style={{ marginTop: 8, marginLeft: 32, gap: 4 }}>
                   {p.plano_dias.map((d) => (
                     <View key={d.dia} wrap={false} style={{ flexDirection: "row", gap: 8 }}>
-                      <Text style={{ width: 38, fontWeight: 600, color: COR.verde }}>Dia {d.dia}</Text>
+                      <Text style={{ width: 38, fontWeight: 600, color: acento }}>Dia {d.dia}</Text>
                       <View style={{ flex: 1 }}>
                         <Text style={{ fontWeight: 600 }}>{semEmoji(d.titulo)}</Text>
                         <Text style={{ color: COR.tinta2 }}>{semEmoji(d.descricao)}</Text>
@@ -206,7 +217,7 @@ function DocumentoRoteiro({ roteiro, checklist, capa, miniaturas = {}, geradoEm 
               <View style={{ marginTop: 6, marginLeft: 32 }}>
                 {p.atribuicoes_e_checklist.map((item, k) => (
                   <View key={k} style={s.item} wrap={false}>
-                    <View style={[s.caixinha, marcados.has(k) ? { backgroundColor: COR.verde, borderColor: COR.verde } : {}]} />
+                    <View style={[s.caixinha, marcados.has(k) ? { backgroundColor: acento, borderColor: acento } : {}]} />
                     <Text style={{ flex: 1, color: marcados.has(k) ? COR.tinta3 : COR.tinta }}>{semEmoji(item.item)}</Text>
                     <Text style={s.categoria}>{item.categoria}</Text>
                   </View>
@@ -227,13 +238,13 @@ function DocumentoRoteiro({ roteiro, checklist, capa, miniaturas = {}, geradoEm 
 
         <View style={{ marginTop: 22 }} wrap={false}>
           <Text style={s.pequeno}>
-            Roteiro sugerido por IA: confira horários, preços e regras de entrada antes de comprar.
+            {marca ? "Roteiro preparado com apoio de IA" : "Roteiro sugerido por IA"}: confira horários, preços e regras de entrada antes de comprar.
             {creditos.length > 0 ? ` Fotos: ${[...new Set(creditos)].join(", ")}.` : ""}
           </Text>
         </View>
 
         <Text style={[s.rodape, { left: 40 }]} fixed>
-          Compass · {titulo}
+          {marca ? `${semEmoji(marca.nome)}${marca.contato ? ` · ${marca.contato}` : ""}` : `Compass · ${titulo}`}
         </Text>
         <Text style={[s.rodape, { left: 40, right: 40, textAlign: "right" }]} fixed render={({ pageNumber, totalPages }) => `${pageNumber} / ${totalPages}`} />
       </Page>

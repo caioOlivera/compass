@@ -738,6 +738,74 @@ export type Database = {
         }
         Relationships: []
       }
+      organizacao_membros: {
+        Row: {
+          created_at: string
+          organizacao_id: string
+          papel: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          organizacao_id: string
+          papel?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          organizacao_id?: string
+          papel?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organizacao_membros_organizacao_id_fkey"
+            columns: ["organizacao_id"]
+            isOneToOne: false
+            referencedRelation: "organizacoes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      organizacoes: {
+        Row: {
+          contato: Json
+          cor: string
+          created_at: string
+          criado_por: string | null
+          id: string
+          logo_path: string | null
+          nome: string
+          plano: string | null
+          plano_ativo_ate: string | null
+          updated_at: string
+        }
+        Insert: {
+          contato?: Json
+          cor?: string
+          created_at?: string
+          criado_por?: string | null
+          id?: string
+          logo_path?: string | null
+          nome: string
+          plano?: string | null
+          plano_ativo_ate?: string | null
+          updated_at?: string
+        }
+        Update: {
+          contato?: Json
+          cor?: string
+          created_at?: string
+          criado_por?: string | null
+          id?: string
+          logo_path?: string | null
+          nome?: string
+          plano?: string | null
+          plano_ativo_ate?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       generated_itineraries: {
         Row: {
           adjustment_request: string | null
@@ -942,7 +1010,11 @@ export type Database = {
           titulo: string
         }[]
       }
+      adicionar_membro: { Args: { p_email: string }; Returns: string }
+      criar_organizacao: { Args: { p_nome: string }; Returns: string }
       generations_last_24h: { Args: { p_user_id: string }; Returns: number }
+      minha_organizacao: { Args: never; Returns: string }
+      sou_dono_da_organizacao: { Args: never; Returns: boolean }
       is_admin: { Args: never; Returns: boolean }
     }
     Enums: {
