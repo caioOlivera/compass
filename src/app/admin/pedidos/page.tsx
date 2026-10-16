@@ -2,7 +2,7 @@ import { BotaoReembolso } from "@/components/compras/botoes";
 import { lerConfig } from "@/lib/configuracoes";
 import { cobrancaAtiva, NOME_STATUS_PEDIDO, PRODUTOS, type ProdutoAvulso } from "@/lib/creditos";
 import { formatarPreco } from "@/lib/motor/catalogo";
-import { mercadoPagoConfigurado } from "@/lib/pagamentos/mercadopago";
+import { mercadoPagoConfigurado, modoTeste } from "@/lib/pagamentos/mercadopago";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export const dynamic = "force-dynamic";
@@ -28,7 +28,7 @@ export default async function PedidosAdminPage() {
       <header className="flex flex-col gap-1">
         <h1 className="text-2xl font-semibold tracking-tight">Pedidos</h1>
         <p className="text-sm text-text-2">
-          {pagos.length} pagos · {formatarPreco(receita)} · Mercado Pago {mercadoPagoConfigurado() ? "ligado" : "sem chave"} · cobrança{" "}
+          {pagos.length} pagos · {formatarPreco(receita)} · Mercado Pago {mercadoPagoConfigurado() ? (modoTeste() ? "em modo de TESTE" : "em produção") : "sem chave"} · cobrança{" "}
           {ativa ? "ligada" : "desligada (em Configurações)"}
         </p>
       </header>

@@ -34,6 +34,10 @@ const ServerEnvSchema = z
     // Cobrança (Mercado Pago). Sem token, a compra fica indisponível e o site segue grátis.
     MP_ACCESS_TOKEN: z.string().optional(),
     MP_WEBHOOK_SECRET: z.string().optional(),
+    // "teste" usa as credenciais _TESTE e o checkout de teste (sandbox); padrão: producao
+    MP_MODO: z.enum(["teste", "producao"]).default("producao"),
+    MP_ACCESS_TOKEN_TESTE: z.string().optional(),
+    MP_WEBHOOK_SECRET_TESTE: z.string().optional(),
     // Passagens e hotéis (preço de referência e links de afiliado). Todos opcionais.
     TRAVELPAYOUTS_TOKEN: z.string().optional(),
     TRAVELPAYOUTS_MARKER: z.string().optional(),

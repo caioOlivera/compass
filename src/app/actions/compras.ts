@@ -5,7 +5,7 @@ import { z } from "zod";
 import { exigirAdmin } from "@/lib/admin";
 import { lerConfig } from "@/lib/configuracoes";
 import { PLANOS, PRODUTOS, precoDe, estornarPedido, type Plano, type ProdutoAvulso } from "@/lib/creditos";
-import { criarAssinaturaMP, criarPreferencia, MercadoPagoError, mercadoPagoConfigurado, reembolsar } from "@/lib/pagamentos/mercadopago";
+import { criarAssinaturaMP, criarPreferencia, linkDoCheckout, MercadoPagoError, mercadoPagoConfigurado, reembolsar } from "@/lib/pagamentos/mercadopago";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import type { Json } from "@/types/database";
@@ -44,7 +44,7 @@ export async function iniciarCompra(produto: ProdutoAvulso, referencia: { roteir
 
   try {
     const pref = await criarPreferencia({ pedidoId: pedido.id, titulo: `Compass: ${PRODUTOS[p.data].titulo}`, valor, email: user.email });
-    return { ok: true, url: pref.init_point };
+    return { ok: true, url: linkDoCheckout(pref) };
   } catch (e) {
     console.error("criarPreferencia", e);
     await db.from("pedidos").update({ status: "cancelado" }).eq("id", pedido.id);

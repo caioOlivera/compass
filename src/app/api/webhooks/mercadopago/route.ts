@@ -1,6 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { serverEnv } from "@/lib/env";
-import { MercadoPagoError } from "@/lib/pagamentos/mercadopago";
+import { credenciaisMP, MercadoPagoError } from "@/lib/pagamentos/mercadopago";
 import { processarAssinatura, processarCobrancaMensal, processarPagamento } from "@/lib/pagamentos/processar";
 import { assinaturaValida } from "@/lib/pagamentos/webhook-assinatura";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -11,7 +10,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 export const runtime = "nodejs";
 
 export async function POST(request: NextRequest) {
-  const segredo = serverEnv().MP_WEBHOOK_SECRET;
+  const { segredo } = credenciaisMP();
   if (!segredo) return NextResponse.json({ error: "Webhook não configurado" }, { status: 503 });
 
   const corpo = (await request.json().catch(() => ({}))) as { type?: string; action?: string; data?: { id?: string | number } };

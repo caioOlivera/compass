@@ -16,8 +16,20 @@ export class MercadoPagoError extends Error {
   }
 }
 
+export function modoTeste(): boolean {
+  return serverEnv().MP_MODO === "teste";
+}
+
+/** Credenciais do modo atual. A chave secreta do webhook é da aplicação; sem a _TESTE, vale a de produção. */
+export function credenciaisMP(): { token?: string; segredo?: string } {
+  const e = serverEnv();
+  return modoTeste()
+    ? { token: e.MP_ACCESS_TOKEN_TESTE, segredo: e.MP_WEBHOOK_SECRET_TESTE ?? e.MP_WEBHOOK_SECRET }
+    : { token: e.MP_ACCESS_TOKEN, segredo: e.MP_WEBHOOK_SECRET };
+}
+
 export function mercadoPagoConfigurado(): boolean {
-  return !!serverEnv().MP_ACCESS_TOKEN;
+  return !!credenciaisMP().token;
 }
 
 export function urlDoSite(): string {
@@ -25,8 +37,8 @@ export function urlDoSite(): string {
 }
 
 async function chamar<T>(caminho: string, init: RequestInit & { idempotencia?: string } = {}): Promise<T> {
-  const token = serverEnv().MP_ACCESS_TOKEN;
-  if (!token) throw new MercadoPagoError(503, "Mercado Pago não configurado (MP_ACCESS_TOKEN).");
+  const { token } = credenciaisMP();
+  if (!token) throw new MercadoPagoError(503, `Mercado Pago não configurado (${modoTeste() ? "MP_ACCESS_TOKEN_TESTE" : "MP_ACCESS_TOKEN"}).`);
   const res = await fetch(`${BASE}${caminho}`, {
     ...init,
     headers: {
@@ -43,6 +55,11 @@ async function chamar<T>(caminho: string, init: RequestInit & { idempotencia?: s
 }
 
 export type Preferencia = { id: string; init_point: string; sandbox_init_point?: string };
+
+/** Link do checkout: no modo teste, o de sandbox (quando o Mercado Pago devolve). */
+export function linkDoCheckout(p: { init_point: string; sandbox_init_point?: string }): string {
+  return modoTeste() && p.sandbox_init_point ? p.sandbox_init_point : p.init_point;
+}
 
 /** Checkout Pro: página do Mercado Pago com Pix e cartão. external_reference = id do pedido. */
 export function criarPreferencia(p: { pedidoId: string; titulo: string; valor: number; email?: string }): Promise<Preferencia> {
