@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { serverEnv } from "@/lib/env";
+import { MercadoPagoError } from "@/lib/pagamentos/mercadopago";
 import { processarAssinatura, processarCobrancaMensal, processarPagamento } from "@/lib/pagamentos/processar";
 import { assinaturaValida } from "@/lib/pagamentos/webhook-assinatura";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -34,6 +35,8 @@ export async function POST(request: NextRequest) {
     else if (tipo === "subscription_preapproval") await processarAssinatura(db, dataId);
     else if (tipo === "subscription_authorized_payment") await processarCobrancaMensal(db, dataId);
   } catch (e) {
+    // Pagamento ou assinatura que não existe (ex.: "Simular notificação" do painel): nada a fazer
+    if (e instanceof MercadoPagoError && e.status === 404) return NextResponse.json({ ok: true, ignorado: true });
     console.error("webhook mercadopago", tipo, dataId, e);
     return NextResponse.json({ error: "Falhou; tente de novo" }, { status: 500 });
   }
