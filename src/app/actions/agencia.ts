@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { MarcaSchema, type Marca } from "@/lib/agencia";
+import { planoDoUsuario } from "@/lib/creditos";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import type { Json } from "@/types/database";
@@ -16,20 +17,16 @@ async function sessao() {
   return { supabase, user };
 }
 
-export async function criarAgencia(nome: string): Promise<Resultado> {
-  const { supabase, user } = await sessao();
-  if (!user) return { ok: false, mensagem: "Entre de novo." };
-  const limpo = nome.trim();
-  if (limpo.length < 2) return { ok: false, mensagem: "Informe o nome da agência." };
-  const { error } = await supabase.rpc("criar_organizacao", { p_nome: limpo });
-  if (error) return { ok: false, mensagem: error.message.includes("já faz parte") ? "Você já faz parte de uma agência." : "Não foi possível criar." };
-  revalidatePath("/agencia");
-  return { ok: true };
+const SEM_PLANO = "O painel da agência abre quando o plano estiver pago.";
+async function comPlano(userId: string) {
+  const p = await planoDoUsuario(createAdminClient(), userId);
+  return !!p?.plano;
 }
 
 export async function salvarMarca(marca: Marca): Promise<Resultado> {
   const { supabase, user } = await sessao();
   if (!user) return { ok: false, mensagem: "Entre de novo." };
+  if (!(await comPlano(user.id))) return { ok: false, mensagem: SEM_PLANO };
   const r = MarcaSchema.safeParse(marca);
   if (!r.success) return { ok: false, mensagem: r.error.issues[0]?.message ?? "Dados inválidos." };
   const { data: org } = await supabase.rpc("minha_organizacao");
@@ -48,6 +45,7 @@ export async function salvarMarca(marca: Marca): Promise<Resultado> {
 export async function definirLogo(caminho: string): Promise<Resultado> {
   const { supabase, user } = await sessao();
   if (!user) return { ok: false, mensagem: "Entre de novo." };
+  if (!(await comPlano(user.id))) return { ok: false, mensagem: SEM_PLANO };
   const { data: org } = await supabase.rpc("minha_organizacao");
   if (!org || caminho.split("/")[0] !== org || caminho.split("/").length !== 2) return { ok: false, mensagem: "Arquivo inválido." };
   const { data, error } = await supabase.from("organizacoes").update({ logo_path: caminho }).eq("id", org).select("id");
@@ -66,6 +64,7 @@ const MENSAGEM_MEMBRO: Record<string, string> = {
 export async function adicionarMembro(email: string): Promise<Resultado> {
   const { supabase, user } = await sessao();
   if (!user) return { ok: false, mensagem: "Entre de novo." };
+  if (!(await comPlano(user.id))) return { ok: false, mensagem: SEM_PLANO };
   const { data, error } = await supabase.rpc("adicionar_membro", { p_email: email });
   if (error) return { ok: false, mensagem: "Só o dono da agência adiciona pessoas." };
   revalidatePath("/agencia");

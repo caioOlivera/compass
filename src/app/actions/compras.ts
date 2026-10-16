@@ -62,14 +62,27 @@ export async function iniciarCompra(produto: ProdutoAvulso, referencia: { roteir
   }
 }
 
-/** Assinatura mensal da agência (só o dono). Devolve o link para autorizar o cartão no Mercado Pago. */
-export async function assinarPlano(plano: Plano): Promise<Resultado> {
+/**
+ * Assinatura mensal da agência. Quem ainda não tem agência informa o nome e ela nasce aqui,
+ * com o painel bloqueado até o Mercado Pago confirmar o primeiro pagamento.
+ * Devolve o link para autorizar o cartão no Mercado Pago.
+ */
+export async function assinarPlano(plano: Plano, nomeAgencia?: string): Promise<Resultado> {
   const { supabase, user } = await usuario();
-  if (!user?.email) return { ok: false, mensagem: "Entre de novo." };
+  if (!user?.email) return { ok: false, mensagem: "Entre na sua conta para assinar." };
   if (plano !== "basic" && plano !== "premium") return { ok: false, mensagem: "Plano inválido." };
-  const [{ data: org }, { data: dono }] = await Promise.all([supabase.rpc("minha_organizacao"), supabase.rpc("sou_dono_da_organizacao")]);
-  if (!org || !dono) return { ok: false, mensagem: "Só o dono da agência contrata o plano." };
   if (!mercadoPagoConfigurado()) return { ok: false, mensagem: SEM_PAGAMENTO };
+
+  let { data: org } = await supabase.rpc("minha_organizacao");
+  if (!org) {
+    const nome = (nomeAgencia ?? "").trim();
+    if (nome.length < 2 || nome.length > 80) return { ok: false, mensagem: "Informe o nome da agência." };
+    const criada = await supabase.rpc("criar_organizacao", { p_nome: nome });
+    if (criada.error || !criada.data) return { ok: false, mensagem: "Não foi possível registrar a agência." };
+    org = criada.data;
+  }
+  const { data: dono } = await supabase.rpc("sou_dono_da_organizacao");
+  if (!dono) return { ok: false, mensagem: "Só o dono da agência contrata o plano." };
 
   const db = createAdminClient();
   const valor = await precoDe(db, plano);
@@ -83,6 +96,7 @@ export async function assinarPlano(plano: Plano): Promise<Resultado> {
     const mp = await criarAssinaturaMP({ assinaturaId: assinatura.id, titulo: PLANOS[plano].titulo, valor, email: user.email, site: await siteDaRequisicao() });
     await db.from("assinaturas").update({ provedor_id: mp.id }).eq("id", assinatura.id);
     if (!mp.init_point) return { ok: false, mensagem: "O Mercado Pago não devolveu o link da assinatura." };
+    revalidatePath("/agencia");
     return { ok: true, url: mp.init_point };
   } catch (e) {
     console.error("criarAssinaturaMP", e);

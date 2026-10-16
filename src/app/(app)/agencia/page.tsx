@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { AppHeader } from "@/components/app-header";
-import { CriarAgencia, PainelAgencia } from "@/components/agencia/painel-agencia";
+import { PainelAgencia } from "@/components/agencia/painel-agencia";
+import { BotaoAssinar } from "@/components/compras/botoes";
 import { ContatoSchema, urlDoLogo } from "@/lib/agencia";
 import { lerConfig } from "@/lib/configuracoes";
 import { planoDoUsuario, saldo } from "@/lib/creditos";
@@ -19,21 +20,8 @@ export default async function AgenciaPage() {
   if (!user) redirect("/login?next=/agencia");
 
   const { data: orgId } = await supabase.rpc("minha_organizacao");
-  if (!orgId) {
-    return (
-      <>
-        <AppHeader />
-        <main className="mx-auto flex w-full max-w-2xl flex-col gap-6 px-4 py-12 sm:px-6">
-          <h1 className="text-3xl font-semibold tracking-tight">Compass para agências</h1>
-          <p className="text-text-2">
-            Monte roteiros para os seus clientes e entregue o PDF com a marca da sua agência: logo, cores e contato. Toda a equipe
-            usa a mesma conta.
-          </p>
-          <CriarAgencia />
-        </main>
-      </>
-    );
-  }
+  // Sem agência: a página de planos explica os benefícios e cria a agência na assinatura
+  if (!orgId) redirect("/agencias");
 
   const [{ data: org }, { data: membros }, { data: dono }] = await Promise.all([
     supabase.from("organizacoes").select("*").eq("id", orgId).single(),
@@ -47,6 +35,43 @@ export default async function AgenciaPage() {
   const ativo = await planoDoUsuario(supabase, user.id);
   const precos = await lerConfig<Record<string, number>>(createAdminClient(), "precos_produtos", {});
   const creditos = ativo?.plano === "basic" ? ((await saldo(supabase, { organizacaoId: orgId })).completo ?? 0) : null;
+
+  // Agência criada mas plano ainda não pago: painel fechado até o Mercado Pago confirmar
+  if (!ativo?.plano) {
+    const { data: ultima } = await createAdminClient()
+      .from("assinaturas")
+      .select("plano, status")
+      .eq("organizacao_id", orgId)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    const plano = (ultima?.plano ?? "basic") as "basic" | "premium";
+    return (
+      <>
+        <AppHeader />
+        <main className="mx-auto flex w-full max-w-2xl flex-col gap-6 px-4 py-12 sm:px-6">
+          <h1 className="text-3xl font-semibold tracking-tight">{org?.nome}</h1>
+          <div className="flex flex-col gap-3 rounded-2xl border border-border bg-surface p-6">
+            <p className="font-medium">
+              {ultima?.status === "ativa" || ultima?.status === "pendente" ? "Estamos esperando a confirmação do pagamento" : "Plano não ativo"}
+            </p>
+            <p className="text-sm text-text-2">
+              O painel da agência (marca no PDF, equipe e créditos) abre assim que o Mercado Pago confirmar o pagamento do plano. Isso
+              costuma levar poucos minutos depois de autorizar o cartão. Se você não concluiu o pagamento, retome abaixo.
+            </p>
+            {dono && (
+              <div className="flex flex-wrap gap-3">
+                <BotaoAssinar plano={plano} rotulo={`Retomar pagamento do ${plano === "basic" ? "Basic" : "Premium"}`} />
+                <a href="/agencias#planos" className="inline-flex h-11 items-center text-sm font-medium text-accent-strong hover:underline">
+                  Trocar de plano
+                </a>
+              </div>
+            )}
+          </div>
+        </main>
+      </>
+    );
+  }
 
   return (
     <>

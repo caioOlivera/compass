@@ -29,6 +29,7 @@ export default async function PerfilPage() {
     supabase.from("consultorias").select("id, status").eq("user_id", user.id),
   ]);
   const tipos = (Object.keys(PRODUTOS) as ProdutoAvulso[]).filter((t) => meu[t]);
+  const { data: temAgencia } = await supabase.rpc("minha_organizacao");
 
   return (
     <>
@@ -87,14 +88,20 @@ export default async function PerfilPage() {
         </section>
 
         <Link
-          href="/agencia"
-          className="flex items-center justify-between rounded-2xl border border-border bg-surface p-5 transition hover:border-text-3"
+          href={temAgencia ? "/agencia" : "/agencias"}
+          className="flex items-center justify-between gap-4 rounded-2xl border border-border bg-surface p-5 transition hover:border-text-3"
         >
           <span className="flex flex-col gap-1">
-            <span className="font-medium">Minha agência</span>
-            <span className="text-sm text-text-2">Equipe, marca no PDF e planos para agências.</span>
+            <span className="font-medium">{temAgencia ? "Minha agência" : "Tem uma agência de viagens?"}</span>
+            <span className="text-sm text-text-2">
+              {temAgencia
+                ? "Equipe, marca no PDF e créditos do plano."
+                : "Temos planos para você e sua operação: roteiros com a sua marca, equipe na mesma conta e consultas com passagens e hotéis."}
+            </span>
           </span>
-          <span aria-hidden className="text-accent-strong">→</span>
+          <span aria-hidden className="shrink-0 text-accent-strong">
+            {temAgencia ? "→" : "Ver planos →"}
+          </span>
         </Link>
 
         <form action={sair}>

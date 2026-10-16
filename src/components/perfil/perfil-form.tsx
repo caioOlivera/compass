@@ -7,7 +7,7 @@ import { definirAvatar, salvarPerfil } from "@/app/actions/perfil";
 import { Avatar } from "@/components/perfil/avatar";
 import { Button } from "@/components/ui/button";
 import { Field, FormAlert } from "@/components/ui/field";
-import { AVATAR_MAX_ORIGINAL, AVATAR_TAMANHO_PX, caminhoAvatar } from "@/lib/perfil";
+import { AVATAR_MAX_MB, AVATAR_MAX_ORIGINAL, AVATAR_TAMANHO_PX, caminhoAvatar } from "@/lib/perfil";
 import { createClient } from "@/lib/supabase/client";
 
 type Props = {
@@ -63,7 +63,7 @@ export function PerfilForm({ uid, email, nome, telefone, avatarUrl }: Props) {
     if (!arquivo) return;
     setMensagem(null);
     if (!arquivo.type.startsWith("image/")) return setMensagem({ tipo: "erro", texto: "Escolha uma imagem (JPG, PNG ou WebP)." });
-    if (arquivo.size > AVATAR_MAX_ORIGINAL) return setMensagem({ tipo: "erro", texto: "Imagem grande demais (máximo de 15 MB)." });
+    if (arquivo.size > AVATAR_MAX_ORIGINAL) return setMensagem({ tipo: "erro", texto: `Imagem grande demais: o máximo é ${AVATAR_MAX_MB} MB.` });
 
     setFotoOcupada(true);
     try {
@@ -106,7 +106,9 @@ export function PerfilForm({ uid, email, nome, telefone, avatarUrl }: Props) {
       <section className="flex flex-col items-start gap-5 sm:flex-row sm:items-center">
         <Avatar url={fotoVisivel} nome={nomeAtual} email={email} className="size-24 text-3xl" />
         <div className="flex flex-col gap-2">
-          <p className="text-sm text-text-2">Aparece no topo do site. JPG, PNG ou WebP; recortamos em quadrado.</p>
+          <p className="text-sm text-text-2">
+            Aparece no topo do site. JPG, PNG ou WebP de até {AVATAR_MAX_MB} MB; recortamos em quadrado e reduzimos antes de enviar.
+          </p>
           <div className="flex flex-wrap gap-2">
             <input
               ref={entrada}

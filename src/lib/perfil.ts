@@ -17,7 +17,8 @@ export type PerfilInput = z.input<typeof PerfilSchema>;
 export const AVATAR_TAMANHO_PX = 512;
 export const AVATAR_TIPOS = ["image/jpeg", "image/png", "image/webp"] as const;
 /** Limite do arquivo escolhido (antes de reduzir no navegador). */
-export const AVATAR_MAX_ORIGINAL = 15 * 1024 * 1024;
+export const AVATAR_MAX_ORIGINAL = 20 * 1024 * 1024;
+export const AVATAR_MAX_MB = 20;
 
 /** Caminho do arquivo no bucket: sempre dentro da pasta da pessoa, nome novo a cada troca (evita cache velho). */
 export function caminhoAvatar(uid: string, agora = Date.now()): string {

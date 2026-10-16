@@ -3,38 +3,12 @@
 import { Crown, ImageUp, Trash2, UserPlus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useRef, useState, useTransition } from "react";
-import { adicionarMembro, criarAgencia, definirLogo, removerMembro, salvarMarca } from "@/app/actions/agencia";
+import { adicionarMembro, definirLogo, removerMembro, salvarMarca } from "@/app/actions/agencia";
 import { BotaoAssinar } from "@/components/compras/botoes";
 import { Button } from "@/components/ui/button";
 import { Field, FormAlert } from "@/components/ui/field";
 import type { Marca } from "@/lib/agencia";
 import { createClient } from "@/lib/supabase/client";
-
-export function CriarAgencia() {
-  const router = useRouter();
-  const [nome, setNome] = useState("");
-  const [erro, setErro] = useState("");
-  const [ocupado, iniciar] = useTransition();
-  return (
-    <form
-      className="flex flex-col gap-3 rounded-2xl border border-border bg-surface p-5"
-      onSubmit={(e) => {
-        e.preventDefault();
-        iniciar(async () => {
-          const r = await criarAgencia(nome);
-          if (!r.ok) setErro(r.mensagem);
-          else router.refresh();
-        });
-      }}
-    >
-      <Field label="Nome da agência" value={nome} onChange={(e) => setNome(e.target.value)} placeholder="Ex.: Rota Viagens" required />
-      <FormAlert>{erro}</FormAlert>
-      <Button type="submit" carregando={ocupado} className="self-start">
-        Criar minha agência
-      </Button>
-    </form>
-  );
-}
 
 type Props = {
   orgId: string;

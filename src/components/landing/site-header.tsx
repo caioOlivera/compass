@@ -16,8 +16,11 @@ export function SiteHeader() {
           <a href="/#como-funciona" className="hidden rounded-md px-3 py-2 text-text-2 hover:bg-surface-2 hover:text-text lg:inline">
             Como funciona
           </a>
-          <Link href="/exemplo" className="hidden rounded-md px-3 py-2 text-text-2 hover:bg-surface-2 hover:text-text sm:inline">
+          <Link href="/exemplo" className="hidden rounded-md px-3 py-2 text-text-2 hover:bg-surface-2 hover:text-text xl:inline">
             Exemplo
+          </Link>
+          <Link href="/agencias" className="hidden rounded-md px-3 py-2 text-text-2 hover:bg-surface-2 hover:text-text sm:inline">
+            Para agências
           </Link>
           <Link href="/login" className="rounded-md px-3 py-2 text-text-2 hover:bg-surface-2 hover:text-text">
             Entrar

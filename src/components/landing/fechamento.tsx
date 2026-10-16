@@ -52,16 +52,16 @@ export function Rodape({ creditos }: { creditos: Foto[] }) {
         </div>
         <nav aria-label="Produto" className="flex flex-col gap-2 text-sm">
           <p className="font-semibold">Produto</p>
-          <a href="#regioes" className="text-text-2 hover:text-text">Destinos</a>
-          <a href="#como-funciona" className="text-text-2 hover:text-text">Como funciona</a>
+          <a href="/#regioes" className="text-text-2 hover:text-text">Destinos</a>
+          <a href="/#como-funciona" className="text-text-2 hover:text-text">Como funciona</a>
           <Link href="/exemplo" className="text-text-2 hover:text-text">Exemplo de roteiro</Link>
-          <a href="#perguntas" className="text-text-2 hover:text-text">Perguntas frequentes</a>
+          <a href="/#perguntas" className="text-text-2 hover:text-text">Perguntas frequentes</a>
         </nav>
         <nav aria-label="Conta" className="flex flex-col gap-2 text-sm">
           <p className="font-semibold">Conta</p>
           <Link href="/cadastro" className="text-text-2 hover:text-text">Criar conta</Link>
           <Link href="/login" className="text-text-2 hover:text-text">Entrar</Link>
-          <p className="mt-2 text-text-2">Para agências: planos mensais em breve.</p>
+          <Link href="/agencias" className="text-text-2 hover:text-text">Para agências</Link>
         </nav>
       </div>
       <div className="mx-auto flex max-w-6xl flex-col gap-2 border-t border-border px-4 py-5 text-xs text-text-2 sm:px-6">
