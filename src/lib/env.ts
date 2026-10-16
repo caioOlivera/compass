@@ -43,6 +43,10 @@ const ServerEnvSchema = z
     TRAVELPAYOUTS_MARKER: z.string().optional(),
     TRAVELPAYOUTS_TRS: z.string().optional(),
     SERPAPI_KEY: z.string().optional(),
+    // Suporte: e-mails de aviso pelo Resend (opcional) e quem recebe os chamados
+    RESEND_API_KEY: z.string().optional(),
+    EMAIL_REMETENTE: z.string().optional(),
+    SUPORTE_EMAIL: z.string().optional(),
     // Script "Drive" da Travelpayouts (só páginas públicas), ex.: https://emrldtp.com/XXXX.js?t=586529
     TRAVELPAYOUTS_DRIVE_URL: z.url().optional(),
     NEXT_PUBLIC_SITE_URL: z.url().optional(),

@@ -19,7 +19,12 @@ const INCLUI: Record<ProdutoAvulso, string[]> = {
   roteiro: ["Roteiro dia a dia no mapa", "Dicas da base de relatos reais", "3 ajustes incluídos", "PDF para levar"],
   assinado: ["Um roteiro pronto do consultor", "Adaptado às suas datas e ao seu ritmo", "3 ajustes incluídos", "PDF para levar"],
   completo: ["Tudo do roteiro", "Passagens recomendadas com data da cotação", "2 ou 3 hotéis por cidade", "3 ajustes incluídos"],
-  consultoria: ["Atendimento feito pelo consultor", "Briefing detalhado da viagem", "Roteiro sob medida", "Contato direto"],
+  consultoria: [
+    "Contato direto com o consultor",
+    "Suporte 24 horas pelo WhatsApp, inclusive durante a viagem",
+    "Roteiro sob medida a partir de um briefing detalhado",
+    "Quem monta já rodou 4 continentes, 14 países e mais de 70 cidades",
+  ],
 };
 
 type Props = { searchParams: Promise<{ produto?: string; roteiro?: string }> };

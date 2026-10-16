@@ -16,7 +16,10 @@ export const PRODUTOS: Record<ProdutoAvulso, { titulo: string; descricao: string
   roteiro: { titulo: "Roteiro", descricao: "Roteiro dia a dia montado com a base de conhecimento, mapa, checklist e PDF." },
   assinado: { titulo: "Roteiro assinado", descricao: "Um roteiro feito e validado pelo consultor, adaptado às suas datas e preferências." },
   completo: { titulo: "Completo", descricao: "Roteiro + passagens recomendadas + hotéis + PDF." },
-  consultoria: { titulo: "Consultoria pessoal", descricao: "Atendimento feito pelo consultor; o sistema registra o pedido e o briefing." },
+  consultoria: {
+    titulo: "Consultoria pessoal",
+    descricao: "Sua viagem montada pelo consultor, com contato direto e suporte 24 horas pelo WhatsApp, do planejamento até a volta.",
+  },
 };
 
 export const PLANOS: Record<Plano, { titulo: string; descricao: string }> = {

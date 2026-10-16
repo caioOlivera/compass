@@ -55,7 +55,8 @@ export function Rodape({ creditos }: { creditos: Foto[] }) {
           <a href="/#regioes" className="text-text-2 hover:text-text">Destinos</a>
           <a href="/#como-funciona" className="text-text-2 hover:text-text">Como funciona</a>
           <Link href="/exemplo" className="text-text-2 hover:text-text">Exemplo de roteiro</Link>
-          <a href="/#perguntas" className="text-text-2 hover:text-text">Perguntas frequentes</a>
+          <Link href="/faq" className="text-text-2 hover:text-text">Perguntas frequentes</Link>
+          <Link href="/ajuda" className="text-text-2 hover:text-text">Ajuda e suporte</Link>
         </nav>
         <nav aria-label="Conta" className="flex flex-col gap-2 text-sm">
           <p className="font-semibold">Conta</p>

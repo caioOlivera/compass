@@ -1,5 +1,6 @@
 import { ChevronDown } from "lucide-react";
-import { FAQ } from "@/components/landing/destinos";
+import Link from "next/link";
+import { FAQ_LANDING as FAQ } from "@/lib/faq";
 
 export function Faq() {
   return (
@@ -8,6 +9,9 @@ export function Faq() {
         <div className="flex flex-col gap-2">
           <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl">Perguntas frequentes</h2>
           <p className="text-text-2">O que costumam perguntar antes do primeiro roteiro.</p>
+          <Link href="/faq" className="mt-2 text-sm font-medium text-accent-strong hover:underline">
+            Ver todas as perguntas →
+          </Link>
         </div>
         <div className="flex flex-col gap-3">
           {FAQ.map((f) => (

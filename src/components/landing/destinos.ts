@@ -48,33 +48,6 @@ export const MOSAICO_HERO = [
   { nome: "Kyoto", emoji: "⛩️", busca: "Kyoto Fushimi Inari" },
 ] as const;
 
-export const FAQ = [
-  {
-    p: "O que é um roteiro fluido?",
-    r: "É uma rota que segue em uma linha só: você entra por uma cidade e sai por outra (o chamado voo open-jaw ou multidestino), sem voltar ao ponto de partida só para pegar o avião e sem bate-e-volta entre bases.",
-  },
-  {
-    p: "A Compass compra passagens ou reserva hotéis?",
-    r: "Não. O roteiro diz por onde entrar e sair de avião, quantos dias ficar em cada base e como ir de uma à outra. Com isso em mãos você compra onde preferir.",
-  },
-  {
-    p: "Quanto tempo leva para o roteiro ficar pronto?",
-    r: "Costuma levar menos de um minuto depois das oito perguntas. Você acompanha uma barra de progresso enquanto a rota é montada.",
-  },
-  {
-    p: "Posso sair de outra cidade que não São Paulo?",
-    r: "Pode. São Paulo vem preenchida, mas você troca pela sua cidade e ainda pode aceitar aeroportos alternativos se o voo compensar.",
-  },
-  {
-    p: "E se eu não quiser passar por um lugar?",
-    r: "Na quarta pergunta você lista os lugares que não quer conhecer, e eles ficam fora da rota. O roteiro é conferido antes de chegar a você.",
-  },
-  {
-    p: "As informações são confiáveis?",
-    r: "O roteiro é sugerido por IA e passa por checagens automáticas (dias, trechos, locais evitados e região). Horários, preços e regras de transporte mudam: confira antes de comprar.",
-  },
-] as const;
-
 /** Link para o questionário já com a região e/ou o auge preenchidos. */
 export function linkQuestionario(auge?: string, regiao?: string) {
   const p = new URLSearchParams();

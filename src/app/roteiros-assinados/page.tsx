@@ -27,8 +27,9 @@ export default async function RoteirosAssinadosPage() {
           <p className="text-sm font-medium text-accent-strong">Roteiros assinados · {formatarPreco(preco)}</p>
           <h1 className="text-4xl font-semibold tracking-tight text-balance sm:text-5xl">Roteiros que já foram feitos, adaptados a você</h1>
           <p className="text-lg text-text-2">
-            Cada um foi percorrido e validado pelo consultor da Compass. A sequência, os trechos e o que faz a viagem valer a pena
-            ficam; datas, época do ano, ritmo e quem vai junto são ajustados para você.
+            Cada um foi percorrido e validado pelo consultor da Compass, que já viajou por 4 continentes, 14 países e mais de 70
+            cidades. A sequência, os trechos e o que faz a viagem valer a pena ficam; datas, portas de entrada e saída, ritmo e
+            quem vai junto são ajustados para você.
           </p>
         </header>
 

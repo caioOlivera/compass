@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { z } from "zod";
 import { AppHeader } from "@/components/app-header";
+import { MessageCircle } from "lucide-react";
 import { FormBriefing } from "@/components/compras/botoes";
+import { linkWhatsApp } from "@/lib/contato";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "Consultoria — Compass" };
@@ -39,6 +41,20 @@ export default async function ConsultoriaPage({ params }: { params: Promise<{ id
           </p>
         </header>
         {c.status === "aguardando_briefing" && <FormBriefing consultoriaId={c.id} />}
+        {c.status !== "entregue" && linkWhatsApp() && (
+          <a
+            href={linkWhatsApp("Olá! Sou cliente da consultoria Compass.")!}
+            target="_blank"
+            rel="noreferrer"
+            className="flex items-start gap-3 rounded-2xl border border-accent bg-accent/5 p-5"
+          >
+            <MessageCircle className="mt-0.5 size-5 text-accent-strong" aria-hidden />
+            <span className="flex flex-col gap-1">
+              <span className="font-medium">Fale direto com o consultor pelo WhatsApp</span>
+              <span className="text-sm text-text-2">Suporte 24 horas, do planejamento até a volta da viagem.</span>
+            </span>
+          </a>
+        )}
       </main>
     </>
   );

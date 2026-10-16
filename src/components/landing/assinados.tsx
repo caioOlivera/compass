@@ -15,7 +15,10 @@ export function Assinados({ itens, fotos, preco }: { itens: ItemCatalogo[]; foto
             <BadgeCheck className="size-4" aria-hidden /> Roteiros assinados · {preco}
           </p>
           <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl">Viagens que já deram certo</h2>
-          <p className="text-text-2">Roteiros feitos e validados pelo consultor, adaptados às suas datas e ao seu ritmo.</p>
+          <p className="text-text-2">
+            Viagens feitas de verdade por quem já rodou 4 continentes, 14 países e mais de 70 cidades. Você escolhe as datas e o
+            ritmo; a rota já foi testada.
+          </p>
         </div>
         <Link href="/roteiros-assinados" className="inline-flex items-center gap-1 text-sm font-medium text-accent-strong hover:underline">
           Ver todos <ArrowRight className="size-4" aria-hidden />

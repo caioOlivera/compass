@@ -983,6 +983,20 @@ export type Database = {
         }
         Relationships: []
       }
+      chamados: {
+        Row: { id: string; user_id: string; assunto: string; categoria: string; status: string; created_at: string; updated_at: string }
+        Insert: { id?: string; user_id: string; assunto: string; categoria?: string; status?: string; created_at?: string; updated_at?: string }
+        Update: { id?: string; user_id?: string; assunto?: string; categoria?: string; status?: string; created_at?: string; updated_at?: string }
+        Relationships: []
+      }
+      chamado_mensagens: {
+        Row: { id: string; chamado_id: string; autor: string; autor_id: string | null; texto: string; created_at: string }
+        Insert: { id?: string; chamado_id: string; autor: string; autor_id?: string | null; texto: string; created_at?: string }
+        Update: { id?: string; chamado_id?: string; autor?: string; autor_id?: string | null; texto?: string; created_at?: string }
+        Relationships: [
+          { foreignKeyName: "chamado_mensagens_chamado_id_fkey"; columns: ["chamado_id"]; isOneToOne: false; referencedRelation: "chamados"; referencedColumns: ["id"] },
+        ]
+      }
       cotacoes: {
         Row: { chave: string; tipo: string; provedor: string; consulta: Json; resultado: Json; cotado_em: string; expira_em: string }
         Insert: { chave: string; tipo: string; provedor: string; consulta: Json; resultado: Json; cotado_em?: string; expira_em: string }

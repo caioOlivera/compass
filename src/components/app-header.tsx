@@ -25,6 +25,9 @@ export async function AppHeader() {
           <Link href="/nova-viagem" className="rounded-md px-3 py-2 text-text-2 hover:bg-surface-2 hover:text-text">
             Nova viagem
           </Link>
+          <Link href="/ajuda" className="hidden rounded-md px-3 py-2 text-text-2 hover:bg-surface-2 hover:text-text sm:inline">
+            Ajuda
+          </Link>
           {user ? (
             <Link
               href="/perfil"
