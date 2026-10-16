@@ -9,9 +9,21 @@ import { FormAlert } from "@/components/ui/field";
 
 type Deslocamento = { meio: string; de: string; para: string; obs: string | null } | null;
 type Dia = { dia: number; cidade: string; atividades: string[]; deslocamento: Deslocamento; obs: string | null };
-export type Revisao = Partial<Omit<RoteiroEditavel, "dias">> & { dias?: Record<string, Partial<Omit<Dia, "dia">>> };
+export type Revisao = Partial<Omit<RoteiroEditavel, "dias">> & { total_dias?: number; dias?: Record<string, Partial<Omit<Dia, "dia">>> };
 
-type Form = { titulo: string; resumo: string; epoca: string; essencia: string; paises: string; dias: Dia[] };
+type Form = { titulo: string; auge: string; resumo: string; epoca: string; essencia: string; paises: string; dias: Dia[] };
+
+const diaVazio = (dia: number): Dia => ({ dia, cidade: "", atividades: [], deslocamento: null, obs: null });
+
+/** Junta os dias atuais com os da revisão; a revisão pode ter mais dias (ou menos, com total_dias). */
+function diasDaRevisao(atuais: Dia[], revisao: Revisao): Dia[] {
+  const chaves = Object.keys(revisao.dias ?? {}).map(Number);
+  const total = revisao.total_dias ?? Math.max(atuais.length, ...chaves);
+  return Array.from({ length: total }, (_, i) => {
+    const base = atuais.find((d) => d.dia === i + 1) ?? diaVazio(i + 1);
+    return { ...base, ...(revisao.dias?.[String(i + 1)] ?? {}), dia: i + 1 };
+  });
+}
 
 const linhas = (t: string) => t.split("\n").map((l) => l.trim()).filter(Boolean);
 const campo = "w-full rounded-lg border border-border bg-bg px-3 py-2 text-sm";
@@ -21,6 +33,7 @@ export function EditorRoteiroBase({ id, inicial, revisao }: { id: string; inicia
   const router = useRouter();
   const paraForm = (r: RoteiroEditavel & { dias: Dia[] }): Form => ({
     titulo: r.titulo,
+    auge: r.auge ?? "",
     resumo: r.resumo,
     epoca: r.epoca ?? "",
     essencia: r.essencia.join("\n"),
@@ -35,11 +48,12 @@ export function EditorRoteiroBase({ id, inicial, revisao }: { id: string; inicia
     if (!revisao) return;
     setF((x) => ({
       titulo: revisao.titulo ?? x.titulo,
+      auge: revisao.auge ?? x.auge,
       resumo: revisao.resumo ?? x.resumo,
       epoca: revisao.epoca ?? x.epoca,
       essencia: revisao.essencia ? revisao.essencia.join("\n") : x.essencia,
       paises: revisao.paises ? revisao.paises.join(", ") : x.paises,
-      dias: x.dias.map((d) => ({ ...d, ...(revisao.dias?.[String(d.dia)] ?? {}) })),
+      dias: diasDaRevisao(x.dias, revisao),
     }));
     setMsg({ ok: true, texto: "Sugestão aplicada no formulário. Revise e clique em Salvar." });
   };
@@ -54,6 +68,7 @@ export function EditorRoteiroBase({ id, inicial, revisao }: { id: string; inicia
         iniciar(async () => {
           const r = await salvarRoteiroBase(id, {
             titulo: f.titulo,
+            auge: f.auge || null,
             resumo: f.resumo,
             epoca: f.epoca || null,
             essencia: linhas(f.essencia),
@@ -73,6 +88,10 @@ export function EditorRoteiroBase({ id, inicial, revisao }: { id: string; inicia
       <label className="flex flex-col gap-1">
         Título
         <input className={campo} value={f.titulo} onChange={(e) => setF({ ...f, titulo: e.target.value })} />
+      </label>
+      <label className="flex flex-col gap-1">
+        Auge da viagem (vazio = cidade com mais dias)
+        <input className={campo} value={f.auge} onChange={(e) => setF({ ...f, auge: e.target.value })} placeholder="Ex.: Dolomitas" />
       </label>
       <label className="flex flex-col gap-1">
         Resumo
@@ -129,6 +148,16 @@ export function EditorRoteiroBase({ id, inicial, revisao }: { id: string; inicia
             </li>
           ))}
         </ol>
+        <div className="mt-3 flex gap-2">
+          <Button type="button" variante="secundario" className="h-9" onClick={() => setF((x) => ({ ...x, dias: [...x.dias, diaVazio(x.dias.length + 1)] }))}>
+            Adicionar dia
+          </Button>
+          {f.dias.length > 1 && (
+            <Button type="button" variante="fantasma" className="h-9" onClick={() => setF((x) => ({ ...x, dias: x.dias.slice(0, -1) }))}>
+              Remover o último dia
+            </Button>
+          )}
+        </div>
       </details>
 
       {msg && <FormAlert tipo={msg.ok ? "info" : "erro"}>{msg.texto}</FormAlert>}

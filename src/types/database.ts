@@ -547,6 +547,7 @@ export type Database = {
       roteiros_base: {
         Row: {
           assinado: boolean
+          auge: string | null
           autoria: string
           created_at: string
           duracao_dias: number
@@ -562,6 +563,7 @@ export type Database = {
         }
         Insert: {
           assinado?: boolean
+          auge?: string | null
           autoria: string
           created_at?: string
           duracao_dias: number
@@ -577,6 +579,7 @@ export type Database = {
         }
         Update: {
           assinado?: boolean
+          auge?: string | null
           autoria?: string
           created_at?: string
           duracao_dias?: number

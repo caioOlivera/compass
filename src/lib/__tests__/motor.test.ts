@@ -99,6 +99,11 @@ describe("roteiro assinado", async () => {
     expect(pedidoDoAssinado(base, { ...esc, dias_viagem: 10 }).data_fim).toBe("2026-11-24");
     expect(pedidoDoAssinado(base, { ...esc, dias_viagem: 3 }).data_fim).toBe("2026-11-21");
   });
+
+  it("o auge declarado pelo consultor vence a cidade com mais dias", () => {
+    const esc = { data_inicio: "2026-11-14", cidade_origem: "São Paulo", adultos: 2, criancas: 0, orcamento: "medio", ritmo_viagem: "medio", observacoes: "" } as const;
+    expect(pedidoDoAssinado({ titulo: "X", auge: "Phuket", duracao_dias: 7, dias }, esc).auge_da_viagem).toBe("Phuket");
+  });
 });
 
 describe("painel de medição", async () => {

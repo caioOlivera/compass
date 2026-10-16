@@ -12,7 +12,7 @@ export type RoteiroAssinado = RoteiroBaseAdaptar & { id: string; dias: (RoteiroB
 export async function carregarRoteiroAssinado(db: Db, id: string): Promise<RoteiroAssinado | null> {
   const { data: r } = await db
     .from("roteiros_base")
-    .select("id, titulo, duracao_dias, epoca, essencia, roteiro_base_dias(dia, cidade, pernoite, atividades, deslocamento, obs, destino_id, destinos(lat, lng))")
+    .select("id, titulo, auge, duracao_dias, epoca, essencia, roteiro_base_dias(dia, cidade, pernoite, atividades, deslocamento, obs, destino_id, destinos(lat, lng))")
     .eq("id", id)
     .eq("assinado", true)
     .eq("status", "aprovado")
@@ -28,6 +28,7 @@ export async function carregarRoteiroAssinado(db: Db, id: string): Promise<Rotei
   return {
     id: r.id,
     titulo: r.titulo,
+    auge: r.auge,
     duracao_dias: r.duracao_dias,
     epoca: r.epoca,
     essencia: r.essencia,

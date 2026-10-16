@@ -27,11 +27,12 @@ const DiaSchema = z.object({
 
 const RoteiroSchema = z.object({
   titulo: z.string().trim().min(3).max(120),
+  auge: z.string().trim().max(120).nullable().default(null),
   resumo: z.string().trim().min(10).max(2000),
   epoca: z.string().trim().max(200).nullable(),
   essencia: z.array(z.string().trim().min(2).max(300)).max(15),
   paises: z.array(z.string().trim().toUpperCase().regex(/^[A-Z]{2}$/, "Países em código de 2 letras (ex.: IT, TH)")).min(1).max(15),
-  dias: z.array(DiaSchema).max(120),
+  dias: z.array(DiaSchema).min(1).max(120),
 });
 export type RoteiroEditavel = z.input<typeof RoteiroSchema>;
 
@@ -53,20 +54,23 @@ export async function salvarRoteiroBase(id: string, dados: RoteiroEditavel): Pro
     return data?.id ?? null;
   };
 
-  for (const d of r.data.dias) {
+  // Dias numerados em sequência a partir de 1: a duração do roteiro passa a ser o número de dias
+  const dias = [...r.data.dias].sort((a, b) => a.dia - b.dia).map((d, i) => ({ ...d, dia: i + 1 }));
+  for (const d of dias) {
     const atual = porDia.get(d.dia);
-    if (!atual) continue; // só edita dias existentes (a duração não muda por aqui)
-    const destino_id = atual.cidade === d.cidade ? atual.destino_id : await destinoDaCidade(d.cidade);
-    const { error } = await db
-      .from("roteiro_base_dias")
-      .update({ cidade: d.cidade, destino_id, atividades: d.atividades, deslocamento: d.deslocamento as Json, obs: d.obs || null })
-      .eq("id", atual.id);
+    const destino_id = atual && atual.cidade === d.cidade ? atual.destino_id : await destinoDaCidade(d.cidade);
+    const linha = { cidade: d.cidade, destino_id, atividades: d.atividades, deslocamento: d.deslocamento as Json, obs: d.obs || null };
+    const { error } = atual
+      ? await db.from("roteiro_base_dias").update(linha).eq("id", atual.id)
+      : await db.from("roteiro_base_dias").insert({ ...linha, roteiro_id: id, dia: d.dia });
     if (error) return { ok: false, mensagem: `Não foi possível salvar o dia ${d.dia}.` };
   }
+  const sobrando = (atuais ?? []).filter((d) => d.dia > dias.length).map((d) => d.id);
+  if (sobrando.length) await db.from("roteiro_base_dias").delete().in("id", sobrando);
 
   const { error } = await db
     .from("roteiros_base")
-    .update({ titulo: r.data.titulo, resumo: r.data.resumo, epoca: r.data.epoca || null, essencia: r.data.essencia, paises: r.data.paises })
+    .update({ titulo: r.data.titulo, auge: r.data.auge || null, resumo: r.data.resumo, epoca: r.data.epoca || null, essencia: r.data.essencia, paises: r.data.paises, duracao_dias: dias.length })
     .eq("id", id);
   if (error) return { ok: false, mensagem: "Não foi possível salvar o roteiro." };
   revalidatePath("/admin/base/roteiros");

@@ -37,6 +37,8 @@ export type ContextoBase = { texto: string; refs: string[] };
 /** Roteiro assinado (pronto) a adaptar: sequência de dias, essência e eventos com data variável. */
 export type RoteiroBaseAdaptar = {
   titulo: string;
+  /** Auge declarado pelo consultor (ex.: "Dolomitas"); sem ele, vale a cidade com mais dias */
+  auge?: string | null;
   duracao_dias: number;
   epoca: string | null;
   essencia: string[];

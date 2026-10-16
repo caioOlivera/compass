@@ -50,12 +50,12 @@ export const EscolhasAssinadoSchema = z.object({
 export type EscolhasAssinado = z.infer<typeof EscolhasAssinadoSchema>;
 
 export function pedidoDoAssinado(
-  base: { titulo: string; duracao_dias: number; dias: DiaComLocal[] },
+  base: { titulo: string; auge?: string | null; duracao_dias: number; dias: DiaComLocal[] },
   escolhas: EscolhasAssinado,
 ): TripRequestInput {
   const regioes = regioesDoRoteiro(base.dias);
   const cidades = [...new Set([...base.dias].sort((a, b) => a.dia - b.dia).map((d) => d.cidade))];
-  const auge = cidadeAuge(base.dias) || base.titulo;
+  const auge = base.auge?.trim() || cidadeAuge(base.dias) || base.titulo;
   return TripRequestInputSchema.parse({
     regioes: regioes.length ? regioes : undefined,
     data_inicio: escolhas.data_inicio,
