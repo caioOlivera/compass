@@ -5,6 +5,7 @@ import { ItineraryView } from "@/components/itinerary/itinerary-view";
 import { buscarFoto } from "@/lib/images/fotos";
 import { fotosDoRoteiro } from "@/lib/itinerary/fotos";
 import { lerConfig } from "@/lib/configuracoes";
+import { cobrancaAtiva } from "@/lib/creditos";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { ChecklistStateSchema, ItinerarySchema } from "@/lib/validation/itinerary";
@@ -34,10 +35,13 @@ export default async function RoteiroPage({ params }: Props) {
   const roteiro = ItinerarySchema.parse(data.itinerary);
   const checklist = ChecklistStateSchema.catch({}).parse(data.checklist_state);
 
-  const [fotos, { data: versoes }, inclusos] = await Promise.all([
+  const admin = createAdminClient();
+  const [fotos, { data: versoes }, inclusos, { count: extras }, cobranca] = await Promise.all([
     fotosDoRoteiro(roteiro, (q) => buscarFoto(q, { idioma: "pt-BR" })),
     supabase.from("generated_itineraries").select("id, version").eq("trip_request_id", data.trip_request_id).order("version"),
-    lerConfig(createAdminClient(), "ajustes_inclusos", 3),
+    lerConfig(admin, "ajustes_inclusos", 3),
+    admin.from("creditos").select("id", { count: "exact", head: true }).eq("trip_request_id", data.trip_request_id).eq("motivo", "ajuste_extra"),
+    cobrancaAtiva(admin),
   ]);
   const ultimaVersao = versoes?.at(-1)?.version ?? data.version;
 
@@ -52,7 +56,8 @@ export default async function RoteiroPage({ params }: Props) {
       refsBase={Array.isArray(data.kb_refs) ? data.kb_refs.length : 0}
       ajustes={{
         usados: ultimaVersao - 1,
-        inclusos: Number(inclusos),
+        inclusos: Number(inclusos) * (1 + (extras ?? 0)),
+        pacoteExtra: cobranca ? Number(inclusos) : 0,
         versoes: (versoes ?? []).map((v) => ({ id: v.id, versao: v.version })),
         versaoAtual: data.version,
       }}

@@ -3,6 +3,7 @@ import { z } from "zod";
 import { gerarComProvedorConfigurado } from "@/lib/ai";
 import { GeracaoError } from "@/lib/ai/generate";
 import { serverEnv } from "@/lib/env";
+import { devolverCredito, exigirCredito, vincularUso } from "@/lib/creditos";
 import { registrarUso } from "@/lib/medicao";
 import { carregarRoteiroAssinado } from "@/lib/motor/assinado";
 import { EscolhasAssinadoSchema, pedidoDoAssinado } from "@/lib/motor/assinado-pedido";
@@ -37,9 +38,6 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
   const admin = createAdminClient();
   const env = serverEnv();
-  const { data: usadas } = await admin.rpc("generations_last_24h", { p_user_id: user.id });
-  if ((usadas ?? 0) >= env.DAILY_GENERATION_LIMIT) return erro(429, "Você atingiu o limite de roteiros por dia. Tente mais tarde.");
-
   const base = await carregarRoteiroAssinado(admin, id);
   if (!base) return erro(404, "Roteiro não encontrado.");
 
@@ -50,6 +48,16 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     return erro(500, "Este roteiro ainda não está pronto para adaptação (faltam coordenadas das cidades).");
   }
 
+  const credito = await exigirCredito(admin, { userId: user.id, produto: "assinado" });
+  if (!credito.ok) {
+    const comprar = `/comprar?produto=assinado&roteiro=${id}`;
+    return NextResponse.json({ error: credito.mensagem, comprar: credito.status === 402 ? comprar : undefined }, { status: credito.status });
+  }
+  if (credito.gratis) {
+    const { data: usadas } = await admin.rpc("generations_last_24h", { p_user_id: user.id });
+    if ((usadas ?? 0) >= env.DAILY_GENERATION_LIMIT) return erro(429, "Você atingiu o limite de roteiros por dia. Tente mais tarde.");
+  }
+
   // Gravado pelo servidor: produto e roteiro de origem não vêm do cliente
   const { data: pedido, error: erroPedido } = await admin
     .from("trip_requests")
@@ -58,8 +66,11 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     .single();
   if (erroPedido) {
     console.error("[assinado] pedido", erroPedido);
+    await devolverCredito(admin, credito.usoId);
     return erro(500, "Erro inesperado. Tente de novo.");
   }
+
+  await vincularUso(admin, credito.usoId, pedido.id);
 
   const pedidoIA = toPromptInput(input);
   const contexto = await montarContextoBase(admin, pedidoIA);
@@ -100,6 +111,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     console.error("[assinado]", id, e instanceof GeracaoError ? e.detalhes : e);
     const mensagem = e instanceof GeracaoError ? "Não conseguimos adaptar o roteiro. Tente de novo." : "O serviço de IA falhou. Tente de novo em alguns minutos.";
     await admin.from("trip_requests").update({ status: "failed", error_message: mensagem }).eq("id", pedido.id);
+    await devolverCredito(admin, credito.usoId);
     await registrarUso(admin, { tipo: "adaptacao", userId: user.id, tripRequestId: pedido.id, produto: "assinado", sucesso: false, provedor: env.AI_PROVIDER });
     return erro(e instanceof GeracaoError ? 502 : 503, mensagem);
   }

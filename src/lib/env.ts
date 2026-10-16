@@ -30,6 +30,11 @@ const ServerEnvSchema = z
     // ela é do Gemini. Sem nenhuma, a busca cai para texto.
     EMBEDDINGS_API_KEY: z.string().optional(),
     EMBEDDINGS_MODEL: z.string().default("gemini-embedding-001"),
+
+    // Cobrança (Mercado Pago). Sem token, a compra fica indisponível e o site segue grátis.
+    MP_ACCESS_TOKEN: z.string().optional(),
+    MP_WEBHOOK_SECRET: z.string().optional(),
+    NEXT_PUBLIC_SITE_URL: z.url().optional(),
   })
   .superRefine((env, ctx) => {
     if (env.AI_PROVIDER === "anthropic" && !env.ANTHROPIC_API_KEY) {

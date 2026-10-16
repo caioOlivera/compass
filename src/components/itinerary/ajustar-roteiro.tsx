@@ -10,6 +10,8 @@ import { cn } from "@/lib/utils";
 export type InfoAjustes = {
   usados: number;
   inclusos: number;
+  /** Com a cobrança ligada: quantos ajustes um novo crédito libera (0 = não dá para comprar mais) */
+  pacoteExtra?: number;
   /** Versões do mesmo pedido, da primeira à última */
   versoes: { id: string; versao: number }[];
   versaoAtual: number;
@@ -23,12 +25,14 @@ export function AjustarRoteiro({ itineraryId, info }: { itineraryId: string; inf
   const [texto, setTexto] = useState("");
   const [enviando, setEnviando] = useState(false);
   const [erro, setErro] = useState("");
+  const [comprar, setComprar] = useState("");
   const ultima = info.versaoAtual === info.versoes.at(-1)?.versao;
   const restantes = Math.max(info.inclusos - info.usados, 0);
 
   async function enviar(e: React.FormEvent) {
     e.preventDefault();
     setErro("");
+    setComprar("");
     setEnviando(true);
     try {
       const res = await fetch(`/api/itineraries/${itineraryId}/ajustes`, {
@@ -37,7 +41,10 @@ export function AjustarRoteiro({ itineraryId, info }: { itineraryId: string; inf
         body: JSON.stringify({ pedido: texto }),
       });
       const corpo = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(corpo.error ?? "Não foi possível ajustar.");
+      if (!res.ok) {
+        if (corpo.comprar) setComprar(corpo.comprar);
+        throw new Error(corpo.error ?? "Não foi possível ajustar.");
+      }
       router.push(`/roteiros/${corpo.itinerary_id}`);
       router.refresh();
     } catch (e) {
@@ -78,8 +85,8 @@ export function AjustarRoteiro({ itineraryId, info }: { itineraryId: string; inf
 
       {!ultima ? (
         <p className="text-sm text-text-2">Esta é uma versão anterior. Ajustes partem da versão mais recente.</p>
-      ) : restantes === 0 ? (
-        <p className="text-sm text-text-2">Você usou os ajustes incluídos. Um novo ajuste consome um novo crédito.</p>
+      ) : restantes === 0 && !info.pacoteExtra ? (
+        <p className="text-sm text-text-2">Você usou os ajustes incluídos nesta consulta.</p>
       ) : (
         <form onSubmit={enviar} className="flex flex-col gap-2">
           <textarea
@@ -101,7 +108,21 @@ export function AjustarRoteiro({ itineraryId, info }: { itineraryId: string; inf
               ))}
             </div>
           )}
-          {erro && <p className="text-sm text-red-600">{erro}</p>}
+          {restantes === 0 && (
+            <p className="text-xs text-text-2">
+              Os ajustes incluídos acabaram. O próximo consome 1 crédito e libera mais {info.pacoteExtra}.
+            </p>
+          )}
+          {erro && (
+            <p className="text-sm text-red-600">
+              {erro}{" "}
+              {comprar && (
+                <Link href={comprar} className="font-medium underline">
+                  Comprar crédito
+                </Link>
+              )}
+            </p>
+          )}
           <Button type="submit" disabled={enviando || texto.trim().length < 5} className="h-10 self-end">
             {enviando ? (
               <>

@@ -10,6 +10,8 @@ const LINKS = [
   { href: "/admin/base/revisao", rotulo: "Revisão" },
   { href: "/admin/base/busca", rotulo: "Busca" },
   { href: "/admin/base/roteiros", rotulo: "Roteiros prontos" },
+  { href: "/admin/pedidos", rotulo: "Pedidos" },
+  { href: "/admin/consultorias", rotulo: "Consultorias" },
   { href: "/admin/medicao", rotulo: "Medição" },
   { href: "/admin/config", rotulo: "Configurações" },
 ];

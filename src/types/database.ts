@@ -806,6 +806,183 @@ export type Database = {
         }
         Relationships: []
       }
+      assinaturas: {
+        Row: {
+          atual_ate: string | null
+          created_at: string
+          criado_por: string | null
+          id: string
+          organizacao_id: string
+          plano: string
+          provedor: string
+          provedor_id: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          atual_ate?: string | null
+          created_at?: string
+          criado_por?: string | null
+          id?: string
+          organizacao_id: string
+          plano: string
+          provedor?: string
+          provedor_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          atual_ate?: string | null
+          created_at?: string
+          criado_por?: string | null
+          id?: string
+          organizacao_id?: string
+          plano?: string
+          provedor?: string
+          provedor_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      consultorias: {
+        Row: {
+          briefing: Json | null
+          created_at: string
+          id: string
+          notas: string | null
+          pedido_id: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          briefing?: Json | null
+          created_at?: string
+          id?: string
+          notas?: string | null
+          pedido_id: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          briefing?: Json | null
+          created_at?: string
+          id?: string
+          notas?: string | null
+          pedido_id?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      creditos: {
+        Row: {
+          created_at: string
+          id: string
+          lote_id: string | null
+          motivo: string
+          organizacao_id: string | null
+          pedido_id: string | null
+          quantidade: number
+          tipo: string
+          trip_request_id: string | null
+          user_id: string | null
+          valido_ate: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          lote_id?: string | null
+          motivo: string
+          organizacao_id?: string | null
+          pedido_id?: string | null
+          quantidade: number
+          tipo: string
+          trip_request_id?: string | null
+          user_id?: string | null
+          valido_ate?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          lote_id?: string | null
+          motivo?: string
+          organizacao_id?: string | null
+          pedido_id?: string | null
+          quantidade?: number
+          tipo?: string
+          trip_request_id?: string | null
+          user_id?: string | null
+          valido_ate?: string | null
+        }
+        Relationships: []
+      }
+      pedidos: {
+        Row: {
+          created_at: string
+          id: string
+          metodo: string | null
+          organizacao_id: string | null
+          pago_em: string | null
+          produto: string
+          provedor: string
+          provedor_id: string | null
+          referencia: Json
+          status: string
+          updated_at: string
+          user_id: string
+          valor: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          metodo?: string | null
+          organizacao_id?: string | null
+          pago_em?: string | null
+          produto: string
+          provedor?: string
+          provedor_id?: string | null
+          referencia?: Json
+          status?: string
+          updated_at?: string
+          user_id: string
+          valor: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          metodo?: string | null
+          organizacao_id?: string | null
+          pago_em?: string | null
+          produto?: string
+          provedor?: string
+          provedor_id?: string | null
+          referencia?: Json
+          status?: string
+          updated_at?: string
+          user_id?: string
+          valor?: number
+        }
+        Relationships: []
+      }
+      webhooks_recebidos: {
+        Row: {
+          chave: string
+          created_at: string
+        }
+        Insert: {
+          chave: string
+          created_at?: string
+        }
+        Update: {
+          chave?: string
+          created_at?: string
+        }
+        Relationships: []
+      }
       generated_itineraries: {
         Row: {
           adjustment_request: string | null
@@ -984,7 +1161,18 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      creditos_lotes: {
+        Row: {
+          created_at: string | null
+          id: string | null
+          organizacao_id: string | null
+          restante: number | null
+          tipo: string | null
+          user_id: string | null
+          valido_ate: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       buscar_conhecimento: {
@@ -1011,6 +1199,10 @@ export type Database = {
         }[]
       }
       adicionar_membro: { Args: { p_email: string }; Returns: string }
+      consumir_credito: {
+        Args: { p_motivo: string; p_organizacao_id: string | null; p_tipos: string[]; p_trip_request_id: string | null; p_user_id: string }
+        Returns: string | null
+      }
       criar_organizacao: { Args: { p_nome: string }; Returns: string }
       generations_last_24h: { Args: { p_user_id: string }; Returns: number }
       minha_organizacao: { Args: never; Returns: string }

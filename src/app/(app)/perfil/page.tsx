@@ -5,6 +5,8 @@ import { redirect } from "next/navigation";
 import { sair } from "@/app/actions/auth";
 import { AppHeader } from "@/components/app-header";
 import { PerfilForm } from "@/components/perfil/perfil-form";
+import { NOME_STATUS_PEDIDO, PRODUTOS, saldo, type ProdutoAvulso } from "@/lib/creditos";
+import { formatarPreco } from "@/lib/motor/catalogo";
 import { urlDoAvatar } from "@/lib/perfil";
 import { createClient } from "@/lib/supabase/server";
 
@@ -19,10 +21,14 @@ export default async function PerfilPage() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login?next=/perfil");
 
-  const [{ data: perfil }, { count }] = await Promise.all([
+  const [{ data: perfil }, { count }, meu, { data: pedidos }, { data: consultorias }] = await Promise.all([
     supabase.from("profiles").select("full_name, phone, avatar_path").eq("id", user.id).maybeSingle(),
     supabase.from("generated_itineraries").select("id", { count: "exact", head: true }),
+    saldo(supabase, { userId: user.id }),
+    supabase.from("pedidos").select("id, produto, valor, status, created_at").eq("user_id", user.id).order("created_at", { ascending: false }).limit(10),
+    supabase.from("consultorias").select("id, status").eq("user_id", user.id),
   ]);
+  const tipos = (Object.keys(PRODUTOS) as ProdutoAvulso[]).filter((t) => meu[t]);
 
   return (
     <>
@@ -48,6 +54,37 @@ export default async function PerfilPage() {
             avatarUrl={urlDoAvatar(perfil?.avatar_path)}
           />
         </div>
+
+        <section className="flex flex-col gap-3 rounded-2xl border border-border bg-surface p-5">
+          <div className="flex items-baseline justify-between gap-3">
+            <h2 className="font-medium">Créditos</h2>
+            <Link href="/comprar" className="text-sm font-medium text-accent-strong hover:underline">
+              Comprar
+            </Link>
+          </div>
+          <p className="text-sm text-text-2">
+            {tipos.length ? tipos.map((t) => `${meu[t]} ${PRODUTOS[t].titulo.toLowerCase()}`).join(" · ") : "Nenhum crédito disponível."}
+          </p>
+          {consultorias?.some((c) => c.status === "aguardando_briefing") && (
+            <Link href={`/consultoria/${consultorias.find((c) => c.status === "aguardando_briefing")!.id}`} className="text-sm font-medium text-accent-strong hover:underline">
+              Preencher o briefing da sua consultoria
+            </Link>
+          )}
+          {!!pedidos?.length && (
+            <ul className="flex flex-col divide-y divide-border text-sm">
+              {pedidos.map((p) => (
+                <li key={p.id}>
+                  <Link href={`/pedidos/${p.id}`} className="flex justify-between gap-3 py-2 hover:text-accent-strong">
+                    <span>
+                      {PRODUTOS[p.produto as ProdutoAvulso]?.titulo ?? p.produto} · {formatarPreco(Number(p.valor))}
+                    </span>
+                    <span className="text-text-2">{NOME_STATUS_PEDIDO[p.status] ?? p.status}</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
 
         <Link
           href="/agencia"

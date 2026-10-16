@@ -3,7 +3,7 @@ import { NextResponse, type NextRequest } from "next/server";
 
 // Roda antes de cada página: renova a sessão do Supabase (o token expira em 1 h) e
 // controla o acesso. A RLS continua sendo a proteção real dos dados; isto é só navegação.
-const PRIVADAS = ["/roteiros", "/nova-viagem", "/perfil", "/admin", "/agencia"];
+const PRIVADAS = ["/roteiros", "/nova-viagem", "/perfil", "/admin", "/agencia", "/comprar", "/pedidos", "/consultoria"];
 const SO_DESLOGADO = ["/login", "/cadastro", "/verificar"];
 
 export async function proxy(request: NextRequest) {

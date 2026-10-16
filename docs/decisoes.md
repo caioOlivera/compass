@@ -5,6 +5,26 @@ Status: **decidida**, **proposta** (espera aprovação) ou **revista**.
 
 ---
 
+## 2026-10-16 · Pagamentos pelo Mercado Pago (decidida)
+- **Decisão:** Checkout Pro do Mercado Pago para compras avulsas (Pix e cartão na mesma tela) e assinatura mensal (preapproval) para os planos das agências.
+- **Alternativas:** Stripe (Pix só por convite no Brasil, cartão cai em 30 dias, +0,7% no Billing); Asaas (Pix com tarifa fixa de R$ 1,99, que come 20% de um roteiro de R$ 9,90); Pagar.me (tarifa fixa de R$ 0,99 e sem fonte oficial atual de preços). Comparativo completo no relatório de pesquisa de pagamentos.
+- **Motivo:** Pix e cartão sem montar tela de pagamento, assinatura pronta, conhecido pelo público. A taxa sai por venda, sem mensalidade.
+- **Como funciona:** o pedido nasce no banco, o cliente paga no Mercado Pago e o aviso (webhook com assinatura HMAC conferida) libera o crédito. Nunca confiamos no corpo do aviso: o servidor busca o pagamento na API e confere valor e pedido. Repetir o aviso não muda nada. Na volta do checkout a página do pedido também confere, para não depender só do aviso.
+- **Interruptor:** `cobranca_ativa` em /admin/config. Desligado (padrão), gerar segue grátis com limite diário; ligado, cada consulta consome 1 crédito.
+
+## 2026-10-16 · Créditos em livro-razão com validade (decidida)
+- **Decisão:** tabela `creditos` só recebe inserções. Compra vira lote (+N, com validade); uso aponta o lote (−1). Saldo = soma por lote (`creditos_lotes`). O consumo trava os lotes e usa o que vence primeiro, da agência antes do pessoal.
+- **Regras:** B2C vale 12 meses; Basic recebe 30 créditos "completo" por mês, válidos até o fim do período (não acumulam); Premium não usa créditos, só uso justo (limite por hora e alerta no log acima de 150/mês). Crédito "completo" serve para roteiro e assinado também. Geração que falha devolve o crédito. O 4º ajuste consome um crédito do mesmo tipo e libera mais 3.
+- **Reembolso:** em até 7 dias (configurável) e só se o crédito não foi usado, feito pelo admin em /admin/pedidos. **Validar o texto e o prazo com um advogado** (o CDC dá 7 dias de arrependimento em compra on-line).
+
+## 2026-10-16 · Agências: uma por pessoa, dono gerencia (decidida)
+- **Decisão:** cada pessoa pertence a no máximo uma agência; o dono edita marca, logo e equipe. Remover membro é feito pelo servidor depois de conferir que quem pede é o dono.
+- **Motivo:** simples e cobre o caso real (equipe pequena). Várias agências por pessoa pode vir depois, se pedirem.
+
+## 2026-10-16 · Repositório público e dados da base fora dele (decidida)
+- **Decisão:** relatos, extrações e dados da base de conhecimento ficam só no Supabase, nunca no Git.
+- **Motivo:** o repositório está público. Recomendo deixá-lo privado (Settings > General > Danger Zone no GitHub); a Vercel continua funcionando.
+
 ## 2026-10-15 · Embeddings da base de conhecimento (proposta)
 - **Proposta:** modelo de embeddings do Gemini, vetores no pgvector do Supabase.
 - **Alternativas:** OpenAI `text-embedding-3-small` (pago, barato, muito usado); Voyage (pago); modelo local (exige servidor próprio).

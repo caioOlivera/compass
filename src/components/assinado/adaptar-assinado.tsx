@@ -1,6 +1,7 @@
 "use client";
 
 import { Loader2, Sparkles } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -23,6 +24,7 @@ export function AdaptarAssinado({ id, preco }: { id: string; preco: string }) {
   });
   const [erros, setErros] = useState<Record<string, string>>({});
   const [mensagem, setMensagem] = useState("");
+  const [comprar, setComprar] = useState("");
   const [enviando, setEnviando] = useState(false);
   useEffect(() => setHoje(hojeLocal()), []);
 
@@ -44,6 +46,7 @@ export function AdaptarAssinado({ id, preco }: { id: string; preco: string }) {
       if (res.ok) return router.push(`/roteiros/${corpo.itinerary_id}`);
       if (res.status === 401) return router.push(`/login?next=${encodeURIComponent(`/roteiros-assinados/${id}`)}`);
       if (corpo.campos) setErros(Object.fromEntries(Object.entries(corpo.campos as Record<string, string[]>).map(([k, v]) => [k, v[0]])));
+      setComprar(corpo.comprar ?? "");
       setMensagem(corpo.error ?? "Não foi possível adaptar o roteiro.");
     } catch {
       setMensagem("Sem conexão. Tente de novo.");
@@ -105,6 +108,11 @@ export function AdaptarAssinado({ id, preco }: { id: string; preco: string }) {
         />
       </label>
       <FormAlert>{mensagem}</FormAlert>
+      {comprar && (
+        <Link href={comprar} className="inline-flex h-11 items-center justify-center rounded-lg border border-border font-medium hover:bg-surface-2">
+          Comprar este roteiro
+        </Link>
+      )}
       <Button type="submit" disabled={enviando}>
         {enviando ? (
           <>

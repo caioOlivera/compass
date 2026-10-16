@@ -3,6 +3,9 @@ import { redirect } from "next/navigation";
 import { AppHeader } from "@/components/app-header";
 import { CriarAgencia, PainelAgencia } from "@/components/agencia/painel-agencia";
 import { ContatoSchema, urlDoLogo } from "@/lib/agencia";
+import { lerConfig } from "@/lib/configuracoes";
+import { planoDoUsuario, saldo } from "@/lib/creditos";
+import { formatarPreco } from "@/lib/motor/catalogo";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
@@ -41,6 +44,9 @@ export default async function AgenciaPage() {
   const ids = (membros ?? []).map((m) => m.user_id);
   const { data: perfis } = ids.length ? await createAdminClient().from("profiles").select("id, full_name").in("id", ids) : { data: [] };
   const nomes = Object.fromEntries((perfis ?? []).map((p) => [p.id, p.full_name]));
+  const ativo = await planoDoUsuario(supabase, user.id);
+  const precos = await lerConfig<Record<string, number>>(createAdminClient(), "precos_produtos", {});
+  const creditos = ativo?.plano === "basic" ? ((await saldo(supabase, { organizacaoId: orgId })).completo ?? 0) : null;
 
   return (
     <>
@@ -49,7 +55,7 @@ export default async function AgenciaPage() {
         <header className="flex flex-col gap-1">
           <h1 className="text-3xl font-semibold tracking-tight">{org?.nome}</h1>
           <p className="text-text-2">
-            {org?.plano ? `Plano ${org.plano === "basic" ? "Basic" : "Premium"}` : "Sem plano ativo"} · {membros?.length ?? 0}{" "}
+            {ativo?.plano ? `Plano ${ativo.plano === "basic" ? "Basic" : "Premium"}` : "Sem plano ativo"} · {membros?.length ?? 0}{" "}
             {membros?.length === 1 ? "pessoa" : "pessoas"}
           </p>
         </header>
@@ -60,7 +66,10 @@ export default async function AgenciaPage() {
           marca={{ nome: org?.nome ?? "", cor: org?.cor ?? "#1f6f5c", contato: ContatoSchema.parse(org?.contato ?? {}) }}
           logoUrl={urlDoLogo(org?.logo_path)}
           membros={(membros ?? []).map((m) => ({ id: m.user_id, papel: m.papel, nome: nomes[m.user_id] || "Sem nome" }))}
-          plano={org?.plano ?? null}
+          plano={ativo?.plano ?? null}
+          planoAte={org?.plano_ativo_ate}
+          creditosMes={creditos}
+          precos={{ basic: formatarPreco(precos.basic ?? 199.9), premium: formatarPreco(precos.premium ?? 399.9) }}
         />
       </main>
     </>

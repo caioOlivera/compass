@@ -5,6 +5,7 @@ import { GeracaoError } from "@/lib/ai/generate";
 import { gerarComProvedorConfigurado } from "@/lib/ai";
 import { ProvedorError } from "@/lib/ai/providers/openai-compatible";
 import { serverEnv } from "@/lib/env";
+import { devolverCredito, exigirCredito, vincularUso } from "@/lib/creditos";
 import { registrarUso } from "@/lib/medicao";
 import { montarContextoBase } from "@/lib/motor/contexto";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -45,10 +46,15 @@ export async function POST(req: NextRequest) {
   const env = serverEnv();
   const admin = createAdminClient();
 
-  const { data: usadas, error: erroLimite } = await admin.rpc("generations_last_24h", { p_user_id: user.id });
-  if (erroLimite) return erroInterno("contar gerações", erroLimite);
-  if (usadas >= env.DAILY_GENERATION_LIMIT) {
-    return erro(429, `Você já gerou ${usadas} roteiros nas últimas 24 horas. Tente de novo mais tarde.`);
+  // Com a cobrança ligada, cada roteiro consome 1 crédito; desligada, vale só o limite diário
+  const credito = await exigirCredito(admin, { userId: user.id, produto: "roteiro" });
+  if (!credito.ok) return NextResponse.json({ error: credito.mensagem, comprar: credito.comprar }, { status: credito.status });
+  if (credito.gratis) {
+    const { data: usadas, error: erroLimite } = await admin.rpc("generations_last_24h", { p_user_id: user.id });
+    if (erroLimite) return erroInterno("contar gerações", erroLimite);
+    if (usadas >= env.DAILY_GENERATION_LIMIT) {
+      return erro(429, `Você já gerou ${usadas} roteiros nas últimas 24 horas. Tente de novo mais tarde.`);
+    }
   }
 
   // Inserido com a sessão do usuário: a RLS confere o dono e os grants impedem definir o status.
@@ -57,7 +63,11 @@ export async function POST(req: NextRequest) {
     .insert(toTripRequestRow(input))
     .select("id")
     .single();
-  if (erroPedido) return erroInterno("salvar pedido", erroPedido);
+  if (erroPedido) {
+    await devolverCredito(admin, credito.usoId);
+    return erroInterno("salvar pedido", erroPedido);
+  }
+  await vincularUso(admin, credito.usoId, pedido.id);
 
   const marcarStatus = (status: "generating" | "completed" | "failed", error_message: string | null = null) =>
     admin.from("trip_requests").update({ status, error_message }).eq("id", pedido.id);
@@ -106,6 +116,7 @@ export async function POST(req: NextRequest) {
   } catch (e) {
     const { status, mensagem } = classificarFalha(e);
     await marcarStatus("failed", mensagem);
+    await devolverCredito(admin, credito.usoId);
     // Falha também custa (tokens das tentativas): fica registrada sem tokens conhecidos
     await registrarUso(admin, {
       tipo: "geracao",

@@ -4,6 +4,7 @@ import { Crown, ImageUp, Trash2, UserPlus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useRef, useState, useTransition } from "react";
 import { adicionarMembro, criarAgencia, definirLogo, removerMembro, salvarMarca } from "@/app/actions/agencia";
+import { BotaoAssinar } from "@/components/compras/botoes";
 import { Button } from "@/components/ui/button";
 import { Field, FormAlert } from "@/components/ui/field";
 import type { Marca } from "@/lib/agencia";
@@ -43,9 +44,12 @@ type Props = {
   logoUrl: string | null;
   membros: { id: string; papel: string; nome: string }[];
   plano: string | null;
+  planoAte?: string | null;
+  creditosMes?: number | null;
+  precos?: { basic: string; premium: string };
 };
 
-export function PainelAgencia({ orgId, souDono, eu, marca, logoUrl, membros, plano }: Props) {
+export function PainelAgencia({ orgId, souDono, eu, marca, logoUrl, membros, plano, planoAte, creditosMes, precos }: Props) {
   const router = useRouter();
   const [dados, setDados] = useState(marca);
   const [msgMarca, setMsgMarca] = useState("");
@@ -180,12 +184,19 @@ export function PainelAgencia({ orgId, souDono, eu, marca, logoUrl, membros, pla
       <section className="flex flex-col gap-2 rounded-2xl border border-border bg-surface p-5">
         <h2 className="text-lg font-semibold">Plano</h2>
         {plano ? (
-          <p className="text-text-2">Plano {plano === "basic" ? "Basic: 30 consultas completas por mês" : "Premium: consultas sem limite (uso justo)"}.</p>
-        ) : (
           <p className="text-text-2">
-            Basic (R$ 199,90/mês, 30 consultas completas) ou Premium (R$ 399,90/mês, sem limite declarado). A contratação abre
-            assim que o pagamento estiver ligado.
+            Plano {plano === "basic" ? "Basic: 30 consultas completas por mês" : "Premium: consultas sem limite (uso justo)"}
+            {planoAte ? `, renovado até ${new Date(planoAte).toLocaleDateString("pt-BR")}` : ""}.
+            {creditosMes != null && plano === "basic" ? ` Restam ${creditosMes} consultas neste mês.` : ""}
           </p>
+        ) : (
+          <p className="text-text-2">Assinatura mensal no cartão, cancele quando quiser. Os créditos do Basic renovam todo mês e não acumulam.</p>
+        )}
+        {souDono && !plano && (
+          <div className="grid gap-3 sm:grid-cols-2">
+            <BotaoAssinar plano="basic" rotulo={`Assinar Basic · ${precos?.basic ?? "R$ 199,90"}/mês`} />
+            <BotaoAssinar plano="premium" rotulo={`Assinar Premium · ${precos?.premium ?? "R$ 399,90"}/mês`} />
+          </div>
         )}
       </section>
     </div>

@@ -2,6 +2,7 @@
 
 import { ArrowLeft, ArrowRight, Sparkles } from "lucide-react";
 import { AnimatePresence, motion, MotionConfig } from "motion/react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -62,7 +63,7 @@ function salvarRascunho(valor: { rascunho: TripRequestDraft; etapa: number } | n
   }
 }
 
-type Envio = { estado: "parado" } | { estado: "gerando" } | { estado: "erro"; mensagem: string };
+type Envio = { estado: "parado" } | { estado: "gerando" } | { estado: "erro"; mensagem: string; comprar?: string };
 
 export function Wizard({ inicio = {} }: { inicio?: InicioQuestionario }) {
   const router = useRouter();
@@ -159,7 +160,8 @@ export function Wizard({ inicio = {} }: { inicio?: InicioQuestionario }) {
         setErros(Object.fromEntries(campos.map((c) => [c, corpo.campos[c][0]])));
         return;
       }
-      setEnvio({ estado: "erro", mensagem: corpo.error ?? "Não foi possível gerar o roteiro. Tente de novo." });
+      // Sem crédito: o rascunho fica salvo e a pessoa volta para cá depois de comprar
+      setEnvio({ estado: "erro", mensagem: corpo.error ?? "Não foi possível gerar o roteiro. Tente de novo.", comprar: corpo.comprar });
     } catch {
       setEnvio({ estado: "erro", mensagem: "Sem conexão. Verifique sua internet e tente de novo." });
     }
@@ -216,6 +218,11 @@ export function Wizard({ inicio = {} }: { inicio?: InicioQuestionario }) {
         </AnimatePresence>
 
         {envio.estado === "erro" && <FormAlert>{envio.mensagem}</FormAlert>}
+        {envio.estado === "erro" && envio.comprar && (
+          <Link href={envio.comprar} className="self-start text-sm font-medium text-accent-strong underline">
+            Comprar crédito e voltar para gerar
+          </Link>
+        )}
 
         <div className="flex justify-end">
           <Button type="submit" className="min-w-40">
