@@ -983,11 +983,32 @@ export type Database = {
         }
         Relationships: []
       }
+      cotacoes: {
+        Row: { chave: string; tipo: string; provedor: string; consulta: Json; resultado: Json; cotado_em: string; expira_em: string }
+        Insert: { chave: string; tipo: string; provedor: string; consulta: Json; resultado: Json; cotado_em?: string; expira_em: string }
+        Update: { chave?: string; tipo?: string; provedor?: string; consulta?: Json; resultado?: Json; cotado_em?: string; expira_em?: string }
+        Relationships: []
+      }
+      estudo_rotas: {
+        Row: {
+          id: string; rodada: string; rota: number; provedor: string; variante: string; origem: string; destino: string
+          ida: string; volta: string | null; encontrou: boolean; ofertas: number; preco_brl: number | null
+          latencia_ms: number | null; erro: string | null; detalhe: Json | null; created_at: string
+        }
+        Insert: {
+          id?: string; rodada: string; rota: number; provedor: string; variante: string; origem: string; destino: string
+          ida: string; volta?: string | null; encontrou: boolean; ofertas?: number; preco_brl?: number | null
+          latencia_ms?: number | null; erro?: string | null; detalhe?: Json | null; created_at?: string
+        }
+        Update: Partial<Database["public"]["Tables"]["estudo_rotas"]["Insert"]>
+        Relationships: []
+      }
       generated_itineraries: {
         Row: {
           adjustment_request: string | null
           kb_refs: Json
           checklist_state: Json
+          extras: Json | null
           created_at: string
           id: string
           input_tokens: number | null
@@ -1005,6 +1026,7 @@ export type Database = {
           adjustment_request?: string | null
           kb_refs?: Json
           checklist_state?: Json
+          extras?: Json | null
           created_at?: string
           id?: string
           input_tokens?: number | null
@@ -1022,6 +1044,7 @@ export type Database = {
           adjustment_request?: string | null
           kb_refs?: Json
           checklist_state?: Json
+          extras?: Json | null
           created_at?: string
           id?: string
           input_tokens?: number | null

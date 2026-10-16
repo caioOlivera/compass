@@ -1,11 +1,12 @@
 import "server-only";
 import path from "node:path";
-import { Circle, Document, Font, Image, Line, Page, renderToBuffer, StyleSheet, Svg, Text, View } from "@react-pdf/renderer";
+import { Circle, Document, Font, Image, Line, Link, Page, renderToBuffer, StyleSheet, Svg, Text, View } from "@react-pdf/renderer";
 import { ROTULO_TIPO_PONTO } from "@/lib/itinerary/map";
 import { nomeCurto } from "@/lib/itinerary/map";
 import { projetarRota, semEmoji } from "@/lib/pdf/layout";
 import type { ChecklistState, Itinerary } from "@/lib/validation/itinerary";
 import type { TipoPonto } from "@/lib/constants";
+import type { Extras } from "@/lib/viagem/completo-plano";
 
 // PDF do roteiro: capa com a foto do auge, resumo, desenho da rota e cada parada com checklist e trecho.
 
@@ -49,6 +50,8 @@ export type DadosPdf = {
   geradoEm?: Date;
   /** Agência (B2B): o PDF sai com a marca dela no lugar da Compass */
   marca?: { nome: string; cor: string; contato: string; logo?: ImagemPdf | null } | null;
+  /** Produto completo: passagens e hotéis com a data da cotação */
+  extras?: Extras | null;
 };
 
 const s = StyleSheet.create({
@@ -77,7 +80,7 @@ const s = StyleSheet.create({
 const LARGURA_MAPA = 515;
 const ALTURA_MAPA = 190;
 
-function DocumentoRoteiro({ roteiro, checklist, capa, miniaturas = {}, geradoEm = new Date(), marca }: DadosPdf) {
+function DocumentoRoteiro({ roteiro, checklist, capa, miniaturas = {}, geradoEm = new Date(), marca, extras }: DadosPdf) {
   const acento = marca?.cor ?? COR.verde;
   const autor = marca?.nome ?? "Compass";
   const r = roteiro.resumo_estrategico;
@@ -236,6 +239,8 @@ function DocumentoRoteiro({ roteiro, checklist, capa, miniaturas = {}, geradoEm 
           );
         })}
 
+        {extras && (extras.trechos.length > 0 || extras.estadias.length > 0) && <PassagensHoteisPdf extras={extras} acento={acento} />}
+
         <View style={{ marginTop: 22 }} wrap={false}>
           <Text style={s.pequeno}>
             {marca ? "Roteiro preparado com apoio de IA" : "Roteiro sugerido por IA"}: confira horários, preços e regras de entrada antes de comprar.
@@ -249,6 +254,67 @@ function DocumentoRoteiro({ roteiro, checklist, capa, miniaturas = {}, geradoEm 
         <Text style={[s.rodape, { left: 40, right: 40, textAlign: "right" }]} fixed render={({ pageNumber, totalPages }) => `${pageNumber} / ${totalPages}`} />
       </Page>
     </Document>
+  );
+}
+
+const brl = (v: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 }).format(v).replace(/\u00a0/g, " ");
+const dataPdf = (d: string) => `${d.slice(8, 10)}/${d.slice(5, 7)}`;
+const cotadoEm = (iso: string) => new Date(iso).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" });
+
+function PassagensHoteisPdf({ extras, acento }: { extras: Extras; acento: string }) {
+  return (
+    <View>
+      <Text style={s.secao} minPresenceAhead={80}>
+        Passagens e hotéis
+      </Text>
+      {extras.trechos.map((t) => {
+        const o = t.ofertas[0];
+        return (
+          <View key={t.rotulo} style={[s.item, { justifyContent: "space-between" }]} wrap={false}>
+            <Text style={{ flex: 1 }}>
+              <Text style={{ fontWeight: 600 }}>
+                {t.rotulo}: {t.consulta.origem} - {t.consulta.destino}
+              </Text>{" "}
+              {dataPdf(t.consulta.ida)}
+              {t.consulta.volta ? ` a ${dataPdf(t.consulta.volta)}` : ""}
+              {o ? ` · a partir de ${brl(o.preco_brl)} por pessoa${o.companhia ? ` (${o.companhia})` : ""}` : " · sem preço recente"}
+              {t.cotado_em ? ` · cotado em ${cotadoEm(t.cotado_em)}` : ""}
+            </Text>
+            <Link src={o?.link ?? t.link_busca} style={{ color: acento, fontSize: 9 }}>
+              ver passagens
+            </Link>
+          </View>
+        );
+      })}
+      {extras.estadias.map((e) => (
+        <View key={e.id_ponto} style={{ marginTop: 10 }} wrap={false}>
+          <Text style={{ fontWeight: 600 }}>
+            {semEmoji(e.cidade)} · {dataPdf(e.checkin)} a {dataPdf(e.checkout)}, {e.noites} {e.noites === 1 ? "noite" : "noites"}
+          </Text>
+          {e.hoteis.length ? (
+            e.hoteis.map((h) => (
+              <View key={h.nome} style={[s.item, { justifyContent: "space-between" }]}>
+                <Link src={h.link} style={{ flex: 1, color: COR.tinta, textDecoration: "none" }}>
+                  {semEmoji(h.nome)}
+                  {h.estrelas ? ` · ${h.estrelas} estrelas` : ""}
+                  {h.nota ? ` · nota ${h.nota.toFixed(1)}` : ""}
+                </Link>
+                {h.diaria_brl != null && <Text style={{ color: COR.tinta2 }}>{brl(h.diaria_brl)} / noite</Text>}
+              </View>
+            ))
+          ) : (
+            <Link src={e.link_busca} style={{ color: acento, marginTop: 4 }}>
+              Ver hotéis nessas datas
+            </Link>
+          )}
+          {e.cotado_em && <Text style={[s.pequeno, { marginTop: 2 }]}>Diárias cotadas em {cotadoEm(e.cotado_em)}</Text>}
+        </View>
+      ))}
+      <Text style={[s.pequeno, { marginTop: 10 }]}>
+        Preços de referência na data da cotação; podem mudar até a compra.
+        {extras.trechos.length === 2 ? " Passagens: soma de dois trechos só de ida (um bilhete multidestino costuma sair mais barato)." : ""}
+      </Text>
+    </View>
   );
 }
 

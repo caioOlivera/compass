@@ -28,6 +28,7 @@ export function roteiroPRD(): Itinerary {
       estrategia_deslocamento: "Trem de Roma a Florença + carro alugado de Florença até Milão pelas Dolomitas.",
       justificativa_fluidez: "Linha contínua de sul para norte, sem bate-e-volta.",
       alertas: ["Devolver o carro em outra cidade costuma ter taxa extra."],
+      aeroportos: { origem: "SAO", entrada: "FCO", saida: "MXP" },
     },
     referencias_base: [],
     pontos_mapa: [

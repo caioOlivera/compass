@@ -35,4 +35,42 @@ describe("gerarPdfRoteiro", () => {
     // Título do documento vai nos metadados (texto do PDF é comprimido)
     expect(pdf.toString("latin1")).toMatch(/Rota Viagens/);
   }, 20_000);
+
+  it("com passagens e hotéis, inclui os links de compra", async () => {
+    const { gerarPdfRoteiro } = await import("@/lib/pdf/roteiro-pdf");
+    const pdf = await gerarPdfRoteiro({
+      roteiro: roteiroPRD(),
+      checklist: {},
+      extras: {
+        versao: 1,
+        gerado_em: "2026-10-16T12:00:00Z",
+        trechos: [
+          {
+            rotulo: "Ida",
+            consulta: { origem: "SAO", destino: "FCO", ida: "2027-05-01", adultos: 2 },
+            provedor: "travelpayouts",
+            cotado_em: "2026-10-16T12:00:00Z",
+            ofertas: [{ provedor: "travelpayouts", preco_brl: 3200, companhia: "TP", voo: null, partida: null, chegada_volta: null, escalas: 1, duracao_min: null, link: "https://www.aviasales.com/search/SAO0105FCO2" }],
+            link_busca: "https://www.aviasales.com/search/SAO0105FCO2",
+          },
+        ],
+        estadias: [
+          {
+            id_ponto: "p1",
+            cidade: "Roma",
+            checkin: "2027-05-01",
+            checkout: "2027-05-04",
+            noites: 3,
+            provedor: "serpapi",
+            cotado_em: "2026-10-16T12:00:00Z",
+            hoteis: [{ provedor: "serpapi", nome: "Hotel Exemplo", diaria_brl: 650, total_brl: null, nota: 4.6, avaliacoes: 900, estrelas: 4, lat: null, lng: null, foto: null, fonte_preco: "Booking.com", link: "https://www.booking.com/searchresults.pt-br.html?ss=Hotel+Exemplo" }],
+            link_busca: "https://www.booking.com/searchresults.pt-br.html?ss=Roma",
+          },
+        ],
+      },
+    });
+    const texto = pdf.toString("latin1");
+    expect(texto).toContain("aviasales.com/search/SAO0105FCO2");
+    expect(texto).toContain("booking.com/searchresults");
+  }, 20_000);
 });

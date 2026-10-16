@@ -12,6 +12,7 @@ const LINKS = [
   { href: "/admin/base/roteiros", rotulo: "Roteiros prontos" },
   { href: "/admin/pedidos", rotulo: "Pedidos" },
   { href: "/admin/consultorias", rotulo: "Consultorias" },
+  { href: "/admin/estudo", rotulo: "Voos e hotéis" },
   { href: "/admin/medicao", rotulo: "Medição" },
   { href: "/admin/config", rotulo: "Configurações" },
 ];

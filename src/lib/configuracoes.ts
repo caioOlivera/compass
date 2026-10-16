@@ -13,7 +13,9 @@ export type ChaveConfig =
   | "creditos_basic_mes"
   | "cambio_usd_brl"
   | "precos_modelos"
-  | "cobranca_ativa";
+  | "cobranca_ativa"
+  | "precos_apis"
+  | "validade_cotacao_horas";
 
 export async function lerConfig<T>(db: SupabaseClient<Database>, chave: ChaveConfig, padrao: T): Promise<T> {
   const { data } = await db.from("configuracoes").select("valor").eq("chave", chave).maybeSingle();

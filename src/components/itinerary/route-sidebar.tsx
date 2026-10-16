@@ -13,6 +13,7 @@ import { motion } from "motion/react";
 import Link from "next/link";
 import { AjustarRoteiro, type InfoAjustes } from "@/components/itinerary/ajustar-roteiro";
 import { LegResumo } from "@/components/itinerary/leg-info";
+import { PassagensHoteis, type InfoCompleto } from "@/components/itinerary/passagens-hoteis";
 import { FotoDestino } from "@/components/ui/foto";
 import { pontoDeCapa, type FotosPorPonto } from "@/lib/itinerary/fotos";
 import type { StatusSalvamento } from "@/hooks/use-checklist";
@@ -41,6 +42,7 @@ type Props = {
   refsBase?: number;
   /** Só para o dono (não aparece no exemplo) */
   ajustes?: { itineraryId: string; info: InfoAjustes };
+  completo?: InfoCompleto;
 };
 
 const pilula =
@@ -59,6 +61,7 @@ export function RouteSidebar({
   pdfHref,
   refsBase = 0,
   ajustes,
+  completo,
 }: Props) {
   const r = roteiro.resumo_estrategico;
   const pct = progresso.total
@@ -148,6 +151,8 @@ export function RouteSidebar({
             </ul>
           </section>
         )}
+
+        {completo && <PassagensHoteis info={completo} />}
 
         {ajustes && <AjustarRoteiro itineraryId={ajustes.itineraryId} info={ajustes.info} />}
 

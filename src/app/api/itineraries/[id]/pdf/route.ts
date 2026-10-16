@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
 import { marcaDaAgencia, respostaPdf } from "@/lib/pdf/resposta";
 import { createClient } from "@/lib/supabase/server";
+import { lerExtras } from "@/lib/viagem/completo-plano";
 import { ChecklistStateSchema, ItinerarySchema } from "@/lib/validation/itinerary";
 
 // PDF do roteiro, com o checklist marcado como está. A RLS garante que só o dono baixa.
@@ -20,14 +21,14 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
 
   const { data } = await supabase
     .from("generated_itineraries")
-    .select("itinerary, checklist_state")
+    .select("itinerary, checklist_state, extras")
     .eq("id", id)
     .maybeSingle();
   if (!data) return naoEncontrado();
 
   const roteiro = ItinerarySchema.safeParse(data.itinerary);
   if (!roteiro.success) return NextResponse.json({ error: "Roteiro inválido." }, { status: 500 });
-  return respostaPdf(roteiro.data, ChecklistStateSchema.catch({}).parse(data.checklist_state), "privado", await marcaDaAgencia(supabase));
+  return respostaPdf(roteiro.data, ChecklistStateSchema.catch({}).parse(data.checklist_state), "privado", await marcaDaAgencia(supabase), lerExtras(data.extras));
 }
 
 function naoEncontrado() {

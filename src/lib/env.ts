@@ -34,6 +34,11 @@ const ServerEnvSchema = z
     // Cobrança (Mercado Pago). Sem token, a compra fica indisponível e o site segue grátis.
     MP_ACCESS_TOKEN: z.string().optional(),
     MP_WEBHOOK_SECRET: z.string().optional(),
+    // Passagens e hotéis (preço de referência e links de afiliado). Todos opcionais.
+    TRAVELPAYOUTS_TOKEN: z.string().optional(),
+    TRAVELPAYOUTS_MARKER: z.string().optional(),
+    TRAVELPAYOUTS_TRS: z.string().optional(),
+    SERPAPI_KEY: z.string().optional(),
     NEXT_PUBLIC_SITE_URL: z.url().optional(),
   })
   .superRefine((env, ctx) => {

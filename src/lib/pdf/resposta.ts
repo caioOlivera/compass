@@ -13,9 +13,10 @@ export async function respostaPdf(
   checklist: ChecklistState,
   cache: "privado" | "publico",
   marca: DadosPdf["marca"] = null,
+  extras: DadosPdf["extras"] = null,
 ) {
   const { capa, miniaturas } = await fotosParaPdf(roteiro);
-  const pdf = await gerarPdfRoteiro({ roteiro, checklist, capa, miniaturas, marca });
+  const pdf = await gerarPdfRoteiro({ roteiro, checklist, capa, miniaturas, marca, extras });
   const nome = nomeArquivoPdf(roteiro.titulo);
   return new Response(new Uint8Array(pdf), {
     headers: {

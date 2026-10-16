@@ -61,6 +61,16 @@ export const ResumoEstrategicoSchema = z.object({
   alertas: z
     .array(z.string().max(300))
     .describe("O que não foi possível cumprir ou merece atenção. Lista vazia se nada."),
+  // Roteiros antigos não têm: o default mantém a leitura e a cotação cai no texto de logistica_voos
+  aeroportos: z
+    .object({
+      origem: z.string().regex(/^[A-Z]{3}$/).describe('Código IATA de cidade ou aeroporto de embarque no Brasil, ex.: "SAO", "GYN"'),
+      entrada: z.string().regex(/^[A-Z]{3}$/).describe('IATA do aeroporto de chegada no destino, ex.: "FCO"'),
+      saida: z.string().regex(/^[A-Z]{3}$/).describe('IATA do aeroporto de onde volta para o Brasil, ex.: "MXP"'),
+    })
+    .nullable()
+    .describe("Aeroportos do voo internacional (open-jaw): embarque, chegada e volta")
+    .default(null),
 });
 
 export const ItinerarySchema = z.object({

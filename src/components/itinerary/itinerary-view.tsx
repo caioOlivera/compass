@@ -4,6 +4,7 @@ import { MotionConfig } from "motion/react";
 import dynamic from "next/dynamic";
 import { useMemo, useState } from "react";
 import type { InfoAjustes } from "@/components/itinerary/ajustar-roteiro";
+import type { InfoCompleto } from "@/components/itinerary/passagens-hoteis";
 import { RouteSidebar } from "@/components/itinerary/route-sidebar";
 import { PointDrawer } from "@/components/map/point-drawer";
 import { useChecklist } from "@/hooks/use-checklist";
@@ -33,9 +34,10 @@ type Props = {
   /** Quantos registros da base de conhecimento o roteiro usou */
   refsBase?: number;
   ajustes?: InfoAjustes;
+  completo?: InfoCompleto;
 };
 
-export function ItineraryView({ roteiro, fotos = {}, checklistInicial, itineraryId, voltar, pdfHref, refsBase = 0, ajustes }: Props) {
+export function ItineraryView({ roteiro, fotos = {}, checklistInicial, itineraryId, voltar, pdfHref, refsBase = 0, ajustes, completo }: Props) {
   const [selecao, setSelecao] = useState<Selecao>(null);
   const checklist = useChecklist(checklistInicial, itineraryId);
   const desktop = useIsDesktop();
@@ -64,6 +66,7 @@ export function ItineraryView({ roteiro, fotos = {}, checklistInicial, itinerary
             pdfHref={pdfHref}
             refsBase={refsBase}
             ajustes={ajustes && itineraryId ? { itineraryId, info: ajustes } : undefined}
+            completo={completo}
           />
         </aside>
         <main className="relative order-1 h-[52dvh] shrink-0 lg:order-2 lg:h-auto lg:flex-1">

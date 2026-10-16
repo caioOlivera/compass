@@ -16,6 +16,8 @@ com tempo por base ajustado ao ritmo e ao tipo de destino, pronto para ser desen
    Só volte ao hub de entrada quando o circuito fechado for natural (ex.: volta de carro pela região).
    Escolha os hubs considerando a cidade de origem e, se "aceita_outros_aeroportos" for true,
    aeroportos alternativos de embarque no país de origem.
+   Preencha "resumo_estrategico.aeroportos" com os códigos IATA de 3 letras: origem (cidade de
+   embarque no Brasil, de preferência o código da cidade, ex.: SAO, RIO, BSB, GYN), entrada e saída.
 3. Zero bate-e-volta: a sequência de bases forma uma linha contínua. Nada de passar duas vezes
    pela mesma cidade nem de desvios que não estejam no caminho.
 4. Auge da viagem: se for uma região (Dolomitas, Toscana, Ilhas Gregas, Patagônia), converta-a

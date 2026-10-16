@@ -5,6 +5,12 @@ Status: **decidida**, **proposta** (espera aprovação) ou **revista**.
 
 ---
 
+## 2026-10-16 · Passagens pela Travelpayouts, hotéis pela SerpApi + Booking (decidida)
+- **Decisão:** preço de referência das passagens pela Aviasales Data API (Travelpayouts), com link de afiliado; diárias pela SerpApi (Google Hotels) e reserva pelo Booking.com via links da Travelpayouts.
+- **Alternativas:** Amadeus (desligado em 07/2026), Skyscanner e Kiwi (exigem muito tráfego ou convite), Duffel (só para quem vende), Hotellook (encerrado em 10/2025), Booking Demand API (exige contrato).
+- **Motivo:** são as únicas fontes abertas para uma empresa pequena; a de passagens é grátis e paga comissão. Preço sempre como referência, com a data da cotação. Detalhes em `docs/estudo-voos.md` e `docs/estudo-hoteis.md`.
+- **Pendente:** rodar o estudo das 20 rotas em /admin/estudo depois de configurar as chaves, e confirmar os itens marcados nos dois estudos.
+
 ## 2026-10-16 · Pagamentos pelo Mercado Pago (decidida)
 - **Decisão:** Checkout Pro do Mercado Pago para compras avulsas (Pix e cartão na mesma tela) e assinatura mensal (preapproval) para os planos das agências.
 - **Alternativas:** Stripe (Pix só por convite no Brasil, cartão cai em 30 dias, +0,7% no Billing); Asaas (Pix com tarifa fixa de R$ 1,99, que come 20% de um roteiro de R$ 9,90); Pagar.me (tarifa fixa de R$ 0,99 e sem fonte oficial atual de preços). Comparativo completo no relatório de pesquisa de pagamentos.

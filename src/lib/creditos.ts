@@ -84,14 +84,20 @@ export async function exigirCredito(
     return { ok: true, usoId: null, premium: true };
   }
 
-  const tipos = p.produto === "consultoria" ? ["consultoria"] : [...new Set([p.produto, "completo"])];
-  const { data: usoId } = await db.rpc("consumir_credito", {
-    p_user_id: p.userId,
-    p_organizacao_id: agencia?.organizacaoId ?? null,
-    p_tipos: tipos,
-    p_motivo: p.motivo ?? "uso",
-    p_trip_request_id: p.tripRequestId ?? null,
-  });
+  // Primeiro o crédito do próprio produto; "completo" (mais caro) só quando não houver
+  const tentativas = p.produto === "consultoria" || p.produto === "completo" ? [[p.produto]] : [[p.produto], ["completo"]];
+  let usoId: string | null = null;
+  for (const tipos of tentativas) {
+    const { data } = await db.rpc("consumir_credito", {
+      p_user_id: p.userId,
+      p_organizacao_id: agencia?.organizacaoId ?? null,
+      p_tipos: tipos,
+      p_motivo: p.motivo ?? "uso",
+      p_trip_request_id: p.tripRequestId ?? null,
+    });
+    usoId = data;
+    if (usoId) break;
+  }
   if (usoId) return { ok: true, usoId };
   return {
     ok: false,
