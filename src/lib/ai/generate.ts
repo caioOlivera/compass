@@ -212,7 +212,13 @@ function mensagemAdaptacao(
       '- Eventos com data variável ("eventos"): calcule a data no ano da viagem. Se cair fora da cidade certa, ' +
         "reorganize só o mínimo para encaixar (sem mudar a ordem das cidades) ou explique em alertas que ficou de fora.",
       "- Adapte ao ritmo, às crianças, ao orçamento e aos interesses só dentro de cada dia (atividades e plano_dias).",
-      "- Preencha checklist e plano_dias usando as atividades do roteiro e a base de conhecimento.",
+      "- Preencha checklist, plano_dias e restaurantes usando as atividades do roteiro e a base de conhecimento.",
+      "- Companhia aérea e stopover citados no roteiro são da viagem original, não regra: deixe a companhia livre e, " +
+        "se valer a pena, cite o stopover só como opção em alertas.",
+      "- Portas de entrada e saída seguem a regra de portas (hubs saindo de GRU). Se o roteiro começar ou terminar " +
+        "longe de uma porta, inclua a chegada e a saída pela porta mais próxima, com trem, carro ou voo curto até o miolo.",
+      "- Se a viagem tiver mais dias que o roteiro assinado, o miolo mantém os dias dele e os dias extras viram " +
+        "cidades antes e depois, no caminho entre as portas e o miolo (open-jaw dentro do open-jaw).",
     ].join("\n"),
   ].join("\n\n");
 }

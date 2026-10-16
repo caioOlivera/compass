@@ -134,6 +134,26 @@ export function PointDrawer({ ponto, pontos, fotos, lado, checklist, onAlternar,
                   })}
                 </ul>
 
+                {ponto.restaurantes.length > 0 && (
+                  <section className="mt-5">
+                    <h3 className="mb-2 text-xs font-medium tracking-wide text-text-3 uppercase">Onde comer</h3>
+                    <ul className="flex flex-col gap-2">
+                      {ponto.restaurantes.map((r) => (
+                        <li key={r.nome} className="rounded-lg border border-border p-3">
+                          <p className="flex items-baseline justify-between gap-2">
+                            <span className="font-medium">🍽️ {r.nome}</span>
+                            <span className="text-xs text-text-2 tabular-nums" title="Faixa de preço">
+                              {r.faixa}
+                            </span>
+                          </p>
+                          <p className="text-xs text-text-3">{r.tipo}</p>
+                          <p className="mt-1 text-sm text-text-2">{r.dica}</p>
+                        </li>
+                      ))}
+                    </ul>
+                  </section>
+                )}
+
                 {ponto.proximo_deslocamento && proximo && (
                   <section className="mt-5 rounded-xl border border-border bg-bg p-4">
                     <h3 className="mb-2 text-xs font-medium tracking-wide text-text-3 uppercase">Próximo trecho</h3>

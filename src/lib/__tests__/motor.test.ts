@@ -92,6 +92,13 @@ describe("roteiro assinado", async () => {
     expect(p.locais_desejados_complementares).toEqual(["Doha", "Phuket"]);
     expect(p.observacoes).toMatch(/Roteiro assinado/);
   });
+
+  it("dias a mais alongam a viagem (para as portas), dias a menos não encurtam o roteiro", () => {
+    const esc = { data_inicio: "2026-11-14", cidade_origem: "São Paulo", adultos: 2, criancas: 0, orcamento: "medio", ritmo_viagem: "medio", observacoes: "" } as const;
+    const base = { titulo: "X", duracao_dias: 7, dias };
+    expect(pedidoDoAssinado(base, { ...esc, dias_viagem: 10 }).data_fim).toBe("2026-11-24");
+    expect(pedidoDoAssinado(base, { ...esc, dias_viagem: 3 }).data_fim).toBe("2026-11-21");
+  });
 });
 
 describe("painel de medição", async () => {

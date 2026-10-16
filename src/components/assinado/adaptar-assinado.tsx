@@ -10,7 +10,7 @@ import { ORCAMENTOS, RITMOS } from "@/lib/constants";
 import { hojeLocal } from "@/lib/wizard";
 
 /** Escolhas do cliente para adaptar um roteiro assinado: datas, origem, quem vai, orçamento, ritmo. */
-export function AdaptarAssinado({ id, preco }: { id: string; preco: string }) {
+export function AdaptarAssinado({ id, preco, duracao }: { id: string; preco: string; duracao: number }) {
   const router = useRouter();
   const [hoje, setHoje] = useState("");
   const [dados, setDados] = useState({
@@ -21,6 +21,7 @@ export function AdaptarAssinado({ id, preco }: { id: string; preco: string }) {
     orcamento: "medio",
     ritmo_viagem: "medio",
     observacoes: "",
+    dias_viagem: duracao,
   });
   const [erros, setErros] = useState<Record<string, string>>({});
   const [mensagem, setMensagem] = useState("");
@@ -68,6 +69,15 @@ export function AdaptarAssinado({ id, preco }: { id: string; preco: string }) {
         onChange={(e) => mudar("data_inicio", e.target.value)}
         erro={erros.data_inicio}
         required
+      />
+      <Field
+        label="Quantos dias tem a sua viagem?"
+        type="number"
+        min={duracao}
+        max={duracao + 21}
+        value={dados.dias_viagem}
+        onChange={(e) => mudar("dias_viagem", Number(e.target.value))}
+        dica={`O roteiro tem ${duracao} dias. Dias a mais viram portas de entrada e saída e outras cidades no caminho.`}
       />
       <Field label="Cidade de origem" value={dados.cidade_origem} onChange={(e) => mudar("cidade_origem", e.target.value)} erro={erros.cidade_origem} />
       <div className="grid grid-cols-2 gap-3">

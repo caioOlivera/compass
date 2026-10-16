@@ -28,6 +28,13 @@ export const DiaPlanoSchema = z.object({
   descricao: z.string().min(5).max(400).describe("Manhã, tarde e noite em 1 a 3 frases, práticas"),
 });
 
+export const RestauranteSchema = z.object({
+  nome: z.string().min(2).max(80),
+  tipo: z.string().min(2).max(60).describe('Ex.: "Trattoria", "Street food", "Bistrô"'),
+  faixa: z.enum(["$", "$$", "$$$"]).describe("$ barato, $$ médio, $$$ caro"),
+  dica: z.string().min(2).max(160).describe("O que pedir ou por que ir, numa frase"),
+});
+
 export const PontoMapaSchema = z.object({
   id_ponto: z.string().regex(/^p\d+$/).describe('"p1", "p2", ... na ordem da rota'),
   ordem: z.int().min(1),
@@ -49,6 +56,11 @@ export const PontoMapaSchema = z.object({
     .array(DiaPlanoSchema)
     .max(90)
     .describe("Uma entrada por dia alocado nesta parada, em ordem")
+    .default([]),
+  restaurantes: z
+    .array(RestauranteSchema)
+    .max(4)
+    .describe("2 ou 3 restaurantes reais quando fizer sentido; lista vazia na dúvida")
     .default([]),
 });
 
@@ -89,6 +101,7 @@ export type ItemChecklist = z.infer<typeof ItemChecklistSchema>;
 export type Deslocamento = z.infer<typeof DeslocamentoSchema>;
 export type PontoMapa = z.infer<typeof PontoMapaSchema>;
 export type DiaPlano = z.infer<typeof DiaPlanoSchema>;
+export type Restaurante = z.infer<typeof RestauranteSchema>;
 export type ResumoEstrategico = z.infer<typeof ResumoEstrategicoSchema>;
 export type Itinerary = z.infer<typeof ItinerarySchema>;
 

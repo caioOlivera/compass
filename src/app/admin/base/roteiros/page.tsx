@@ -1,13 +1,18 @@
+import { EditorRoteiroBase, type Revisao } from "@/components/admin/editor-roteiro-base";
 import { exigirAdmin } from "@/lib/admin";
+import { lerConfig } from "@/lib/configuracoes";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { nomePais } from "@/lib/conhecimento/registros";
 
 export default async function RoteirosBasePage() {
   const { supabase } = await exigirAdmin();
   const { data: roteiros } = await supabase
     .from("roteiros_base")
-    .select("id, titulo, assinado, autoria, duracao_dias, resumo, epoca, essencia, paises, roteiro_base_dias(dia, cidade, atividades)")
+    .select("id, titulo, assinado, autoria, duracao_dias, resumo, epoca, essencia, paises, roteiro_base_dias(dia, cidade, atividades, deslocamento, obs)")
     .order("assinado", { ascending: false })
     .order("created_at", { ascending: false });
+  // Revisões sugeridas (por id do roteiro), aplicadas pelo editor só quando o admin salvar
+  const revisoes = await lerConfig<Record<string, Revisao>>(createAdminClient(), "revisao_assinados", {});
 
   return (
     <div className="flex flex-col gap-6">
@@ -46,6 +51,24 @@ export default async function RoteirosBasePage() {
                     ))}
                   </ol>
                 </div>
+                <EditorRoteiroBase
+                  id={r.id}
+                  revisao={revisoes[r.id] ?? null}
+                  inicial={{
+                    titulo: r.titulo,
+                    resumo: r.resumo,
+                    epoca: r.epoca,
+                    essencia: r.essencia,
+                    paises: r.paises,
+                    dias: dias.map((d) => ({
+                      dia: d.dia,
+                      cidade: d.cidade,
+                      atividades: d.atividades,
+                      deslocamento: (d.deslocamento as { meio: string; de: string; para: string; obs: string | null } | null) ?? null,
+                      obs: d.obs,
+                    })),
+                  }}
+                />
               </details>
             </li>
           );

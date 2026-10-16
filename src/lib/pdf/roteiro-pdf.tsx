@@ -224,8 +224,20 @@ function DocumentoRoteiro({ roteiro, checklist, capa, miniaturas = {}, geradoEm 
                     <Text style={{ flex: 1, color: marcados.has(k) ? COR.tinta3 : COR.tinta }}>{semEmoji(item.item)}</Text>
                     <Text style={s.categoria}>{item.categoria}</Text>
                   </View>
+
                 ))}
               </View>
+
+              {p.restaurantes.length > 0 && (
+                <View style={{ marginTop: 8, marginLeft: 32, gap: 2 }} wrap={false}>
+                  <Text style={s.rotulo}>Onde comer</Text>
+                  {p.restaurantes.map((r) => (
+                    <Text key={r.nome} style={{ color: COR.tinta2 }}>
+                      <Text style={{ fontWeight: 600, color: COR.tinta }}>{semEmoji(r.nome)}</Text> ({semEmoji(r.tipo)}, {r.faixa}): {semEmoji(r.dica)}
+                    </Text>
+                  ))}
+                </View>
+              )}
 
               {prox && (
                 <View style={s.trecho} wrap={false}>

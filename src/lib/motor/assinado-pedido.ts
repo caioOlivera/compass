@@ -44,6 +44,8 @@ export const EscolhasAssinadoSchema = z.object({
   orcamento: z.enum(["economico", "medio", "conforto", "luxo"]).default("medio"),
   ritmo_viagem: z.enum(["lento", "medio", "acelerado"]).default("medio"),
   observacoes: z.string().trim().max(2000).default(""),
+  /** Dias da viagem inteira; a mais que o roteiro viram portas e cidades antes e depois do miolo */
+  dias_viagem: z.int().min(1).max(90).optional(),
 });
 export type EscolhasAssinado = z.infer<typeof EscolhasAssinadoSchema>;
 
@@ -57,7 +59,7 @@ export function pedidoDoAssinado(
   return TripRequestInputSchema.parse({
     regioes: regioes.length ? regioes : undefined,
     data_inicio: escolhas.data_inicio,
-    data_fim: somarDias(escolhas.data_inicio, base.duracao_dias),
+    data_fim: somarDias(escolhas.data_inicio, Math.max(base.duracao_dias, Math.min(escolhas.dias_viagem ?? 0, base.duracao_dias + 21))),
     auge_da_viagem: auge.slice(0, 120),
     locais_desejados_complementares: cidades.filter((c) => c !== auge).slice(0, 15),
     locais_a_evitar: [],

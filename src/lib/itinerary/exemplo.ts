@@ -51,6 +51,11 @@ export function roteiroPRD(): Itinerary {
           { dia: 2, titulo: "Coliseu e Fórum Romano", descricao: "Manhã no Coliseu com ingresso de horário marcado, depois Fórum e Palatino. Fim de tarde na Fontana di Trevi e no Panteão." },
           { dia: 3, titulo: "Vaticano", descricao: "Museus do Vaticano e Capela Sistina logo cedo; Basílica de São Pedro em seguida. Noite livre no Campo de' Fiori." },
         ],
+        restaurantes: [
+          { nome: "Da Enzo al 29", tipo: "Trattoria romana", faixa: "$$", dica: "Carbonara e cacio e pepe em Trastevere; chegue antes de abrir, não aceita reserva" },
+          { nome: "Roscioli Salumeria", tipo: "Salumeria e restaurante", faixa: "$$$", dica: "Reserve com antecedência; peça a carbonara e os embutidos" },
+          { nome: "Pizzarium Bonci", tipo: "Pizza al taglio", faixa: "$", dica: "Perto do Vaticano, pizza por peso para comer em pé" },
+        ],
         proximo_deslocamento: {
           destino_id: "p2",
           meio_transporte: "Trem Frecciarossa",
@@ -71,6 +76,10 @@ export function roteiroPRD(): Itinerary {
         plano_dias: [
           { dia: 4, titulo: "Trem para Florença e Duomo", descricao: "Frecciarossa pela manhã. À tarde, Duomo e Ponte Vecchio; pôr do sol na Piazzale Michelangelo." },
           { dia: 5, titulo: "Uffizi e retirada do carro", descricao: "Galeria Uffizi com reserva. No fim do dia, retire o carro fora da ZTL para sair cedo no dia seguinte." },
+        ],
+        restaurantes: [
+          { nome: "All'Antico Vinaio", tipo: "Paninoteca", faixa: "$", dica: "O sanduíche de schiacciata mais famoso da cidade; fila anda rápido" },
+          { nome: "Trattoria Mario", tipo: "Trattoria", faixa: "$$", dica: "Só no almoço, mesas compartilhadas perto do Mercado Central" },
         ],
         proximo_deslocamento: {
           destino_id: "p3",
@@ -102,6 +111,9 @@ export function roteiroPRD(): Itinerary {
           { dia: 12, titulo: "Val Gardena e Seceda", descricao: "Estrada pelos passos até Ortisei e teleférico para Seceda, o cartão-postal das Dolomitas." },
           { dia: 13, titulo: "Alpe di Siusi", descricao: "Planalto da Alpe di Siusi de teleférico; caminhadas leves e pôr do sol com vista para o Sassolungo." },
         ],
+        restaurantes: [
+          { nome: "Rifugio Scoiattoli", tipo: "Rifúgio de montanha", faixa: "$$", dica: "Almoço com vista das Cinque Torri; polenta e speck depois da trilha" },
+        ],
         proximo_deslocamento: {
           destino_id: "p4",
           meio_transporte: "Carro alugado",
@@ -122,6 +134,10 @@ export function roteiroPRD(): Itinerary {
         plano_dias: [
           { dia: 14, titulo: "Descida para Milão", descricao: "Estrada até Milão pela manhã e devolução do carro. À tarde, Duomo e terraços." },
           { dia: 15, titulo: "Último dia e voo", descricao: "Galleria Vittorio Emanuele e Navigli de manhã; transfer para Malpensa e voo de volta." },
+        ],
+        restaurantes: [
+          { nome: "Luini", tipo: "Panzerotti", faixa: "$", dica: "Ao lado do Duomo, o panzerotto frito clássico de Milão" },
+          { nome: "Trattoria Milanese", tipo: "Cozinha milanesa", faixa: "$$", dica: "Cotoletta e risotto alla milanese num salão tradicional" },
         ],
         proximo_deslocamento: null,
       },

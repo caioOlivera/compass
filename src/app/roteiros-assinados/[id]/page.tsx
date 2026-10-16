@@ -91,7 +91,7 @@ export default async function RoteiroAssinadoPage({ params }: { params: Promise<
           </article>
 
           <aside className="lg:sticky lg:top-24 lg:self-start">
-            <AdaptarAssinado id={r.id} preco={formatarPreco(preco)} />
+            <AdaptarAssinado id={r.id} preco={formatarPreco(preco)} duracao={r.duracao_dias} />
           </aside>
         </div>
       </main>

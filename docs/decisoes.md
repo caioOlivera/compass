@@ -5,6 +5,11 @@ Status: **decidida**, **proposta** (espera aprovação) ou **revista**.
 
 ---
 
+## 2026-10-17 · Método: portas por hubs, companhia livre, open-jaw aninhado (decidida)
+- **Decisão:** o voo internacional sempre entra e sai por hubs com voo direto ou de uma conexão saindo de GRU (lista no prompt do motor). Do hub até o miolo, trem, carro ou voo curto, inclusive open-jaw dentro do open-jaw. Nenhum roteiro prende companhia, aliança ou stopover; stopover só como sugestão opcional.
+- **Roteiros assinados:** tratados como o miolo. A adaptação escolhe as portas e, se a viagem tiver mais dias, acrescenta cidades antes e depois. Os textos foram revisados para ficar generalistas (revisão sugerida em `configuracoes.revisao_assinados`, aplicada pelo editor em /admin/base/roteiros).
+- **Restaurantes:** cada parada pode trazer 2 ou 3 restaurantes reais, de preferência da base; na dúvida, nenhum.
+
 ## 2026-10-16 · Passagens pela Travelpayouts, hotéis pela SerpApi + Booking (decidida)
 - **Decisão:** preço de referência das passagens pela Aviasales Data API (Travelpayouts), com link de afiliado; diárias pela SerpApi (Google Hotels) e reserva pelo Booking.com via links da Travelpayouts.
 - **Alternativas:** Amadeus (desligado em 07/2026), Skyscanner e Kiwi (exigem muito tráfego ou convite), Duffel (só para quem vende), Hotellook (encerrado em 10/2025), Booking Demand API (exige contrato).
