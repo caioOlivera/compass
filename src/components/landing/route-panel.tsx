@@ -27,7 +27,7 @@ export function RoutePanel({ ativa, fotos = [] }: { ativa: number; fotos?: (Foto
   const diasAteAgora = ROTA.slice(0, Math.max(ativa + 1, 0)).reduce((s, p) => s + p.dias, 0);
 
   return (
-    <div data-ui className="relative flex h-full flex-col justify-between gap-6 overflow-hidden rounded-3xl bg-field-dark p-6 text-field-dark-ink sm:p-8">
+    <div data-ui className="relative flex h-full flex-col justify-between gap-3 overflow-hidden rounded-3xl bg-field-dark p-4 text-field-dark-ink sm:gap-6 sm:p-8">
       {/* Reserva sem banco de fotos: cor e emoji da parada */}
       {!fotos[fotoVisivel] && (
         <div
@@ -60,7 +60,7 @@ export function RoutePanel({ ativa, fotos = [] }: { ativa: number; fotos?: (Foto
       {/* Escurece em cima e embaixo para o texto ler sobre qualquer foto */}
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/60 via-black/10 to-black/75" aria-hidden />
 
-      <div className="relative flex items-baseline justify-between gap-4 text-[15px] font-medium">
+      <div className="relative flex items-baseline justify-between gap-4 text-xs font-medium sm:text-[15px]">
         <span className="rounded-full bg-black/40 px-3 py-1 backdrop-blur-sm">
           ✈️ {VOO_IDA.de} → {VOO_IDA.para}
         </span>
@@ -71,7 +71,7 @@ export function RoutePanel({ ativa, fotos = [] }: { ativa: number; fotos?: (Foto
       </div>
 
       <div className="relative flex flex-1 items-end">
-        <div className="w-[min(240px,60%)] rounded-2xl bg-black/45 p-3 backdrop-blur-md">
+        <div className="w-[min(240px,60%)] rounded-2xl bg-black/45 p-2 backdrop-blur-md max-lg:w-[130px] sm:p-3">
       <svg viewBox={`-40 -30 ${L + 80} ${A + 60}`} className="h-auto w-full" role="img" aria-label="Rota Roma, Florença, Dolomitas, Milão">
         {PONTOS.slice(0, -1).map((p, i) => {
           const q = PONTOS[i + 1];
@@ -136,7 +136,7 @@ export function RoutePanel({ ativa, fotos = [] }: { ativa: number; fotos?: (Foto
             />
           ))}
         </div>
-        <p className="flex items-baseline justify-between gap-4 text-[clamp(1.0625rem,1rem+0.25vw,1.1875rem)]" aria-live="polite">
+        <p className="flex items-baseline justify-between gap-4 text-sm sm:text-[clamp(1.0625rem,1rem+0.25vw,1.1875rem)]" aria-live="polite">
           <span>{atual ? `${atual.nome}, ${atual.papel.toLowerCase()}` : "Uma linha só, de uma porta à outra"}</span>
           <span className="tabular-nums text-white/70">{atual ? `até o dia ${diasAteAgora} de 15` : "4 paradas"}</span>
         </p>

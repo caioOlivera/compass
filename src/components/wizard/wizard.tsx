@@ -238,8 +238,9 @@ export function Wizard({
           </Link>
         )}
 
-        <div className="flex justify-end">
-          <Button type="submit" className="min-w-40" disabled={ultima && semCredito}>
+        {/* No celular, o botão fica preso embaixo, ao alcance do polegar */}
+        <div className="sticky bottom-0 -mx-4 flex justify-end border-t border-border bg-bg/95 px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] backdrop-blur sm:static sm:mx-0 sm:border-0 sm:bg-transparent sm:p-0 sm:backdrop-blur-none">
+          <Button type="submit" className="min-w-40 max-sm:w-full" disabled={ultima && semCredito}>
             {ultima ? (
               <>
                 <Sparkles className="size-4" aria-hidden /> {envio.estado === "erro" ? "Tentar de novo" : produto === "completo" || opcoes?.modo === "cortesia" || opcoes?.modo === "plano" ? "Gerar roteiro completo" : "Gerar meu roteiro"}

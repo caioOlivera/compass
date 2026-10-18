@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { MenuCelular } from "@/components/landing/menu-celular";
 import { Logo } from "@/components/logo";
 
 export function SiteHeader() {
@@ -19,10 +20,10 @@ export function SiteHeader() {
           <Link href="/exemplo" className="hidden rounded-md px-3 py-2 text-text-2 hover:bg-surface-2 hover:text-text xl:inline">
             Exemplo
           </Link>
-          <Link href="/agencias" className="hidden rounded-md px-3 py-2 text-text-2 hover:bg-surface-2 hover:text-text sm:inline">
+          <Link href="/agencias" className="hidden rounded-md px-3 py-2 text-text-2 hover:bg-surface-2 hover:text-text md:inline">
             Para agências
           </Link>
-          <Link href="/login" className="rounded-md px-3 py-2 text-text-2 hover:bg-surface-2 hover:text-text">
+          <Link href="/login" className="hidden rounded-md px-3 py-2 text-text-2 hover:bg-surface-2 hover:text-text min-[400px]:inline">
             Entrar
           </Link>
           <Link
@@ -31,6 +32,7 @@ export function SiteHeader() {
           >
             Criar roteiro
           </Link>
+          <MenuCelular />
         </nav>
       </div>
     </header>

@@ -43,7 +43,8 @@ export function RouteStory({ fotos = [] }: { fotos?: (Foto | null)[] }) {
       </div>
 
       <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-12">
-        <div className="h-[440px] lg:sticky lg:top-24 lg:h-[calc(100svh-8rem)]">
+        {/* No celular o painel também gruda no topo (menor), para a foto e a rota trocarem enquanto se lê */}
+        <div className="sticky top-[68px] z-10 h-[38svh] lg:top-24 lg:h-[calc(100svh-8rem)]">
           <RoutePanel ativa={ativa} fotos={fotos} />
         </div>
 
@@ -114,7 +115,7 @@ function Bloco({
       ref={ref}
       data-parada={i}
       aria-label={`${ROTA[i].nome}: ${titulo}`}
-      className="flex flex-col justify-center gap-4 py-10 text-text-2 lg:min-h-[70svh]"
+      className="flex flex-col justify-center gap-4 py-10 text-text-2 max-lg:min-h-[55svh] lg:min-h-[70svh]"
     >
       <p className="text-sm font-medium text-accent-strong">
         {ROTA[i].nome} · {ROTA[i].papel}

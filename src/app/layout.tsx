@@ -1,5 +1,13 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
+
+// viewport-fit=cover: as barras fixas usam env(safe-area-inset-*) no iPhone
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: "#1f6f5c",
+};
 
 export const metadata: Metadata = {
   title: "Compass: roteiros de viagem fluidos",

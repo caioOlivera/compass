@@ -28,6 +28,9 @@ import {
 import type { PontoMapa } from "@/lib/validation/itinerary";
 import { cn } from "@/lib/utils";
 
+// O nome de cada parada fica à direita do pino: sobra mais espaço desse lado para não cortar
+const MARGEM = { top: 72, bottom: 72, left: 56, right: 150 };
+
 // Worker copiado para public/ no postinstall (scripts/copy-maplibre-worker.mjs).
 // Este módulo só carrega no navegador (dynamic com ssr: false), então pode rodar no topo.
 maplibregl.setWorkerUrl("/maplibre-gl-worker.mjs");
@@ -132,7 +135,7 @@ export default function ItineraryMap({ pontos, trechos, selecao, onSelecionar, d
   useEffect(() => {
     if (!trechoSelecionado || !mapa.current) return;
     mapa.current.fitBounds(limitesDoRoteiro([trechoSelecionado.de, trechoSelecionado.para]), {
-      padding: 96,
+      padding: { ...MARGEM, top: MARGEM.top + 24, bottom: MARGEM.bottom + 24 },
       maxZoom: 8,
       duration: 700,
     });
@@ -150,7 +153,7 @@ export default function ItineraryMap({ pontos, trechos, selecao, onSelecionar, d
     <MapGL
       ref={mapa}
       mapLib={maplibregl}
-      initialViewState={{ bounds: limites, fitBoundsOptions: { padding: 72, maxZoom: 8 } }}
+      initialViewState={{ bounds: limites, fitBoundsOptions: { padding: MARGEM, maxZoom: 8 } }}
       mapStyle={process.env.NEXT_PUBLIC_MAP_STYLE_URL || ESTILO_PADRAO}
       interactiveLayerIds={[CAMADA_CLIQUE]}
       onClick={aoClicar}
