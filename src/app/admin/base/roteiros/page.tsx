@@ -1,5 +1,8 @@
 import { EditorRoteiroBase, type Revisao } from "@/components/admin/editor-roteiro-base";
+import { AplicarRevisoes } from "@/components/admin/aplicar-revisoes";
 import { exigirAdmin } from "@/lib/admin";
+import { lerConfig } from "@/lib/configuracoes";
+import { revisoesPendentes } from "@/lib/conhecimento/revisao-roteiro";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { nomePais } from "@/lib/conhecimento/registros";
 
@@ -12,11 +15,13 @@ export default async function RoteirosBasePage() {
     .order("created_at", { ascending: false });
   // Revisões sugeridas (por id do roteiro), aplicadas pelo editor só quando o admin salvar
   // Várias chaves "revisao_assinados*": as mais novas (ordem alfabética) valem por cima
-  const { data: cfgRevisoes } = await createAdminClient().from("configuracoes").select("chave, valor").like("chave", "revisao_assinados%").order("chave");
-  const revisoes: Record<string, Revisao> = {};
-  for (const c of cfgRevisoes ?? []) {
-    for (const [id, rev] of Object.entries(c.valor as Record<string, Revisao>)) revisoes[id] = { ...revisoes[id], ...rev };
-  }
+  const admin = createAdminClient();
+  const [{ data: cfgRevisoes }, aplicadas] = await Promise.all([
+    admin.from("configuracoes").select("chave, valor").like("chave", "revisao_assinados%"),
+    lerConfig<Record<string, string[]>>(admin, "revisoes_aplicadas", {}),
+  ]);
+  const { revisoes, pendentes } = revisoesPendentes(cfgRevisoes ?? [], aplicadas);
+  const titulos = new Map((roteiros ?? []).map((r) => [r.id, r.titulo]));
 
   return (
     <div className="flex flex-col gap-6">
@@ -24,6 +29,9 @@ export default async function RoteirosBasePage() {
         <h1 className="text-3xl font-semibold tracking-tight">Roteiros prontos</h1>
         <p className="text-text-2">Os assinados são vendidos como “Roteiro assinado”; os da comunidade servem de referência para o gerador.</p>
       </header>
+      {pendentes.length > 0 && (
+        <AplicarRevisoes titulos={pendentes.map((id) => titulos.get(id) ?? id)} />
+      )}
       {!roteiros?.length && <p className="text-sm text-text-2">Nenhum roteiro aprovado ainda. Aprove os roteiros na revisão.</p>}
       <ul className="flex flex-col gap-3">
         {roteiros?.map((r) => {
@@ -57,7 +65,7 @@ export default async function RoteirosBasePage() {
                 </div>
                 <EditorRoteiroBase
                   id={r.id}
-                  revisao={revisoes[r.id] ?? null}
+                  revisao={pendentes.includes(r.id) ? (revisoes[r.id] as Revisao) : null}
                   inicial={{
                     titulo: r.titulo,
                     auge: r.auge,

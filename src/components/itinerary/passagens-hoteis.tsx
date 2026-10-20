@@ -5,12 +5,24 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import type { Extras } from "@/lib/viagem/completo-plano";
+import type { AvaliacaoPreco, NivelPreco } from "@/lib/viagem/termometro";
 
 export type InfoCompleto = {
   itineraryId: string;
   extras: Extras | null;
   /** Até quando os preços são atualizados (1 vez ao dia) */
   atualizaAte: string | null;
+  /** Se o preço das portas está bom para a região */
+  termometro?: AvaliacaoPreco | null;
+};
+
+const COR_NIVEL: Record<NivelPreco, string> = {
+  unicornio: "bg-sky-100 text-sky-900 dark:bg-sky-950 dark:text-sky-100",
+  muito_bom: "bg-green-100 text-green-900 dark:bg-green-950 dark:text-green-100",
+  bom: "bg-teal-100 text-teal-900 dark:bg-teal-950 dark:text-teal-100",
+  normal: "bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-100",
+  acima: "bg-orange-100 text-orange-900 dark:bg-orange-950 dark:text-orange-100",
+  caro: "bg-red-100 text-red-900 dark:bg-red-950 dark:text-red-100",
 };
 
 const brl = (v: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 }).format(v);
@@ -107,6 +119,12 @@ export function PassagensHoteis({ info }: { info: InfoCompleto }) {
           );
         })}
       </ul>
+      {info.termometro && (
+        <p className={`rounded-lg px-3 py-2 text-sm ${COR_NIVEL[info.termometro.nivel]}`}>
+          <strong>{info.termometro.rotulo}.</strong> {brl(info.termometro.total)} por pessoa nas passagens de ida e volta; para{" "}
+          {info.termometro.regiao}, o preço normal fica em torno de {brl(info.termometro.normal)}.
+        </p>
+      )}
       {openJaw && <p className="text-xs text-text-3">Soma de dois trechos só de ida. Um bilhete multidestino com a mesma rota costuma sair mais barato.</p>}
 
       <ul className="flex flex-col gap-3">

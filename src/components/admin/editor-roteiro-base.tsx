@@ -6,24 +6,12 @@ import { useState, useTransition } from "react";
 import { salvarRoteiroBase, type RoteiroEditavel } from "@/app/actions/roteiros-base";
 import { Button } from "@/components/ui/button";
 import { FormAlert } from "@/components/ui/field";
+import { diaVazio, diasDaRevisao, type DiaRoteiro, type Revisao } from "@/lib/conhecimento/revisao-roteiro";
 
-type Deslocamento = { meio: string; de: string; para: string; obs: string | null } | null;
-type Dia = { dia: number; cidade: string; atividades: string[]; deslocamento: Deslocamento; obs: string | null };
-export type Revisao = Partial<Omit<RoteiroEditavel, "dias">> & { total_dias?: number; dias?: Record<string, Partial<Omit<Dia, "dia">>> };
+type Dia = DiaRoteiro;
+export type { Revisao };
 
 type Form = { titulo: string; auge: string; resumo: string; epoca: string; essencia: string; paises: string; dias: Dia[] };
-
-const diaVazio = (dia: number): Dia => ({ dia, cidade: "", atividades: [], deslocamento: null, obs: null });
-
-/** Junta os dias atuais com os da revisão; a revisão pode ter mais dias (ou menos, com total_dias). */
-function diasDaRevisao(atuais: Dia[], revisao: Revisao): Dia[] {
-  const chaves = Object.keys(revisao.dias ?? {}).map(Number);
-  const total = revisao.total_dias ?? Math.max(atuais.length, ...chaves);
-  return Array.from({ length: total }, (_, i) => {
-    const base = atuais.find((d) => d.dia === i + 1) ?? diaVazio(i + 1);
-    return { ...base, ...(revisao.dias?.[String(i + 1)] ?? {}), dia: i + 1 };
-  });
-}
 
 const linhas = (t: string) => t.split("\n").map((l) => l.trim()).filter(Boolean);
 const campo = "w-full rounded-lg border border-border bg-bg px-3 py-2 text-sm";
@@ -43,6 +31,7 @@ export function EditorRoteiroBase({ id, inicial, revisao }: { id: string; inicia
   const [f, setF] = useState<Form>(paraForm(inicial));
   const [msg, setMsg] = useState<{ ok: boolean; texto: string } | null>(null);
   const [ocupado, iniciar] = useTransition();
+  const [usouRevisao, setUsouRevisao] = useState(false);
 
   const aplicarRevisao = () => {
     if (!revisao) return;
@@ -55,6 +44,7 @@ export function EditorRoteiroBase({ id, inicial, revisao }: { id: string; inicia
       paises: revisao.paises ? revisao.paises.join(", ") : x.paises,
       dias: diasDaRevisao(x.dias, revisao),
     }));
+    setUsouRevisao(true);
     setMsg({ ok: true, texto: "Sugestão aplicada no formulário. Revise e clique em Salvar." });
   };
 
@@ -74,7 +64,7 @@ export function EditorRoteiroBase({ id, inicial, revisao }: { id: string; inicia
             essencia: linhas(f.essencia),
             paises: f.paises.split(/[,\s]+/).filter(Boolean),
             dias: f.dias,
-          });
+          }, usouRevisao);
           setMsg({ ok: r.ok, texto: r.mensagem });
           if (r.ok) router.refresh();
         });

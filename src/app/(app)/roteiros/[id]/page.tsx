@@ -6,10 +6,12 @@ import { buscarFoto } from "@/lib/images/fotos";
 import { fotosDoRoteiro } from "@/lib/itinerary/fotos";
 import { lerConfig } from "@/lib/configuracoes";
 import { cobrancaAtiva } from "@/lib/creditos";
-import { lerExtras } from "@/lib/viagem/completo-plano";
+import { lerExtras, totalPassagens } from "@/lib/viagem/completo-plano";
+import { avaliarPortas, type ConfigTermometro } from "@/lib/viagem/termometro";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { ChecklistStateSchema, ItinerarySchema } from "@/lib/validation/itinerary";
+import { regioesDaLinha } from "@/lib/validation/trip-request";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -27,7 +29,7 @@ export default async function RoteiroPage({ params }: Props) {
 
   const { data } = await supabase
     .from("generated_itineraries")
-    .select("itinerary, checklist_state, kb_refs, version, trip_request_id, extras, trip_requests(product, created_at)")
+    .select("itinerary, checklist_state, kb_refs, version, trip_request_id, extras, trip_requests(product, created_at, regions, subregion)")
     .eq("id", id)
     .maybeSingle();
   if (!data) notFound();
@@ -52,6 +54,17 @@ export default async function RoteiroPage({ params }: Props) {
   const atualizaAte =
     janela && data.trip_requests?.created_at ? new Date(new Date(data.trip_requests.created_at).getTime() + janela.dias * 86_400_000).toISOString() : null;
 
+  // Termômetro: as portas (ida e volta, por pessoa) comparadas às faixas da região
+  const termometro =
+    ehCompleto && extras
+      ? avaliarPortas(
+          totalPassagens(extras.trechos),
+          regioesDaLinha(data.trip_requests ?? {}),
+          extras.trechos.map((t) => t.consulta.destino),
+          await lerConfig<ConfigTermometro>(admin, "termometro_passagens", {}),
+        )
+      : null;
+
   return (
     <ItineraryView
       roteiro={roteiro}
@@ -68,7 +81,7 @@ export default async function RoteiroPage({ params }: Props) {
         versoes: (versoes ?? []).map((v) => ({ id: v.id, versao: v.version })),
         versaoAtual: data.version,
       }}
-      completo={ehCompleto ? { itineraryId: id, extras, atualizaAte } : undefined}
+      completo={ehCompleto ? { itineraryId: id, extras, atualizaAte, termometro } : undefined}
     />
   );
 }

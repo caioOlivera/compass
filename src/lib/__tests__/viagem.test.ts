@@ -5,6 +5,7 @@ import { lerLinksParceiro, lerPrecos, linkBuscaAviasales, parametrosPrecos } fro
 import { aeroportosDoRoteiro, estadiasDoRoteiro, maisBaratas, totalPassagens, trechosDoRoteiro } from "@/lib/viagem/completo-plano";
 import { desviosDePreco, medianaDesvio, resumirEstudo, ROTAS_ESTUDO, variantesTravelpayouts } from "@/lib/viagem/estudo-rotas";
 import { escolherHoteis, lerHoteis, lerVoos, linkBooking, linkGoogleFlights } from "@/lib/viagem/serpapi-ler";
+import { avaliarPortas, regiaoDoTermometro } from "@/lib/viagem/termometro";
 import type { OfertaHotel, OfertaVoo } from "@/lib/viagem/tipos";
 
 describe("aeroportos", () => {
@@ -186,5 +187,35 @@ describe("passagens: o mais barato entre os provedores", () => {
     expect(u.hostname).toBe("www.google.com");
     expect(u.searchParams.get("q")).toBe("Voos de GRU para LIS em 2027-05-10 volta 2027-05-25 3 passageiros");
     expect(u.searchParams.get("curr")).toBe("BRL");
+  });
+});
+
+describe("termômetro de passagens", () => {
+  const cfg = {
+    europa: { unicornio: 2500, muito_bom: 3400, bom: 3800, normal: 4000, teto: 4500 },
+    asia: { unicornio: 4000, muito_bom: 5000, bom: 5500, normal: 6500, teto: 7000 },
+    america_sul_sul: { unicornio: 700, muito_bom: 900, bom: 1100, normal: 1200, teto: 1600 },
+    america_sul_norte: { unicornio: 1400, muito_bom: 1800, bom: 2000, normal: 2200, teto: 2600 },
+  };
+
+  it("classifica pelas faixas da região", () => {
+    expect(avaliarPortas(3700, ["europa"], ["FCO"], cfg)?.nivel).toBe("bom");
+    expect(avaliarPortas(2400, ["europa"], ["FCO"], cfg)?.nivel).toBe("unicornio");
+    expect(avaliarPortas(4200, ["europa"], ["FCO"], cfg)?.nivel).toBe("acima");
+    expect(avaliarPortas(5200, ["europa"], ["FCO"], cfg)?.nivel).toBe("caro");
+  });
+
+  it("roteiro entre regiões usa a de passagem mais cara", () => {
+    expect(regiaoDoTermometro(["oriente-medio", "sudeste-asiatico", "europa"], [], cfg)).toBe("asia");
+  });
+
+  it("América do Sul: Argentina, Chile e Uruguai usam a faixa do sul", () => {
+    expect(regiaoDoTermometro(["america-do-sul"], ["SCL", "EZE"], cfg)).toBe("america_sul_sul");
+    expect(regiaoDoTermometro(["america-do-sul"], ["LIM"], cfg)).toBe("america_sul_norte");
+  });
+
+  it("sem faixa para a região ou sem preço, não avalia", () => {
+    expect(avaliarPortas(3000, ["oceania"], [], cfg)).toBeNull();
+    expect(avaliarPortas(null, ["europa"], [], cfg)).toBeNull();
   });
 });
