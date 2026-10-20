@@ -56,7 +56,8 @@ export function ScriptComConsentimento({ src }: { src: string }) {
     return aoMudarEscolha(ver);
   }, []);
   useEffect(() => {
-    if (!aceito) return;
+    // Já carregado pelo trecho do <head> (aceite de outra visita)
+    if (!aceito || Array.from(document.scripts).some((x) => x.src === src)) return;
     const s = document.createElement("script");
     s.src = src;
     s.async = true;
