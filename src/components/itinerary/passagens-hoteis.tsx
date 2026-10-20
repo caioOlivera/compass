@@ -100,7 +100,7 @@ export function PassagensHoteis({ info }: { info: InfoCompleto }) {
               <span className="flex items-baseline justify-between gap-2 text-xs text-text-3">
                 <span>{t.cotado_em ? `Cotado em ${quando(t.cotado_em)}` : "Sem cotação"}</span>
                 <a href={o?.link ?? t.link_busca} target="_blank" rel="noopener sponsored" className="font-medium text-accent-strong hover:underline">
-                  Ver passagens
+                  Ver no {o?.provedor === "travelpayouts" ? "Aviasales" : "Google Flights"}
                 </a>
               </span>
             </li>
@@ -153,7 +153,7 @@ export function PassagensHoteis({ info }: { info: InfoCompleto }) {
       </ul>
 
       <p className="rounded-lg bg-accent/5 p-3 text-xs text-text-2">
-        Preços de referência: podem mudar até a compra.
+        Preços de referência: podem mudar até a compra. Mostramos o mais barato entre Google Flights e Aviasales.
         {info.atualizaAte && new Date(info.atualizaAte) > new Date()
           ? ` Atualizamos 1 vez por dia até ${dataCurta(info.atualizaAte)}: é o tempo para você decidir e comprar as passagens.`
           : " A atualização diária já terminou; confira o valor final no site do parceiro."}{" "}

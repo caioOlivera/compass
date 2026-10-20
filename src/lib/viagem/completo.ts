@@ -2,16 +2,18 @@ import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Itinerary } from "@/lib/validation/itinerary";
 import type { Database, Json } from "@/types/database";
-import { linkBuscaAviasales } from "./aviasales";
-import { estadiasDoRoteiro, trechosDoRoteiro, type EstadiaCotada, type Extras, type PedidoBase, type TrechoCotado } from "./completo-plano";
+import { estadiasDoRoteiro, maisBaratas, trechosDoRoteiro, type EstadiaCotada, type Extras, type PedidoBase, type TrechoCotado } from "./completo-plano";
 import { cotarHoteis, cotarVoo } from "./cotar";
-import { linksDeAfiliado, serpapiConfigurada, serpapiHoteis, travelpayoutsConfigurado, travelpayoutsVoos } from "./provedores";
-import { escolherHoteis, linkBooking } from "./serpapi-ler";
+import { linksDeAfiliado, serpapiConfigurada, serpapiHoteis, serpapiVoos, travelpayoutsConfigurado, travelpayoutsVoos } from "./provedores";
+import { escolherHoteis, linkBooking, linkGoogleFlights } from "./serpapi-ler";
+import type { ProvedorVoos } from "./tipos";
 
 type Db = SupabaseClient<Database>;
 
 /**
- * Cota passagens (Travelpayouts) e 2–3 hotéis por cidade (SerpApi Google Hotels) para um roteiro.
+ * Cota passagens e 2–3 hotéis por cidade (SerpApi Google Hotels) para um roteiro.
+ * Passagens: Google Flights (SerpApi) e Aviasales (Travelpayouts) juntos; vale o mais barato para o
+ * cliente, venha de onde vier (decisão de produto: preço antes de comissão).
  * Sem chave configurada, cada parte sai só com o link de busca (sem preço). Falha de um provedor
  * não derruba o resto.
  */
@@ -23,17 +25,26 @@ export async function montarExtras(
 ): Promise<Extras> {
   const usoCot = { userId: uso.userId, tripRequestId: uso.tripRequestId };
 
+  const provedoresVoo: ProvedorVoos[] = [
+    ...(serpapiConfigurada() ? [serpapiVoos] : []),
+    ...(travelpayoutsConfigurado() ? [travelpayoutsVoos] : []),
+  ];
   const trechos: TrechoCotado[] = await Promise.all(
     trechosDoRoteiro(roteiro, pedido).map(async (t) => {
-      const base = { rotulo: t.rotulo, consulta: t.consulta, link_busca: linkBuscaAviasales(t.consulta) };
-      if (!travelpayoutsConfigurado()) return { ...base, provedor: null, cotado_em: null, ofertas: [] };
-      try {
-        const c = await cotarVoo(db, travelpayoutsVoos, t.consulta, usoCot);
-        return { ...base, provedor: c.provedor, cotado_em: c.cotado_em, ofertas: c.ofertas.slice(0, 3) };
-      } catch (e) {
-        console.error("[completo] voo", t.consulta, e);
-        return { ...base, provedor: null, cotado_em: null, ofertas: [] };
-      }
+      const base = { rotulo: t.rotulo, consulta: t.consulta, link_busca: linkGoogleFlights(t.consulta) };
+      const cotacoes = await Promise.all(
+        provedoresVoo.map((p) =>
+          cotarVoo(db, p, t.consulta, usoCot).catch((e) => {
+            console.error("[completo] voo", p.nome, t.consulta, e);
+            return null;
+          }),
+        ),
+      );
+      const validas = cotacoes.filter((c) => c !== null);
+      const ofertas = maisBaratas(validas.flatMap((c) => c.ofertas));
+      if (!ofertas.length) return { ...base, provedor: validas[0]?.provedor ?? null, cotado_em: validas[0]?.cotado_em ?? null, ofertas: [] };
+      const daMelhor = validas.find((c) => c.provedor === ofertas[0].provedor)!;
+      return { ...base, provedor: daMelhor.provedor, cotado_em: daMelhor.cotado_em, ofertas };
     }),
   );
 
@@ -58,21 +69,20 @@ export async function montarExtras(
     }),
   );
 
-  // Links de afiliado de uma vez (a API aceita 10 por chamada); sem marker, ficam os originais
-  const urls = [
-    ...trechos.flatMap((t) => [t.link_busca, ...t.ofertas.map((o) => o.link)]),
-    ...estadias.flatMap((e) => [e.link_busca, ...e.hoteis.map((h) => h.link)]),
-  ];
-  const afiliados = await linksDeAfiliado(urls, `roteiro_${uso.itineraryId.slice(0, 8)}`);
-  let i = 0;
+  // Links de afiliado de uma vez (a API aceita 10 por chamada). Só Aviasales e Booking viram afiliado;
+  // Google Flights não tem programa e segue como está. Sem marker, ficam os originais.
+  const alvos: { url: string; trocar: (u: string) => void }[] = [];
+  const talvez = (url: string, trocar: (u: string) => void) => /aviasales\.|booking\.com/.test(url) && alvos.push({ url, trocar });
   for (const t of trechos) {
-    t.link_busca = afiliados[i++];
-    for (const o of t.ofertas) o.link = afiliados[i++];
+    talvez(t.link_busca, (u) => (t.link_busca = u));
+    for (const o of t.ofertas) talvez(o.link, (u) => (o.link = u));
   }
   for (const e of estadias) {
-    e.link_busca = afiliados[i++];
-    for (const h of e.hoteis) h.link = afiliados[i++];
+    talvez(e.link_busca, (u) => (e.link_busca = u));
+    for (const h of e.hoteis) talvez(h.link, (u) => (h.link = u));
   }
+  const afiliados = await linksDeAfiliado(alvos.map((a) => a.url), `roteiro_${uso.itineraryId.slice(0, 8)}`);
+  alvos.forEach((a, i) => a.trocar(afiliados[i]));
 
   return { versao: 1, gerado_em: new Date().toISOString(), trechos, estadias };
 }

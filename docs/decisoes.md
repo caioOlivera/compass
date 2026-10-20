@@ -5,6 +5,12 @@ Status: **decidida**, **proposta** (espera aprovação) ou **revista**.
 
 ---
 
+## 2026-10-20 · Passagens: o preço mais barato para o cliente antes da comissão (decidida)
+- **Decisão:** o Completo cota cada trecho no Google Flights (SerpApi) e na Aviasales (Travelpayouts) e mostra as 3 ofertas mais baratas entre os dois. O botão leva para onde está o preço; o link de busca padrão é o Google Flights.
+- **Comissão:** só quando a Aviasales ganha no preço (link de afiliado). Google Flights não tem programa de afiliados.
+- **Custo:** cada busca no Google Flights é paga na SerpApi; o cache de 24 h e a atualização 1 vez ao dia por 15 dias limitam a ~15 buscas por trecho por consulta.
+- **Futuro:** Skyscanner entra como mais um provedor/link quando aprovado no programa de afiliados (Impact).
+
 ## 2026-10-20 · LGPD e segurança da informação (decidida)
 - **Transparência:** Política de Privacidade (`/privacidade`) e Termos (`/termos`) com versão (`VERSAO_TERMOS`). Aceite obrigatório no cadastro, gravado com data e versão nos metadados da conta.
 - **Direitos do titular:** no perfil, "Baixar meus dados" (JSON por `/api/meus-dados`) e "Excluir minha conta" (confirma digitando EXCLUIR). Pedidos pagos ficam 5 anos em `pedidos_arquivados`, sem nome, e-mail ou id; o e-mail vira hash em `contas_excluidas` para o roteiro de boas-vindas não renascer.

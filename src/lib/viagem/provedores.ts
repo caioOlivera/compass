@@ -34,7 +34,7 @@ export const travelpayoutsVoos: ProvedorVoos = {
   },
 };
 
-/** Google Flights pela SerpApi: preço ao vivo, pago por busca, sem afiliado. Só para conferência. */
+/** Google Flights pela SerpApi: preço ao vivo, pago por busca, sem afiliado. Disputa com a Aviasales; vale o mais barato. */
 export const serpapiVoos: ProvedorVoos = {
   nome: "serpapi",
   async buscar(c: ConsultaVoo, signal?: AbortSignal): Promise<OfertaVoo[]> {

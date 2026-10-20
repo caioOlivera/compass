@@ -2,10 +2,10 @@ import { describe, expect, it } from "vitest";
 import { roteiroPRD } from "@/lib/itinerary/exemplo";
 import { iataDaOrigem, iatasDoTexto } from "@/lib/viagem/aeroportos";
 import { lerLinksParceiro, lerPrecos, linkBuscaAviasales, parametrosPrecos } from "@/lib/viagem/aviasales";
-import { aeroportosDoRoteiro, estadiasDoRoteiro, totalPassagens, trechosDoRoteiro } from "@/lib/viagem/completo-plano";
+import { aeroportosDoRoteiro, estadiasDoRoteiro, maisBaratas, totalPassagens, trechosDoRoteiro } from "@/lib/viagem/completo-plano";
 import { desviosDePreco, medianaDesvio, resumirEstudo, ROTAS_ESTUDO, variantesTravelpayouts } from "@/lib/viagem/estudo-rotas";
-import { escolherHoteis, lerHoteis, lerVoos, linkBooking } from "@/lib/viagem/serpapi-ler";
-import type { OfertaHotel } from "@/lib/viagem/tipos";
+import { escolherHoteis, lerHoteis, lerVoos, linkBooking, linkGoogleFlights } from "@/lib/viagem/serpapi-ler";
+import type { OfertaHotel, OfertaVoo } from "@/lib/viagem/tipos";
 
 describe("aeroportos", () => {
   it("reconhece a cidade de origem com ou sem acento e com UF", () => {
@@ -151,5 +151,40 @@ describe("estudo das rotas", () => {
     const d = desviosDePreco(linhas);
     expect(d).toEqual([{ rota: 1, desvio: -0.1 }]);
     expect(medianaDesvio(d)).toBe(-0.1);
+  });
+});
+
+describe("passagens: o mais barato entre os provedores", () => {
+  const voo = (provedor: string, preco_brl: number, v: string | null = null): OfertaVoo => ({
+    provedor,
+    preco_brl,
+    companhia: "TP",
+    voo: v,
+    partida: "2027-05-10T08:00",
+    chegada_volta: null,
+    escalas: 0,
+    duracao_min: 700,
+    link: provedor === "serpapi" ? "https://www.google.com/travel/flights" : "https://www.aviasales.com/x",
+  });
+
+  it("ordena por preço misturando Google Flights e Aviasales", () => {
+    const r = maisBaratas([voo("travelpayouts", 4200), voo("serpapi", 3900), voo("serpapi", 5100), voo("travelpayouts", 4000)]);
+    expect(r.map((o) => [o.provedor, o.preco_brl])).toEqual([
+      ["serpapi", 3900],
+      ["travelpayouts", 4000],
+      ["travelpayouts", 4200],
+    ]);
+  });
+
+  it("não repete o mesmo voo vindo dos dois provedores", () => {
+    const r = maisBaratas([voo("serpapi", 3900, "TP82"), voo("travelpayouts", 3950, "TP82"), voo("travelpayouts", 4100, "LA8084")]);
+    expect(r.map((o) => o.voo)).toEqual(["TP82", "LA8084"]);
+  });
+
+  it("link de busca do Google Flights traz rota, datas e passageiros", () => {
+    const u = new URL(linkGoogleFlights({ origem: "GRU", destino: "LIS", ida: "2027-05-10", volta: "2027-05-25", adultos: 2, criancas: 1 }));
+    expect(u.hostname).toBe("www.google.com");
+    expect(u.searchParams.get("q")).toBe("Voos de GRU para LIS em 2027-05-10 volta 2027-05-25 3 passageiros");
+    expect(u.searchParams.get("curr")).toBe("BRL");
   });
 });

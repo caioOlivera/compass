@@ -17,6 +17,13 @@ export function parametrosVoo(c: ConsultaVoo): Record<string, string> {
   };
 }
 
+/** Busca no Google Flights com rota, datas e passageiros já preenchidos (sem afiliado). */
+export function linkGoogleFlights(c: ConsultaVoo): string {
+  const pessoas = c.adultos + (c.criancas ?? 0);
+  const q = `Voos de ${c.origem} para ${c.destino} em ${c.ida}${c.volta ? ` volta ${c.volta}` : " só ida"}${pessoas > 1 ? ` ${pessoas} passageiros` : ""}`;
+  return `https://www.google.com/travel/flights?${new URLSearchParams({ q, hl: "pt-BR", gl: "BR", curr: "BRL" })}`;
+}
+
 type VooSerp = {
   price?: number;
   total_duration?: number;
@@ -28,7 +35,7 @@ type VooSerp = {
 export function lerVoos(json: unknown, pessoas = 1): OfertaVoo[] {
   const r = json as { best_flights?: VooSerp[]; other_flights?: VooSerp[]; search_metadata?: { google_flights_url?: string } } | null;
   if (!r) return [];
-  const link = r.search_metadata?.google_flights_url ?? "https://www.google.com/travel/flights";
+  const link = r.search_metadata?.google_flights_url ?? "https://www.google.com/travel/flights?hl=pt-BR&curr=BRL";
   return [...(r.best_flights ?? []), ...(r.other_flights ?? [])]
     .filter((v) => typeof v.price === "number" && v.price > 0)
     .map((v) => ({

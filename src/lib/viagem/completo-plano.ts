@@ -103,3 +103,17 @@ export function totalPassagens(trechos: TrechoCotado[]): number | null {
   if (!trechos.length || trechos.some((t) => !t.ofertas[0]?.preco_brl)) return null;
   return trechos.reduce((a, t) => a + t.ofertas[0].preco_brl, 0);
 }
+
+/** As 3 ofertas mais baratas entre todos os provedores, sem repetir o mesmo voo. */
+export function maisBaratas(ofertas: OfertaVoo[], quantas = 3): OfertaVoo[] {
+  const vistos = new Set<string>();
+  return [...ofertas]
+    .sort((a, b) => a.preco_brl - b.preco_brl)
+    .filter((o) => {
+      const chave = o.voo ? `${o.voo}|${o.partida?.slice(0, 10) ?? ""}` : `${o.provedor}|${o.preco_brl}|${o.companhia ?? ""}`;
+      if (vistos.has(chave)) return false;
+      vistos.add(chave);
+      return true;
+    })
+    .slice(0, quantas);
+}
