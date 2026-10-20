@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { lerConfig } from "@/lib/configuracoes";
+import { limparPrazosVencidos } from "@/lib/lgpd";
 import { serverEnv } from "@/lib/env";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { ItinerarySchema } from "@/lib/validation/itinerary";
@@ -13,6 +14,7 @@ export const maxDuration = 300;
  * GET /api/cron/cotacoes — chamado pela Vercel 1 vez ao dia (vercel.json).
  * Atualiza passagens e hotéis da versão mais recente de cada consulta completa feita nos últimos
  * N dias (config `atualizacao_completo`). O cache das cotações evita pagar duas vezes pela mesma busca.
+ * No fim, apaga o que passou do prazo de guarda (LGPD).
  */
 export async function GET(req: NextRequest) {
   const segredo = serverEnv().CRON_SECRET;
@@ -60,5 +62,7 @@ export async function GET(req: NextRequest) {
       console.error("[cron cotacoes]", tr.id, e);
     }
   }
+  // Prazos de guarda da Política de Privacidade
+  await limparPrazosVencidos(db).catch((e) => console.error("[cron limpeza]", e));
   return NextResponse.json({ consultas: consultas?.length ?? 0, atualizados });
 }

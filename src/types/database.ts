@@ -995,6 +995,18 @@ export type Database = {
         Update: { id?: string; email?: string; user_id?: string | null; valido_ate?: string | null; motivo?: string; concedido_por?: string | null; revogado_em?: string | null; created_at?: string }
         Relationships: []
       }
+      pedidos_arquivados: {
+        Row: { id: string; produto: string; valor: number; status: string; provedor: string | null; provedor_id: string | null; metodo: string | null; pago_em: string | null; criado_em: string; arquivado_em: string; apagar_apos: string }
+        Insert: { id: string; produto: string; valor: number; status: string; provedor?: string | null; provedor_id?: string | null; metodo?: string | null; pago_em?: string | null; criado_em: string; arquivado_em?: string; apagar_apos?: string }
+        Update: { id?: string; produto?: string; valor?: number; status?: string; provedor?: string | null; provedor_id?: string | null; metodo?: string | null; pago_em?: string | null; criado_em?: string; arquivado_em?: string; apagar_apos?: string }
+        Relationships: []
+      }
+      contas_excluidas: {
+        Row: { email_hash: string; excluida_em: string }
+        Insert: { email_hash: string; excluida_em?: string }
+        Update: { email_hash?: string; excluida_em?: string }
+        Relationships: []
+      }
       boas_vindas: {
         Row: { user_id: string; created_at: string }
         Insert: { user_id: string; created_at?: string }

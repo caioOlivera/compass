@@ -1,6 +1,7 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { lerConfig } from "@/lib/configuracoes";
+import { hashEmail } from "@/lib/lgpd";
 import type { Database } from "@/types/database";
 
 // Regras de crédito (livro-razão em `creditos`). Toda compra vira um lote com validade; todo uso
@@ -78,8 +79,13 @@ export async function acessoGratisAtivo(db: Db, userId: string, email?: string |
 }
 
 /** Toda conta ganha 1 roteiro grátis (sem passagens e hotéis), uma vez só. */
-export async function garantirBoasVindas(db: Db, userId: string) {
+export async function garantirBoasVindas(db: Db, userId: string, email?: string | null) {
   if ((await lerConfig(db, "roteiro_boas_vindas", true)) !== true) return;
+  // Quem excluiu a conta e voltou com o mesmo e-mail já recebeu o seu
+  if (email) {
+    const { data: excluida } = await db.from("contas_excluidas").select("email_hash").eq("email_hash", hashEmail(email)).maybeSingle();
+    if (excluida) return;
+  }
   const { data } = await db.from("boas_vindas").upsert({ user_id: userId }, { onConflict: "user_id", ignoreDuplicates: true }).select("user_id");
   if (!data?.length) return; // já recebeu
   const meses = Number(await lerConfig(db, "validade_meses_b2c", 12));
@@ -125,7 +131,7 @@ export async function exigirCredito(
     return { ok: true, usoId: null, completo: true, origem: "plano" };
   }
 
-  await garantirBoasVindas(db, p.userId);
+  await garantirBoasVindas(db, p.userId, p.email);
 
   // Basic: os créditos da agência são "completo". Assinado aceita o próprio crédito ou um completo.
   const tentativas =

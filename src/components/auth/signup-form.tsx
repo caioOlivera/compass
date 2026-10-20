@@ -1,10 +1,12 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Field, FormAlert } from "@/components/ui/field";
 import { createClient } from "@/lib/supabase/client";
+import { VERSAO_TERMOS } from "@/lib/empresa";
 import { CadastroSchema, errosPorCampo, mensagemErroAuth } from "@/lib/validation/auth";
 
 export function SignupForm({ next }: { next: string }) {
@@ -17,9 +19,10 @@ export function SignupForm({ next }: { next: string }) {
     e.preventDefault();
     const dados = Object.fromEntries(new FormData(e.currentTarget));
     const r = CadastroSchema.safeParse(dados);
-    setErros(errosPorCampo(r));
+    const semAceite = dados.aceite !== "sim";
+    setErros({ ...errosPorCampo(r), ...(semAceite ? { aceite: "Para criar a conta, aceite os Termos e a Política de Privacidade" } : {}) });
     setErroGeral("");
-    if (!r.success) return;
+    if (!r.success || semAceite) return;
 
     setEnviando(true);
     const { data, error } = await createClient().auth.signUp({
@@ -27,7 +30,7 @@ export function SignupForm({ next }: { next: string }) {
       password: r.data.senha,
       options: {
         // Vai para auth.users.raw_user_meta_data; o trigger handle_new_user cria o profile
-        data: { full_name: r.data.nome, phone: r.data.telefone },
+        data: { full_name: r.data.nome, phone: r.data.telefone, termos_aceitos_em: new Date().toISOString(), versao_termos: VERSAO_TERMOS },
         emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`,
       },
     });
@@ -67,6 +70,21 @@ export function SignupForm({ next }: { next: string }) {
         dica="Pelo menos 8 caracteres"
         erro={erros.senha}
       />
+      <label className="flex items-start gap-2 text-sm text-text-2">
+        <input type="checkbox" name="aceite" value="sim" className="mt-1 size-4 accent-[var(--accent)]" aria-invalid={!!erros.aceite || undefined} />
+        <span>
+          Li e aceito os{" "}
+          <Link href="/termos" target="_blank" className="font-medium text-accent-strong underline">
+            Termos de Uso
+          </Link>{" "}
+          e a{" "}
+          <Link href="/privacidade" target="_blank" className="font-medium text-accent-strong underline">
+            Política de Privacidade
+          </Link>
+          .
+        </span>
+      </label>
+      {erros.aceite && <p className="-mt-2 text-xs text-red-600">{erros.aceite}</p>}
       <FormAlert>{erroGeral}</FormAlert>
       <Button type="submit" carregando={enviando} className="mt-2">
         Criar conta

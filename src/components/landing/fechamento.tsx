@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { PreferenciasCookies } from "@/components/legal/aviso-cookies";
 import { Logo } from "@/components/logo";
 import { FotoDestino } from "@/components/ui/foto";
 import type { Foto } from "@/lib/images/fotos";
@@ -67,6 +68,11 @@ export function Rodape({ creditos }: { creditos: Foto[] }) {
       </div>
       <div className="mx-auto flex max-w-6xl flex-col gap-2 border-t border-border px-4 py-5 text-xs text-text-2 sm:px-6">
         <p>© 2026 Compass. Roteiros sugeridos por IA: confira horários, preços e regras antes de comprar.</p>
+        <p className="flex flex-wrap gap-x-4 gap-y-1">
+          <Link href="/privacidade" className="underline hover:text-text">Privacidade</Link>
+          <Link href="/termos" className="underline hover:text-text">Termos de uso</Link>
+          <PreferenciasCookies className="underline hover:text-text" />
+        </p>
         {[...porFonte].map(([fonte, { url, autores }]) => (
           <p key={fonte}>
             Fotos:{" "}

@@ -5,6 +5,14 @@ Status: **decidida**, **proposta** (espera aprovação) ou **revista**.
 
 ---
 
+## 2026-10-20 · LGPD e segurança da informação (decidida)
+- **Transparência:** Política de Privacidade (`/privacidade`) e Termos (`/termos`) com versão (`VERSAO_TERMOS`). Aceite obrigatório no cadastro, gravado com data e versão nos metadados da conta.
+- **Direitos do titular:** no perfil, "Baixar meus dados" (JSON por `/api/meus-dados`) e "Excluir minha conta" (confirma digitando EXCLUIR). Pedidos pagos ficam 5 anos em `pedidos_arquivados`, sem nome, e-mail ou id; o e-mail vira hash em `contas_excluidas` para o roteiro de boas-vindas não renascer.
+- **Cookies:** só essenciais por padrão. O script de afiliados (Drive) só carrega depois do aceite; "Preferências de cookies" no rodapé reabre a escolha.
+- **Guarda:** o cron diário apaga cotações (30 dias), webhooks (90 dias), registros de uso (6 meses), chamados fechados (2 anos) e pedidos arquivados vencidos.
+- **Cabeçalhos:** HSTS, nosniff, X-Frame-Options DENY, Referrer-Policy, Permissions-Policy e CSP mínima aplicadas; a CSP completa roda em Report-Only até observarmos o que o mapa, as fotos e os parceiros carregam.
+- **Detalhes:** `docs/seguranca-lgpd.md`. **Validar com advogado** antes de vender em escala.
+
 ## 2026-10-17 · Regras de produto: sem upsell, completo entregue de uma vez, cortesias (decidida)
 - **Sem upsell:** quem compra o roteiro recebe o roteiro. Passagens e hotéis só no Completo, que já é gerado com tudo na mesma hora (a tela do roteiro é o produto). Planos de agência e acessos cortesia geram sempre completo.
 - **Atualização:** passagens e hotéis do Completo são atualizados 1 vez ao dia durante 15 dias (config `atualizacao_completo`), por agendamento da Vercel (`/api/cron/cotacoes`, protegido por `CRON_SECRET`). As cotações têm cache (voo 24 h, hotel 72 h), então hotel é cotado de novo a cada 3 dias.

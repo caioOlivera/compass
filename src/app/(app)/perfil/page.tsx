@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { sair } from "@/app/actions/auth";
 import { AppHeader } from "@/components/app-header";
 import { PerfilForm } from "@/components/perfil/perfil-form";
+import { PrivacidadeConta } from "@/components/perfil/privacidade-conta";
 import { acessoGratisAtivo, garantirBoasVindas, NOME_STATUS_PEDIDO, PRODUTOS, saldo, type ProdutoAvulso } from "@/lib/creditos";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { formatarPreco } from "@/lib/motor/catalogo";
@@ -24,7 +25,7 @@ export default async function PerfilPage() {
 
   // O roteiro de boas-vindas aparece no saldo já na primeira visita
   const admin = createAdminClient();
-  await garantirBoasVindas(admin, user.id).catch(() => {});
+  await garantirBoasVindas(admin, user.id, user.email).catch(() => {});
   const cortesia = await acessoGratisAtivo(admin, user.id, user.email).catch(() => null);
   const [{ data: perfil }, { count }, meu, { data: pedidos }, { data: consultorias }] = await Promise.all([
     supabase.from("profiles").select("full_name, phone, avatar_path").eq("id", user.id).maybeSingle(),
@@ -114,6 +115,8 @@ export default async function PerfilPage() {
             {temAgencia ? "→" : "Ver planos →"}
           </span>
         </Link>
+
+        <PrivacidadeConta />
 
         <form action={sair}>
           <button type="submit" className="inline-flex items-center gap-2 text-sm text-text-2 hover:text-text">
